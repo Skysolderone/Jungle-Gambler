@@ -1,0 +1,511 @@
+[gd_scene load_steps=8 format=3 uid="uid://byfvb3hgje0yh"]
+
+[ext_resource type="Script" path="res://scripts/MainMenu.gd" id="1_main"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
+bg_color = Color(0.25, 0.25, 0.3, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
+bg_color = Color(0.35, 0.35, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
+bg_color = Color(0.35, 0.35, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_focus"]
+bg_color = Color(0.25, 0.25, 0.3, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.85, 0.3, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_disabled"]
+bg_color = Color(0.2, 0.2, 0.25, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="MainMenu" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_main")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.15, 0.15, 0.2, 1)
+
+[node name="CenterContainer" type="CenterContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="CenterContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="TitleLabel" type="Label" parent="CenterContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 48
+text = "丛林赌徒"
+horizontal_alignment = 1
+
+[node name="Spacer1" type="Control" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 30)
+layout_mode = 2
+
+[node name="LoginButton" type="Button" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 0.85, 0.3, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "登录"
+
+[node name="RegisterButton" type="Button" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 0.85, 0.3, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "注册"
+
+[node name="SettingsButton" type="Button" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(300, 60)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_hover_color = Color(1, 0.85, 0.3, 1)
+theme_override_colors/font_pressed_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 24
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "设置"
+
+[node name="Spacer2" type="Control" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+
+[node name="ExitButton" type="Button" parent="CenterContainer/VBoxContainer"]
+custom_minimum_size = Vector2(300, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_colors/font_pressed_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "退出游戏"
+
+[node name="LoginPanel" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -200.0
+offset_right = 250.0
+offset_bottom = 200.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="LoginPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="TitleMargin" type="MarginContainer" parent="LoginPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 20
+
+[node name="Title" type="Label" parent="LoginPanel/VBoxContainer/TitleMargin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 32
+text = "登录"
+horizontal_alignment = 1
+
+[node name="FormMargin" type="MarginContainer" parent="LoginPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 20
+
+[node name="Form" type="VBoxContainer" parent="LoginPanel/VBoxContainer/FormMargin"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="UsernameLabel" type="Label" parent="LoginPanel/VBoxContainer/FormMargin/Form"]
+layout_mode = 2
+text = "用户名："
+horizontal_alignment = 1
+
+[node name="UsernameInput" type="LineEdit" parent="LoginPanel/VBoxContainer/FormMargin/Form"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+placeholder_text = "请输入用户名"
+
+[node name="PasswordLabel" type="Label" parent="LoginPanel/VBoxContainer/FormMargin/Form"]
+layout_mode = 2
+text = "密码："
+horizontal_alignment = 1
+
+[node name="PasswordInput" type="LineEdit" parent="LoginPanel/VBoxContainer/FormMargin/Form"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+placeholder_text = "请输入密码"
+secret = true
+
+[node name="Spacer" type="Control" parent="LoginPanel/VBoxContainer/FormMargin/Form"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="ConfirmButton" type="Button" parent="LoginPanel/VBoxContainer/FormMargin/Form"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "确认登录"
+
+[node name="CancelButton" type="Button" parent="LoginPanel/VBoxContainer/FormMargin/Form"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "取消"
+
+[node name="RegisterPanel" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -250.0
+offset_top = -250.0
+offset_right = 250.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="RegisterPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 15
+
+[node name="TitleMargin" type="MarginContainer" parent="RegisterPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 20
+
+[node name="Title" type="Label" parent="RegisterPanel/VBoxContainer/TitleMargin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 32
+text = "注册"
+horizontal_alignment = 1
+
+[node name="FormMargin" type="MarginContainer" parent="RegisterPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 20
+
+[node name="Form" type="VBoxContainer" parent="RegisterPanel/VBoxContainer/FormMargin"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="UsernameLabel" type="Label" parent="RegisterPanel/VBoxContainer/FormMargin/Form"]
+layout_mode = 2
+text = "用户名："
+horizontal_alignment = 1
+
+[node name="UsernameInput" type="LineEdit" parent="RegisterPanel/VBoxContainer/FormMargin/Form"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+placeholder_text = "请输入用户名"
+
+[node name="PasswordLabel" type="Label" parent="RegisterPanel/VBoxContainer/FormMargin/Form"]
+layout_mode = 2
+text = "密码："
+horizontal_alignment = 1
+
+[node name="PasswordInput" type="LineEdit" parent="RegisterPanel/VBoxContainer/FormMargin/Form"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+placeholder_text = "请输入密码"
+secret = true
+
+[node name="ConfirmPasswordLabel" type="Label" parent="RegisterPanel/VBoxContainer/FormMargin/Form"]
+layout_mode = 2
+text = "确认密码："
+horizontal_alignment = 1
+
+[node name="ConfirmPasswordInput" type="LineEdit" parent="RegisterPanel/VBoxContainer/FormMargin/Form"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+placeholder_text = "请再次输入密码"
+secret = true
+
+[node name="Spacer" type="Control" parent="RegisterPanel/VBoxContainer/FormMargin/Form"]
+custom_minimum_size = Vector2(0, 10)
+layout_mode = 2
+
+[node name="ConfirmButton" type="Button" parent="RegisterPanel/VBoxContainer/FormMargin/Form"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 1, 1, 1)
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "确认注册"
+
+[node name="CancelButton" type="Button" parent="RegisterPanel/VBoxContainer/FormMargin/Form"]
+custom_minimum_size = Vector2(0, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "取消"
+
+[node name="SettingsPanel" type="Panel" parent="."]
+visible = false
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -250.0
+offset_right = 300.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="SettingsPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="TitleMargin" type="MarginContainer" parent="SettingsPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 20
+
+[node name="Title" type="Label" parent="SettingsPanel/VBoxContainer/TitleMargin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 32
+text = "设置"
+horizontal_alignment = 1
+
+[node name="SettingsMargin" type="MarginContainer" parent="SettingsPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 20
+
+[node name="Settings" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin"]
+layout_mode = 2
+theme_override_constants/separation = 25
+
+[node name="MusicControl" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MusicLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/MusicControl"]
+layout_mode = 2
+text = "音乐音量"
+horizontal_alignment = 1
+
+[node name="MusicSlider" type="HSlider" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/MusicControl"]
+layout_mode = 2
+max_value = 100.0
+value = 80.0
+
+[node name="SoundControl" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SoundLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/SoundControl"]
+layout_mode = 2
+text = "音效音量"
+horizontal_alignment = 1
+
+[node name="SoundSlider" type="HSlider" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/SoundControl"]
+layout_mode = 2
+max_value = 100.0
+value = 80.0
+
+[node name="BrightnessControl" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BrightnessLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/BrightnessControl"]
+layout_mode = 2
+text = "屏幕亮度"
+horizontal_alignment = 1
+
+[node name="BrightnessSlider" type="HSlider" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/BrightnessControl"]
+layout_mode = 2
+min_value = 30.0
+max_value = 100.0
+value = 100.0
+
+[node name="FullscreenControl" type="HBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+layout_mode = 2
+alignment = 1
+
+[node name="FullscreenLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl"]
+layout_mode = 2
+text = "全屏模式"
+
+[node name="Spacer" type="Control" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl"]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+
+[node name="FullscreenCheckbox" type="CheckButton" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl"]
+layout_mode = 2
+
+[node name="ThemeControl" type="HBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+layout_mode = 2
+alignment = 1
+
+[node name="ThemeLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl"]
+layout_mode = 2
+text = "外观模式"
+
+[node name="Spacer" type="Control" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl"]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+
+[node name="ThemeOptionButton" type="OptionButton" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl"]
+layout_mode = 2
+item_count = 2
+selected = 0
+popup/item_0/text = "黑暗模式"
+popup/item_0/id = 0
+popup/item_1/text = "明亮模式"
+popup/item_1/id = 1
+
+[node name="Spacer" type="Control" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CloseButton" type="Button" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "关闭"
+
+[node name="BrightnessOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="MessageDialog" type="AcceptDialog" parent="."]
+title = "提示"
+initial_position = 1
+size = Vector2i(400, 150)
+ok_button_text = "确定"
+
+[connection signal="pressed" from="CenterContainer/VBoxContainer/LoginButton" to="." method="_on_login_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/RegisterButton" to="." method="_on_register_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/SettingsButton" to="." method="_on_settings_button_pressed"]
+[connection signal="pressed" from="CenterContainer/VBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]
+[connection signal="pressed" from="LoginPanel/VBoxContainer/FormMargin/Form/ConfirmButton" to="." method="_on_login_confirm_pressed"]
+[connection signal="pressed" from="LoginPanel/VBoxContainer/FormMargin/Form/CancelButton" to="." method="_on_login_cancel_pressed"]
+[connection signal="pressed" from="RegisterPanel/VBoxContainer/FormMargin/Form/ConfirmButton" to="." method="_on_register_confirm_pressed"]
+[connection signal="pressed" from="RegisterPanel/VBoxContainer/FormMargin/Form/CancelButton" to="." method="_on_register_cancel_pressed"]
+[connection signal="value_changed" from="SettingsPanel/VBoxContainer/SettingsMargin/Settings/MusicControl/MusicSlider" to="." method="_on_music_slider_changed"]
+[connection signal="value_changed" from="SettingsPanel/VBoxContainer/SettingsMargin/Settings/SoundControl/SoundSlider" to="." method="_on_sound_slider_changed"]
+[connection signal="value_changed" from="SettingsPanel/VBoxContainer/SettingsMargin/Settings/BrightnessControl/BrightnessSlider" to="." method="_on_brightness_slider_changed"]
+[connection signal="toggled" from="SettingsPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl/FullscreenCheckbox" to="." method="_on_fullscreen_toggled"]
+[connection signal="item_selected" from="SettingsPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl/ThemeOptionButton" to="." method="_on_theme_option_selected"]
+[connection signal="pressed" from="SettingsPanel/VBoxContainer/SettingsMargin/Settings/CloseButton" to="." method="_on_settings_close_pressed"]
+

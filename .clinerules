@@ -1,0 +1,199 @@
+# 项目规则和上下文
+
+## 项目信息
+- **项目名称**: Jungle Gambler（丛林赌徒）
+- **类型**: 2D Roguelike 卡牌/背包管理游戏
+- **引擎**: Godot 4.5
+- **语言**: GDScript
+- **平台**: macOS (Apple M3)
+
+## 核心功能
+1. **用户系统**：登录、注册、个人资料管理
+2. **主题系统**：支持明亮/黑暗模式切换
+3. **魂印背包系统**：基于网格的形状拼图式背包（参考暗黑破坏神3）
+4. **商城系统**：购买不同品质的魂印
+5. **地图系统**：9x9格子地图，探索、战斗、收集
+6. **战斗系统**：回合制战斗，攻击/逃跑机制
+7. **撤离系统**：探索达到40%后显示撤离点
+
+## 技术架构
+
+### 目录结构
+```
+jungle-gambler/
+├── scenes/          # 场景文件 (.tscn)
+├── scripts/         # 脚本文件 (.gd)
+├── systems/         # 全局系统脚本
+├── assets/          # 资源文件（如需添加）
+└── project.godot    # 项目配置
+```
+
+### 全局单例（Autoload）
+- `UserSession`: 用户会话管理
+- `SoulPrintSystem`: 魂印系统和背包管理
+- `ThemeManager`: 主题管理
+- `InventorySystem`: 旧版库存系统（已弃用）
+
+### 核心场景
+1. **MainMenu** - 主菜单（登录/注册/设置）
+2. **Lobby** - 大厅（开始游戏/背包/商城/个人资料）
+3. **Profile** - 个人资料页
+4. **Settings** - 设置页（音频/亮度/主题/全屏）
+5. **SoulInventoryV2** - 魂印背包（暗黑3风格）
+6. **Shop** - 魂印商城
+7. **MapSelection** - 地图选择
+8. **SoulLoadout** - 魂印配置（出战准备）
+9. **GameMap** - 游戏地图（9x9格子）
+10. **Battle** - 战斗场景
+
+## 魂印系统
+
+### 品质等级
+0. 普通 (COMMON) - 灰色
+1. 非凡 (UNCOMMON) - 绿色
+2. 稀有 (RARE) - 蓝色
+3. 史诗 (EPIC) - 紫色
+4. 传说 (LEGENDARY) - 橙色
+5. 神话 (MYTHIC) - 红色
+
+### 形状类型
+- SQUARE_1X1: 1×1正方形
+- SQUARE_2X2: 2×2正方形
+- RECT_1X2/RECT_2X1: 矩形
+- RECT_1X3/RECT_3X1: 长矩形
+- L_SHAPE: L形
+- T_SHAPE: T形
+- TRIANGLE: 三角形
+
+### 背包规格
+- 网格大小: 8×10
+- 单元格大小: 50px
+
+## 游戏地图系统
+
+### 地图特性
+- **尺寸**: 9×9 格子（80px/格）
+- **颜色系统**: 根据魂印品质和数量显示不同颜色深浅
+- **探索机制**: 未探索格子有半透明遮罩
+- **敌人分布**: 10-15个随机隐藏敌人
+- **撤离条件**: 探索度≥40%显示撤离点
+
+### 战斗机制
+- 回合制战斗
+- 玩家可攻击或逃跑（50%成功率）
+- 伤害基于配置魂印的总力量
+- HP归零失去所有收集的魂印
+
+## 代码规范
+
+### GDScript 风格
+```gdscript
+# 变量命名：snake_case
+var player_position = Vector2i(0, 0)
+
+# 常量命名：UPPER_SNAKE_CASE
+const GRID_SIZE = 9
+
+# 函数命名：snake_case，私有函数加下划线前缀
+func _initialize_grid():
+    pass
+
+# 类命名：PascalCase
+class GridCell:
+    var quality: int = 0
+```
+
+### 信号和回调
+```gdscript
+# 信号定义
+signal inventory_closed
+signal battle_finished(result: Dictionary)
+
+# 信号连接
+button.pressed.connect(_on_button_pressed)
+
+# 回调命名：_on_[节点名]_[信号名]
+func _on_button_pressed():
+    pass
+```
+
+### 场景引用
+```gdscript
+# 使用 @onready 延迟加载节点引用
+@onready var label = $Path/To/Label
+
+# 检查节点存在
+if has_node("/root/SomeSingleton"):
+    var singleton = get_node("/root/SomeSingleton")
+```
+
+## 数据持久化
+
+### 存储路径
+- 用户数据: `user://users.json`
+- 背包数据: `user://soul_inventory.json`
+- 设置数据: `user://settings.json`
+
+### 数据格式
+```json
+// 用户数据
+{
+  "username": {
+    "password_hash": "...",
+    "nickname": "...",
+    "created_at": "..."
+  }
+}
+```
+
+## 开发约定
+
+### 通用规则
+1. **使用中文回答**和注释
+2. **不重新创建配置文件**（project.godot 等）
+3. **不写测试脚本**
+4. **不写 README**（除非明确要求）
+5. **立即实现功能**，不只是提供建议
+6. **不添加 emoji**（除非用户明确要求）
+
+### UI/UX 规范
+- 按钮点击不做透明处理
+- 使用 StyleBoxFlat 自定义按钮样式
+- 错误信息使用 AcceptDialog 弹窗显示
+- 重要操作使用 ConfirmationDialog 确认
+
+### 颜色方案
+- 背景色: `Color(0.15, 0.15, 0.2, 1)`
+- 面板色: `Color(0.2, 0.2, 0.25, 0.95)`
+- 强调色: `Color(1, 0.85, 0.3, 1)` (金色)
+- 成功色: `Color(0.3, 1.0, 0.3)` (绿色)
+- 危险色: `Color(1.0, 0.2, 0.2)` (红色)
+
+### 音频设置
+- Master Bus: 主音量
+- Music Bus: 音乐（如已配置）
+- Sound Bus: 音效（如已配置）
+
+## 调试约定
+- 调试阶段商城价格设为 0
+- 保留"退出地图"按钮用于调试
+- 自动登录测试用户：`test_debug`
+
+## 已知问题和待优化项
+1. `InventorySystem.gd` 中 `get_inventory_size()` 参数未使用
+2. `ThemeManager.gd` 中变量 `file` 作用域警告
+3. `MapSelection.gd` 中 `_create_map_card()` 的 `index` 参数未使用
+
+## Git 配置
+- 忽略文件: `.godot/`, `.import/`, `*.import`
+- 不跟踪用户数据文件（user:// 目录在本地）
+
+## 环境配置
+- Godot 路径: `/Users/rubioc/Desktop/Godot.app/Contents/MacOS/Godot`
+- 工作目录: `/Users/rubioc/game/jungle-gambler`
+- MCP 工具已配置用于调试
+
+---
+
+**注意**: 本项目遵循快速迭代原则，优先实现功能，代码优化和重构在功能稳定后进行。
+

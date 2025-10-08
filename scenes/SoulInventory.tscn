@@ -1,0 +1,321 @@
+[gd_scene load_steps=7 format=3 uid="uid://dcn5yt7w8m4hp"]
+
+[ext_resource type="Script" path="res://scripts/SoulInventory.gd" id="1_soul_inv"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
+bg_color = Color(0.25, 0.25, 0.3, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
+bg_color = Color(0.35, 0.35, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
+bg_color = Color(0.35, 0.35, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_focus"]
+bg_color = Color(0.25, 0.25, 0.3, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.85, 0.3, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.2, 0.2, 0.25, 0.95)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[node name="SoulInventory" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_soul_inv")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.15, 0.15, 0.2, 1)
+
+[node name="TopBar" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 80.0
+grow_horizontal = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="TopBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 10
+
+[node name="HBoxContainer" type="HBoxContainer" parent="TopBar/MarginContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 32
+text = "魂印背包"
+
+[node name="Spacer" type="Control" parent="TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="InfoLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "魂印: 0"
+
+[node name="BackButton" type="Button" parent="TopBar/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(120, 50)
+layout_mode = 2
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "返回大厅"
+
+[node name="MainContainer" type="HBoxContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 30.0
+offset_top = 100.0
+offset_right = -30.0
+offset_bottom = -30.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 30
+
+[node name="InventoryPanel" type="Panel" parent="MainContainer"]
+custom_minimum_size = Vector2(700, 0)
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="MainContainer/InventoryPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainContainer/InventoryPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="ToolBar" type="HBoxContainer" parent="MainContainer/InventoryPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="RotateButton" type="Button" parent="MainContainer/InventoryPanel/MarginContainer/VBoxContainer/ToolBar"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+disabled = true
+text = "旋转 (R)"
+
+[node name="DeleteButton" type="Button" parent="MainContainer/InventoryPanel/MarginContainer/VBoxContainer/ToolBar"]
+custom_minimum_size = Vector2(100, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+disabled = true
+text = "删除 (Del)"
+
+[node name="StarterButton" type="Button" parent="MainContainer/InventoryPanel/MarginContainer/VBoxContainer/ToolBar"]
+custom_minimum_size = Vector2(120, 40)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "领取新手魂印"
+
+[node name="GridContainer" type="Control" parent="MainContainer/InventoryPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 480)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="SoulDetailPanel" type="Panel" parent="MainContainer"]
+custom_minimum_size = Vector2(350, 0)
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainContainer/SoulDetailPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MainContainer/SoulDetailPanel/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="TitleLabel" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 24
+text = "魂印详情"
+horizontal_alignment = 1
+
+[node name="Separator1" type="HSeparator" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="SoulName" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "未选择魂印"
+horizontal_alignment = 1
+
+[node name="SoulQuality" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = ""
+horizontal_alignment = 1
+
+[node name="SoulShape" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = ""
+
+[node name="Separator2" type="HSeparator" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="SoulDescription" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = ""
+autowrap_mode = 3
+
+[node name="SoulPower" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = ""
+
+[node name="Separator3" type="HSeparator" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="LegendPanel" type="Panel" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="MarginContainer" type="MarginContainer" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer/LegendPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 10
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 10
+theme_override_constants/margin_bottom = 10
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer/LegendPanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 5
+
+[node name="LegendTitle" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer/LegendPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 14
+text = "品质图例："
+
+[node name="Common" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer/LegendPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
+theme_override_font_sizes/font_size = 12
+text = "■ 普通"
+
+[node name="Uncommon" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer/LegendPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 1, 0.3, 1)
+theme_override_font_sizes/font_size = 12
+text = "■ 非凡"
+
+[node name="Rare" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer/LegendPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.3, 0.5, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "■ 稀有"
+
+[node name="Epic" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer/LegendPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.8, 0.3, 1, 1)
+theme_override_font_sizes/font_size = 12
+text = "■ 史诗"
+
+[node name="Legendary" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer/LegendPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.6, 0, 1)
+theme_override_font_sizes/font_size = 12
+text = "■ 传说"
+
+[node name="Mythic" type="Label" parent="MainContainer/SoulDetailPanel/ScrollContainer/MarginContainer/VBoxContainer/LegendPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.2, 0.2, 1)
+theme_override_font_sizes/font_size = 12
+text = "■ 神话"
+
+[connection signal="pressed" from="TopBar/MarginContainer/HBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="MainContainer/InventoryPanel/MarginContainer/VBoxContainer/ToolBar/RotateButton" to="." method="_on_rotate_button_pressed"]
+[connection signal="pressed" from="MainContainer/InventoryPanel/MarginContainer/VBoxContainer/ToolBar/DeleteButton" to="." method="_on_delete_button_pressed"]
+[connection signal="pressed" from="MainContainer/InventoryPanel/MarginContainer/VBoxContainer/ToolBar/StarterButton" to="." method="_on_starter_button_pressed"]
+

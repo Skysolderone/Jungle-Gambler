@@ -1,0 +1,269 @@
+[gd_scene load_steps=7 format=3 uid="uid://b4xp8nh2w3nqr"]
+
+[ext_resource type="Script" path="res://scripts/Profile.gd" id="1_profile"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
+bg_color = Color(0.25, 0.25, 0.3, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
+bg_color = Color(0.35, 0.35, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
+bg_color = Color(0.35, 0.35, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_focus"]
+bg_color = Color(0.25, 0.25, 0.3, 1)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(1, 0.85, 0.3, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_panel"]
+bg_color = Color(0.2, 0.2, 0.25, 0.95)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[node name="Profile" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_profile")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.15, 0.15, 0.2, 1)
+
+[node name="TopBar" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 10
+anchor_right = 1.0
+offset_bottom = 80.0
+grow_horizontal = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="TopBar"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 10
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 10
+
+[node name="HBoxContainer" type="HBoxContainer" parent="TopBar/MarginContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 32
+text = "个人资料"
+
+[node name="Spacer" type="Control" parent="TopBar/MarginContainer/HBoxContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+
+[node name="BackButton" type="Button" parent="TopBar/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(120, 50)
+layout_mode = 2
+theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
+theme_override_font_sizes/font_size = 18
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "返回大厅"
+
+[node name="MainContent" type="MarginContainer" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_top = 80.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 100
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 100
+theme_override_constants/margin_bottom = 20
+
+[node name="ProfilePanel" type="Panel" parent="MainContent"]
+layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
+
+[node name="ScrollContainer" type="ScrollContainer" parent="MainContent/ProfilePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="MainContent/ProfilePanel/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 30
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+
+[node name="Title" type="Label" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 26
+text = "账户信息"
+horizontal_alignment = 1
+
+[node name="Separator1" type="HSeparator" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="UsernameSection" type="VBoxContainer" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="UsernameLabel" type="Label" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer/UsernameSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "用户名（不可修改）"
+
+[node name="UsernameDisplay" type="LineEdit" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer/UsernameSection"]
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+placeholder_text = "用户名"
+editable = false
+context_menu_enabled = false
+selecting_enabled = false
+
+[node name="Separator2" type="HSeparator" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="NicknameSection" type="VBoxContainer" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="NicknameLabel" type="Label" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer/NicknameSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "昵称"
+
+[node name="NicknameInput" type="LineEdit" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer/NicknameSection"]
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+placeholder_text = "输入新昵称"
+max_length = 20
+
+[node name="NicknameHint" type="Label" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer/NicknameSection"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.7, 0.7, 0.7, 1)
+theme_override_font_sizes/font_size = 12
+text = "昵称用于在游戏中显示，最多20个字符"
+
+[node name="SaveNicknameButton" type="Button" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer/NicknameSection"]
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "保存昵称"
+
+[node name="Separator3" type="HSeparator" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="PasswordSection" type="VBoxContainer" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PasswordLabel" type="Label" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer/PasswordSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "修改密码"
+
+[node name="OldPasswordInput" type="LineEdit" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer/PasswordSection"]
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+placeholder_text = "当前密码"
+secret = true
+
+[node name="NewPasswordInput" type="LineEdit" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer/PasswordSection"]
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+placeholder_text = "新密码（至少6个字符）"
+secret = true
+
+[node name="ConfirmPasswordInput" type="LineEdit" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer/PasswordSection"]
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+placeholder_text = "确认新密码"
+secret = true
+
+[node name="SavePasswordButton" type="Button" parent="MainContent/ProfilePanel/ScrollContainer/MarginContainer/VBoxContainer/PasswordSection"]
+custom_minimum_size = Vector2(0, 45)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
+text = "修改密码"
+
+[node name="BrightnessOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+mouse_filter = 2
+color = Color(0, 0, 0, 0)
+
+[node name="MessageDialog" type="AcceptDialog" parent="."]
+title = "提示"
+initial_position = 1
+size = Vector2i(400, 150)
+ok_button_text = "确定"
+
+[connection signal="pressed" from="TopBar/MarginContainer/HBoxContainer/BackButton" to="." method="_on_back_button_pressed"]
+[connection signal="pressed" from="MainContent/ProfilePanel/MarginContainer/VBoxContainer/NicknameSection/SaveNicknameButton" to="." method="_on_save_nickname_button_pressed"]
+[connection signal="pressed" from="MainContent/ProfilePanel/MarginContainer/VBoxContainer/PasswordSection/SavePasswordButton" to="." method="_on_save_password_button_pressed"]
+

@@ -1,0 +1,202 @@
+[gd_scene load_steps=6 format=3 uid="uid://cfajk53x8y2vn"]
+
+[ext_resource type="Script" path="res://scripts/Settings.gd" id="1_settings"]
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_bg"]
+bg_color = Color(0.12, 0.12, 0.15, 0.95)
+border_width_left = 3
+border_width_top = 3
+border_width_right = 3
+border_width_bottom = 3
+border_color = Color(0.8, 0.7, 0.3, 1)
+corner_radius_top_left = 12
+corner_radius_top_right = 12
+corner_radius_bottom_right = 12
+corner_radius_bottom_left = 12
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
+bg_color = Color(0.25, 0.25, 0.3, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
+bg_color = Color(0.35, 0.35, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
+bg_color = Color(0.35, 0.35, 0.4, 1)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
+[node name="Settings" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_settings")
+
+[node name="DarkOverlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.8)
+
+[node name="MainPanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -280.0
+offset_right = 300.0
+offset_bottom = 280.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_bg")
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/separation = 20
+
+[node name="TitleMargin" type="MarginContainer" parent="MainPanel/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/margin_top = 20
+
+[node name="Title" type="Label" parent="MainPanel/VBoxContainer/TitleMargin"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 32
+text = "设置"
+horizontal_alignment = 1
+
+[node name="SettingsMargin" type="MarginContainer" parent="MainPanel/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/margin_left = 40
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 40
+theme_override_constants/margin_bottom = 20
+
+[node name="Settings" type="VBoxContainer" parent="MainPanel/VBoxContainer/SettingsMargin"]
+layout_mode = 2
+theme_override_constants/separation = 25
+
+[node name="MusicControl" type="VBoxContainer" parent="MainPanel/VBoxContainer/SettingsMargin/Settings"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="MusicLabel" type="Label" parent="MainPanel/VBoxContainer/SettingsMargin/Settings/MusicControl"]
+layout_mode = 2
+text = "音乐音量"
+horizontal_alignment = 1
+
+[node name="MusicSlider" type="HSlider" parent="MainPanel/VBoxContainer/SettingsMargin/Settings/MusicControl"]
+layout_mode = 2
+max_value = 100.0
+value = 80.0
+
+[node name="SoundControl" type="VBoxContainer" parent="MainPanel/VBoxContainer/SettingsMargin/Settings"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="SoundLabel" type="Label" parent="MainPanel/VBoxContainer/SettingsMargin/Settings/SoundControl"]
+layout_mode = 2
+text = "音效音量"
+horizontal_alignment = 1
+
+[node name="SoundSlider" type="HSlider" parent="MainPanel/VBoxContainer/SettingsMargin/Settings/SoundControl"]
+layout_mode = 2
+max_value = 100.0
+value = 80.0
+
+[node name="BrightnessControl" type="VBoxContainer" parent="MainPanel/VBoxContainer/SettingsMargin/Settings"]
+layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="BrightnessLabel" type="Label" parent="MainPanel/VBoxContainer/SettingsMargin/Settings/BrightnessControl"]
+layout_mode = 2
+text = "屏幕亮度"
+horizontal_alignment = 1
+
+[node name="BrightnessSlider" type="HSlider" parent="MainPanel/VBoxContainer/SettingsMargin/Settings/BrightnessControl"]
+layout_mode = 2
+min_value = 30.0
+max_value = 100.0
+value = 100.0
+
+[node name="FullscreenControl" type="HBoxContainer" parent="MainPanel/VBoxContainer/SettingsMargin/Settings"]
+layout_mode = 2
+alignment = 1
+
+[node name="FullscreenLabel" type="Label" parent="MainPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl"]
+layout_mode = 2
+text = "全屏模式"
+
+[node name="Spacer" type="Control" parent="MainPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl"]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+
+[node name="FullscreenCheckbox" type="CheckButton" parent="MainPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl"]
+layout_mode = 2
+
+[node name="ThemeControl" type="HBoxContainer" parent="MainPanel/VBoxContainer/SettingsMargin/Settings"]
+layout_mode = 2
+alignment = 1
+
+[node name="ThemeLabel" type="Label" parent="MainPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl"]
+layout_mode = 2
+text = "外观模式"
+
+[node name="Spacer" type="Control" parent="MainPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl"]
+custom_minimum_size = Vector2(20, 0)
+layout_mode = 2
+
+[node name="ThemeOptionButton" type="OptionButton" parent="MainPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl"]
+layout_mode = 2
+item_count = 2
+selected = 0
+popup/item_0/text = "黑暗模式"
+popup/item_0/id = 0
+popup/item_1/text = "明亮模式"
+popup/item_1/id = 1
+
+[node name="Spacer" type="Control" parent="MainPanel/VBoxContainer/SettingsMargin/Settings"]
+custom_minimum_size = Vector2(0, 20)
+layout_mode = 2
+size_flags_vertical = 3
+
+[node name="CloseButton" type="Button" parent="MainPanel/VBoxContainer/SettingsMargin/Settings"]
+custom_minimum_size = Vector2(0, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
+theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+text = "关闭"
+
+[connection signal="value_changed" from="MainPanel/VBoxContainer/SettingsMargin/Settings/MusicControl/MusicSlider" to="." method="_on_music_slider_changed"]
+[connection signal="value_changed" from="MainPanel/VBoxContainer/SettingsMargin/Settings/SoundControl/SoundSlider" to="." method="_on_sound_slider_changed"]
+[connection signal="value_changed" from="MainPanel/VBoxContainer/SettingsMargin/Settings/BrightnessControl/BrightnessSlider" to="." method="_on_brightness_slider_changed"]
+[connection signal="toggled" from="MainPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl/FullscreenCheckbox" to="." method="_on_fullscreen_toggled"]
+[connection signal="item_selected" from="MainPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl/ThemeOptionButton" to="." method="_on_theme_option_selected"]
+[connection signal="pressed" from="MainPanel/VBoxContainer/SettingsMargin/Settings/CloseButton" to="." method="_on_close_button_pressed"]
+

@@ -1,0 +1,93 @@
+# Jungle Gambler - Godot 游戏项目规则
+
+## 项目概述
+这是一个使用 Godot 4.5 开发的 2D Roguelike 背包管理游戏，灵感来自暗黑破坏神 3 的背包系统。
+
+## 核心原则
+1. **使用中文**进行所有交流和注释
+2. **立即实现**功能，不只提供建议
+3. **不创建**配置文件、测试文件、README（除非明确要求）
+4. **不使用** emoji（除非明确要求）
+5. **简洁高效**的代码风格
+
+## 技术栈
+- **引擎**: Godot 4.5
+- **语言**: GDScript
+- **平台**: macOS (Apple M3)
+- **数据存储**: JSON 文件（user:// 目录）
+
+## 全局系统（Autoload）
+- `UserSession` - 用户会话和游戏数据管理
+- `SoulPrintSystem` - 魂印和背包系统
+- `ThemeManager` - 主题管理（明暗模式）
+
+## 魂印品质
+0=普通(灰) 1=非凡(绿) 2=稀有(蓝) 3=史诗(紫) 4=传说(橙) 5=神话(红)
+
+## 代码风格
+
+### 变量和函数
+```gdscript
+# 变量：snake_case
+var player_hp = 100
+
+# 常量：UPPER_SNAKE_CASE
+const GRID_SIZE = 9
+
+# 函数：snake_case，私有加下划线
+func _initialize():
+    pass
+
+# 类：PascalCase
+class SoulPrint:
+    var id: String
+```
+
+### 节点引用
+```gdscript
+# 使用 @onready 延迟加载
+@onready var label = $Path/To/Label
+
+# 单例访问带检查
+if has_node("/root/UserSession"):
+    var session = get_node("/root/UserSession")
+```
+
+### 信号
+```gdscript
+signal inventory_closed
+signal battle_finished(result: Dictionary)
+
+# 连接信号
+button.pressed.connect(_on_button_pressed)
+```
+
+## UI 规范
+- 使用 `StyleBoxFlat` 自定义按钮，不使用透明效果
+- 错误/提示使用 `AcceptDialog`
+- 确认操作使用 `ConfirmationDialog`
+- 亮度控制使用 `ColorRect` 覆盖层
+
+## 游戏机制
+- **背包**: 8×10 网格，形状拼图
+- **地图**: 9×9 格子，颜色表示资源品质和数量
+- **探索**: 40% 探索度显示撤离点
+- **战斗**: 回合制，玩家先攻，敌人反击
+- **撤离**: 只能通过撤离点或 HP=0 退出
+
+## 调试约定
+- 测试账户: `test_debug` / `test`
+- 商城价格: 0（调试阶段）
+- 保留"退出地图"按钮
+
+## 常用路径
+- 场景: `res://scenes/*.tscn`
+- 脚本: `res://scripts/*.gd`
+- 系统: `res://systems/*.gd`
+
+## 重要提示
+- 音频总线可能不存在"Music"，需回退到"Master"
+- 背包已满时禁止添加魂印
+- 战斗中 HP 变化需正确传递（current_hp - initial_hp）
+- 所有格子颜色在进入地图时就可见（未探索有遮罩）
+

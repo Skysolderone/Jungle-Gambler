@@ -1,0 +1,137 @@
+[gd_scene load_steps=2 format=3 uid="uid://cfvyhq8wtkh6l"]
+
+[ext_resource type="Script" path="res://scripts/Battle.gd" id="1_1"]
+
+[node name="Battle" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_1")
+
+[node name="Overlay" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0, 0, 0, 0.7)
+
+[node name="BattlePanel" type="Panel" parent="."]
+layout_mode = 1
+anchors_preset = 8
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+offset_left = -300.0
+offset_top = -250.0
+offset_right = 300.0
+offset_bottom = 250.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="BattlePanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_constants/margin_left = 20
+theme_override_constants/margin_top = 20
+theme_override_constants/margin_right = 20
+theme_override_constants/margin_bottom = 20
+
+[node name="VBoxContainer" type="VBoxContainer" parent="BattlePanel/MarginContainer"]
+layout_mode = 2
+theme_override_constants/separation = 15
+
+[node name="Title" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 24
+text = "遭遇战斗！"
+horizontal_alignment = 1
+
+[node name="HSeparator1" type="HSeparator" parent="BattlePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="EnemyInfo" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="EnemyLabel" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/EnemyInfo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "敌人信息"
+horizontal_alignment = 1
+
+[node name="EnemyName" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/EnemyInfo"]
+layout_mode = 2
+text = "敌人: 未知"
+
+[node name="EnemyHP" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/EnemyInfo"]
+layout_mode = 2
+text = "生命值: 100"
+
+[node name="EnemyPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/EnemyInfo"]
+layout_mode = 2
+text = "攻击力: 10"
+
+[node name="HSeparator2" type="HSeparator" parent="BattlePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="PlayerInfo" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 8
+
+[node name="PlayerLabel" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/PlayerInfo"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 18
+text = "你的信息"
+horizontal_alignment = 1
+
+[node name="PlayerHP" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/PlayerInfo"]
+layout_mode = 2
+text = "生命值: 100"
+
+[node name="PlayerPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/PlayerInfo"]
+layout_mode = 2
+text = "攻击力: 20"
+
+[node name="HSeparator3" type="HSeparator" parent="BattlePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="BattleLog" type="RichTextLabel" parent="BattlePanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 100)
+layout_mode = 2
+bbcode_enabled = true
+text = "[center]准备战斗...[/center]"
+fit_content = true
+
+[node name="HSeparator4" type="HSeparator" parent="BattlePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_constants/separation = 20
+alignment = 1
+
+[node name="AttackButton" type="Button" parent="BattlePanel/MarginContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "攻击"
+
+[node name="FleeButton" type="Button" parent="BattlePanel/MarginContainer/VBoxContainer/ButtonContainer"]
+custom_minimum_size = Vector2(150, 50)
+layout_mode = 2
+theme_override_font_sizes/font_size = 16
+text = "逃跑"
+
+[connection signal="pressed" from="BattlePanel/MarginContainer/VBoxContainer/ButtonContainer/AttackButton" to="." method="_on_attack_button_pressed"]
+[connection signal="pressed" from="BattlePanel/MarginContainer/VBoxContainer/ButtonContainer/FleeButton" to="." method="_on_flee_button_pressed"]
+
