@@ -12,6 +12,7 @@ extends Control
 const GRID_SIZE = 9
 const CELL_SIZE = 80
 const SETTINGS_PATH = "user://settings.json"
+const COLLAPSE_INTERVAL := 30.0  # 坍塌间隔（秒），每30秒坍塌一圈
 
 # 格子数据结构
 class GridCell:
@@ -20,6 +21,7 @@ class GridCell:
 	var explored: bool = false  # 是否已探索
 	var has_enemy: bool = false  # 是否有敌人（隐藏）
 	var enemy_data: Dictionary = {}  # 敌人数据 {name: String, hp: int, power: int}
+	var collapsed: bool = false  # 是否已坍塌
 
 # 地图数据
 var grid_data: Array[Array] = []  # GridCell[][]
@@ -40,6 +42,9 @@ var show_evacuation: bool = false  # 是否显示撤离点
 # 收集记录
 var collected_souls: Array[String] = []  # 本局收集到的魂印ID列表
 
+# 坍塌状态
+var collapse_ring_index: int = -1  # 已坍塌到第几圈（-1 表示未开始）
+
 func _ready():
 	_apply_brightness_from_settings()
 	_load_game_data()
@@ -51,6 +56,23 @@ func _ready():
 	grid_container.draw.connect(_draw_grid)
 	grid_container.gui_input.connect(_on_grid_gui_input)
 	grid_container.queue_redraw()
+	
+	# 启动地形坍塌计时
+	_start_collapse_loop()
+
+func _start_collapse_loop():
+	# 延迟首轮30秒开始，再每30秒坍塌一圈
+	await get_tree().create_timer(COLLAPSE_INTERVAL).timeout
+	while true:
+		if _collapse_next_ring():
+			grid_container.queue_redraw()
+			# 如果玩家当前位置已坍塌，判定失败
+			if grid_data[player_pos.y][player_pos.x].collapsed:
+				_game_over()
+				return
+		else:
+			return  # 所有圈已坍塌，结束
+		await get_tree().create_timer(COLLAPSE_INTERVAL).timeout
 
 func _apply_brightness_from_settings():
 	var settings = {"brightness": 100.0}
@@ -120,6 +142,27 @@ func _get_random_cell_pos() -> Vector2i:
 	var y = randi() % GRID_SIZE
 	return Vector2i(x, y)
 
+func _collapse_next_ring() -> bool:
+	# 计算下一圈索引，并坍塌其外环格子
+	var max_ring = int((GRID_SIZE - 1) / 2)
+	if collapse_ring_index >= max_ring:
+		return false
+	collapse_ring_index += 1
+	var r = collapse_ring_index
+	var start = r
+	var end = GRID_SIZE - 1 - r
+	# 上边和下边
+	for x in range(start, end + 1):
+		grid_data[start][x].collapsed = true
+		grid_data[end][x].collapsed = true
+	# 左边和右边
+	for y in range(start, end + 1):
+		grid_data[y][start].collapsed = true
+		grid_data[y][end].collapsed = true
+	# 信息提示
+	_show_message("地形坍塌蔓延中！第 " + str(r + 1) + " 圈已坍塌")
+	return true
+
 func _draw_grid():
 	# 绘制网格背景
 	var bg_rect = Rect2(0, 0, GRID_SIZE * CELL_SIZE, GRID_SIZE * CELL_SIZE)
@@ -156,6 +199,17 @@ func _draw_cell(x: int, y: int):
 	# 未探索的格子 - 添加半透明遮罩
 	if not cell.explored and player_pos != Vector2i(x, y):
 		grid_container.draw_rect(rect, Color(0.05, 0.05, 0.1, 0.7), true)
+
+	# 已坍塌的格子 - 深红遮罩与X标记
+	if cell.collapsed:
+		grid_container.draw_rect(rect, Color(0.4, 0.0, 0.0, 0.75), true)
+		# 画一个X
+		var p1 = Vector2(rect.position.x, rect.position.y)
+		var p2 = Vector2(rect.position.x + rect.size.x, rect.position.y + rect.size.y)
+		var p3 = Vector2(rect.position.x + rect.size.x, rect.position.y)
+		var p4 = Vector2(rect.position.x, rect.position.y + rect.size.y)
+		grid_container.draw_line(p1, p2, Color(0.9, 0.2, 0.2), 3.0)
+		grid_container.draw_line(p3, p4, Color(0.9, 0.2, 0.2), 3.0)
 	
 	# 玩家位置
 	if player_pos == Vector2i(x, y):
@@ -232,6 +286,10 @@ func _on_cell_clicked(x: int, y: int):
 	
 	# 只能移动到相邻格子
 	if not _is_adjacent(player_pos, clicked_pos):
+		return
+	# 禁止移动到已坍塌格子
+	if grid_data[clicked_pos.y][clicked_pos.x].collapsed:
+		_show_message("该区域已坍塌，无法进入！")
 		return
 	
 	# 移动到目标格子
