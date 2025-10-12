@@ -232,6 +232,19 @@ func _create_empty_grid() -> Array:
 	return grid
 
 # 检查是否可以放置魂印
+func can_fit_soul(username: String, soul_id: String) -> bool:
+	# 检查是否能放置该魂印（尝试所有位置和旋转）
+	var soul = get_soul_by_id(soul_id)
+	if not soul:
+		return false
+	
+	for rotation in range(4):
+		for y in range(GRID_HEIGHT):
+			for x in range(GRID_WIDTH):
+				if can_place_soul(username, soul, x, y, rotation):
+					return true
+	return false
+
 func can_place_soul(username: String, soul: SoulPrint, x: int, y: int, rotation: int = 0) -> bool:
 	var inventory = _user_inventories.get(username, {"items": [], "grid": _create_empty_grid()})
 	var grid = inventory["grid"]

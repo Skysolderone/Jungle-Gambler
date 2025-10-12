@@ -22,15 +22,13 @@ color = Color(0, 0, 0, 0.7)
 
 [node name="BattlePanel" type="Panel" parent="."]
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -300.0
-offset_top = -250.0
-offset_right = 300.0
-offset_bottom = 250.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = -50.0
+offset_bottom = -50.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -48,90 +46,144 @@ theme_override_constants/margin_bottom = 20
 
 [node name="VBoxContainer" type="VBoxContainer" parent="BattlePanel/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 15
+theme_override_constants/separation = 10
 
 [node name="Title" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
-text = "遭遇战斗！"
+text = "战斗开始！"
+horizontal_alignment = 1
+
+[node name="PhaseLabel" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "准备阶段"
+horizontal_alignment = 1
+
+[node name="TimerLabel" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 20
+text = "10"
 horizontal_alignment = 1
 
 [node name="HSeparator1" type="HSeparator" parent="BattlePanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="EnemyInfo" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
+[node name="InfoContainer" type="HBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
-theme_override_constants/separation = 8
+size_flags_vertical = 3
+theme_override_constants/separation = 20
 
-[node name="EnemyLabel" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/EnemyInfo"]
+[node name="PlayerInfo" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="PlayerLabel" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0.4, 0.7, 1, 1)
 theme_override_font_sizes/font_size = 18
-text = "敌人信息"
+text = "玩家"
 horizontal_alignment = 1
 
-[node name="EnemyName" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/EnemyInfo"]
+[node name="PlayerHP" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
 layout_mode = 2
-text = "敌人: 未知"
+text = "HP: 100"
 
-[node name="EnemyHP" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/EnemyInfo"]
+[node name="PlayerPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
 layout_mode = 2
-text = "生命值: 100"
+text = "基础力量: 50"
 
-[node name="EnemyPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/EnemyInfo"]
+[node name="PlayerDice" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
 layout_mode = 2
-text = "攻击力: 10"
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 20
+text = "骰子: ?"
+horizontal_alignment = 1
+
+[node name="PlayerFinalPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0.3, 1)
+theme_override_font_sizes/font_size = 16
+text = "最终力量: ?"
+
+[node name="VSeparator" type="VSeparator" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer"]
+layout_mode = 2
+
+[node name="EnemyInfo" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 5
+
+[node name="EnemyLabel" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.3, 0.3, 1)
+theme_override_font_sizes/font_size = 18
+text = "敌人"
+horizontal_alignment = 1
+
+[node name="EnemyHP" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
+layout_mode = 2
+text = "HP: 100"
+
+[node name="EnemyPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
+layout_mode = 2
+text = "基础力量: 30"
+
+[node name="EnemyDice" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
+theme_override_font_sizes/font_size = 20
+text = "骰子: ?"
+horizontal_alignment = 1
+
+[node name="EnemyFinalPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
+layout_mode = 2
+theme_override_colors/font_color = Color(0, 1, 0.3, 1)
+theme_override_font_sizes/font_size = 16
+text = "最终力量: ?"
 
 [node name="HSeparator2" type="HSeparator" parent="BattlePanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="PlayerInfo" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
+[node name="LoadoutContainer" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
-theme_override_constants/separation = 8
+size_flags_vertical = 3
 
-[node name="PlayerLabel" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/PlayerInfo"]
+[node name="LoadoutLabel" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/LoadoutContainer"]
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
-text = "你的信息"
-horizontal_alignment = 1
+text = "配置你的魂印（点击选择/取消）："
 
-[node name="PlayerHP" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/PlayerInfo"]
+[node name="LoadoutScroll" type="ScrollContainer" parent="BattlePanel/MarginContainer/VBoxContainer/LoadoutContainer"]
 layout_mode = 2
-text = "生命值: 100"
+size_flags_vertical = 3
 
-[node name="PlayerPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/PlayerInfo"]
+[node name="LoadoutGrid" type="GridContainer" parent="BattlePanel/MarginContainer/VBoxContainer/LoadoutContainer/LoadoutScroll"]
 layout_mode = 2
-text = "攻击力: 20"
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 5
 
 [node name="HSeparator3" type="HSeparator" parent="BattlePanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
 [node name="BattleLog" type="RichTextLabel" parent="BattlePanel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 100)
+custom_minimum_size = Vector2(0, 120)
 layout_mode = 2
+size_flags_vertical = 3
 bbcode_enabled = true
 text = "[center]准备战斗...[/center]"
 fit_content = true
+scroll_following = true
 
-[node name="HSeparator4" type="HSeparator" parent="BattlePanel/MarginContainer/VBoxContainer"]
-layout_mode = 2
+[node name="MessageDialog" type="AcceptDialog" parent="."]
+title = "提示"
+initial_position = 1
+size = Vector2i(400, 150)
+ok_button_text = "确定"
 
-[node name="ButtonContainer" type="HBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
-layout_mode = 2
-theme_override_constants/separation = 20
-alignment = 1
-
-[node name="AttackButton" type="Button" parent="BattlePanel/MarginContainer/VBoxContainer/ButtonContainer"]
-custom_minimum_size = Vector2(150, 50)
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "攻击"
-
-[node name="FleeButton" type="Button" parent="BattlePanel/MarginContainer/VBoxContainer/ButtonContainer"]
-custom_minimum_size = Vector2(150, 50)
-layout_mode = 2
-theme_override_font_sizes/font_size = 16
-text = "逃跑"
-
-[connection signal="pressed" from="BattlePanel/MarginContainer/VBoxContainer/ButtonContainer/AttackButton" to="." method="_on_attack_button_pressed"]
-[connection signal="pressed" from="BattlePanel/MarginContainer/VBoxContainer/ButtonContainer/FleeButton" to="." method="_on_flee_button_pressed"]
-
+[connection signal="confirmed" from="MessageDialog" to="." method="_on_message_confirmed"]

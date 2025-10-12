@@ -48,8 +48,53 @@ var collapse_ring_index: int = -1  # 已坍塌到第几圈（-1 表示未开始�
 func _ready():
 	_apply_brightness_from_settings()
 	_load_game_data()
-	_initialize_grid()
-	_generate_map_content()
+	
+	# 检查是否从战斗返回
+	var session = get_node("/root/UserSession")
+	if session.has_meta("return_to_map") and session.get_meta("return_to_map"):
+		# 恢复地图状态
+		if session.has_meta("map_player_pos"):
+			player_pos = session.get_meta("map_player_pos")
+		if session.has_meta("map_player_hp"):
+			player_hp = session.get_meta("map_player_hp")
+		if session.has_meta("map_max_hp"):
+			max_hp = session.get_meta("map_max_hp")
+		if session.has_meta("map_explored_count"):
+			explored_count = session.get_meta("map_explored_count")
+		if session.has_meta("map_show_evacuation"):
+			show_evacuation = session.get_meta("map_show_evacuation")
+		if session.has_meta("map_collapse_ring_index"):
+			collapse_ring_index = session.get_meta("map_collapse_ring_index")
+		if session.has_meta("map_collected_souls"):
+			collected_souls = session.get_meta("map_collected_souls")
+		
+		# 重新初始化地图（需要grid_data）
+		_initialize_grid()
+		_generate_map_content()
+		
+		# 处理战斗结果
+		if session.has_meta("battle_result"):
+			var result = session.get_meta("battle_result")
+			_on_battle_finished(result)
+		
+		# 清除战斗数据
+		session.remove_meta("return_to_map")
+		session.remove_meta("battle_result")
+		session.remove_meta("battle_enemy_data")
+		session.remove_meta("battle_player_hp")
+		session.remove_meta("battle_player_souls")
+		session.remove_meta("battle_enemy_souls")
+		session.remove_meta("map_player_pos")
+		session.remove_meta("map_player_hp")
+		session.remove_meta("map_max_hp")
+		session.remove_meta("map_explored_count")
+		session.remove_meta("map_show_evacuation")
+		session.remove_meta("map_collapse_ring_index")
+		session.remove_meta("map_collected_souls")
+	else:
+		_initialize_grid()
+		_generate_map_content()
+	
 	_update_info()
 	
 	# 连接绘制和输入
@@ -144,7 +189,7 @@ func _get_random_cell_pos() -> Vector2i:
 
 func _collapse_next_ring() -> bool:
 	# 计算下一圈索引，并坍塌其外环格子
-	var max_ring = int((GRID_SIZE - 1) / 2)
+	var max_ring = int((GRID_SIZE - 1) / 2.0)
 	if collapse_ring_index >= max_ring:
 		return false
 	collapse_ring_index += 1
@@ -328,23 +373,80 @@ func _move_to_cell(target_pos: Vector2i):
 	_collect_resources_from_cell(cell)
 
 func _start_battle(enemy_data: Dictionary):
-	# 触发战斗，加载战斗场景
-	var battle_scene = load("res://scenes/Battle.tscn")
-	var battle_instance = battle_scene.instantiate()
+	# 保存当前游戏状态到UserSession
+	var session = get_node("/root/UserSession")
 	
-	# 传递数据给战斗场景
-	battle_instance.set_meta("enemy_data", enemy_data)
-	battle_instance.set_meta("player_power", _calculate_total_power())
-	battle_instance.set_meta("player_hp", player_hp)
+	# 获取玩家所有魂印
+	var soul_system = _get_soul_system()
+	var player_souls = []
+	if soul_system:
+		var username = UserSession.get_username()
+		player_souls = soul_system.get_user_inventory(username)
 	
-	# 连接战斗结束信号
-	battle_instance.battle_finished.connect(_on_battle_finished)
+	# 生成敌人魂印（根据敌人力量随机生成1-3个）
+	var enemy_souls = _generate_enemy_souls(enemy_data.get("power", 30))
 	
-	# 添加为覆盖层
-	add_child(battle_instance)
+	# 保存地图状态
+	session.set_meta("map_player_pos", player_pos)
+	session.set_meta("map_player_hp", player_hp)
+	session.set_meta("map_max_hp", max_hp)
+	session.set_meta("map_explored_count", explored_count)
+	session.set_meta("map_show_evacuation", show_evacuation)
+	session.set_meta("map_collapse_ring_index", collapse_ring_index)
+	session.set_meta("map_collected_souls", collected_souls)
+	
+	# 保存战斗数据
+	session.set_meta("battle_enemy_data", enemy_data)
+	session.set_meta("battle_player_hp", player_hp)
+	session.set_meta("battle_player_souls", player_souls)
+	session.set_meta("battle_enemy_souls", enemy_souls)
+	session.set_meta("return_to_map", true)
+	
+	# 跳转到战斗场景
+	get_tree().change_scene_to_file("res://scenes/Battle.tscn")
+
+func _generate_enemy_souls(enemy_power: int) -> Array:
+	# 根据敌人力量生成魂印
+	var soul_system = _get_soul_system()
+	if not soul_system:
+		return []
+	
+	var souls = []
+	var soul_count = 1 + randi() % 3  # 1-3个魂印
+	
+	# 根据敌人力量决定魂印品质
+	var quality = 0
+	if enemy_power >= 40:
+		quality = 3 + randi() % 2  # 史诗或传说
+	elif enemy_power >= 30:
+		quality = 2 + randi() % 2  # 稀有或史诗
+	elif enemy_power >= 20:
+		quality = 1 + randi() % 2  # 非凡或稀有
+	else:
+		quality = randi() % 2  # 普通或非凡
+	
+	# 生成魂印
+	var soul_pools = [
+		["soul_basic_1", "soul_basic_2"],
+		["soul_forest", "soul_wind"],
+		["soul_thunder", "soul_flame"],
+		["soul_dragon", "soul_shadow"],
+		["soul_phoenix", "soul_celestial", "soul_titan"],
+		["soul_chaos", "soul_eternity", "soul_god"]
+	]
+	
+	for i in range(soul_count):
+		if quality < soul_pools.size():
+			var pool = soul_pools[quality]
+			var soul_id = pool[randi() % pool.size()]
+			var soul = soul_system.get_soul_by_id(soul_id)
+			if soul:
+				souls.append(soul)
+	
+	return souls
 
 func _on_battle_finished(result: Dictionary):
-	# result包含: won (bool), player_hp_change (int), collected_souls (Array)
+	# result包含: won (bool), player_hp_change (int), loot_souls (Array)
 	
 	# 更新玩家血量
 	player_hp += result.get("player_hp_change", 0)
@@ -355,10 +457,17 @@ func _on_battle_finished(result: Dictionary):
 	if player_hp > max_hp:
 		player_hp = max_hp
 	
-	# 如果战斗胜利，收集资源
+	# 如果战斗胜利
 	if result.get("won", false):
 		var cell = grid_data[player_pos.y][player_pos.x]
 		cell.has_enemy = false  # 敌人已被击败
+		
+		# 战利品已经在战斗场景中添加到背包
+		var loot_souls = result.get("loot_souls", [])
+		for soul in loot_souls:
+			collected_souls.append(soul.id)
+		
+		# 收集格子资源
 		_collect_resources_from_cell(cell)
 	
 	_update_info()
