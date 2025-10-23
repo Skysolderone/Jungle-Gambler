@@ -1,0 +1,71 @@
+[gd_scene load_steps=2 format=3 uid="uid://cvlddpvtkopoe"]
+
+[ext_resource type="Script" uid="uid://cr312emj2mdaj" path="res://scripts/PreparationPhase.gd" id="1_7hnmh"]
+
+[node name="PreparationPhase" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+script = ExtResource("1_7hnmh")
+
+[node name="PrepPanel" type="Panel" parent="."]
+modulate = Color(0.8, 0.9, 1, 0.95)
+self_modulate = Color(0.2, 0.3, 0.4, 0.9)
+custom_minimum_size = Vector2(800, 600)
+layout_mode = 0
+anchor_left = 0.5
+anchor_top = 0.5
+anchor_right = 0.5
+anchor_bottom = 0.5
+
+[node name="MarginContainer" type="MarginContainer" parent="PrepPanel"]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 50.0
+offset_top = 30.0
+offset_right = -50.0
+offset_bottom = -30.0
+
+[node name="VBoxContainer" type="VBoxContainer" parent="PrepPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="PhaseLabel" type="Label" parent="PrepPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "战前准备阶段"
+horizontal_alignment = 1
+
+[node name="TimerLabel" type="Label" parent="PrepPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="EnemyInfo" type="Label" parent="PrepPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="LoadoutContainer" type="VBoxContainer" parent="PrepPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="LoadoutScroll" type="ScrollContainer" parent="PrepPanel/MarginContainer/VBoxContainer/LoadoutContainer"]
+custom_minimum_size = Vector2(800, 400)
+layout_mode = 2
+
+[node name="LoadoutGrid" type="GridContainer" parent="PrepPanel/MarginContainer/VBoxContainer/LoadoutContainer/LoadoutScroll"]
+layout_mode = 2
+columns = 5
+
+[node name="SelectedInfo" type="Label" parent="PrepPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="StartButton" type="Button" parent="PrepPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+text = "开始战斗"
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+color = Color(0.05, 0.1, 0.15, 1)

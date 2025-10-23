@@ -21,6 +21,11 @@ UserSession="*res://systems/UserSession.gd"
 InventorySystem="*res://systems/InventorySystem.gd"
 SoulPrintSystem="*res://systems/SoulPrintSystem.gd"
 ThemeManager="*res://systems/ThemeManager.gd"
+GDAIMCPRuntime="*res://addons/gdai-mcp-plugin-godot/gdai_mcp_runtime.gd"
+
+[editor_plugins]
+
+enabled=PackedStringArray("res://addons/gdai-mcp-plugin-godot/plugin.cfg")
 
 [rendering]
 
