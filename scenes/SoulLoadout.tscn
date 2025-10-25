@@ -145,8 +145,8 @@ layout_mode = 2
 theme_override_constants/separation = 30
 
 [node name="LeftPanel" type="VBoxContainer" parent="MainContent/HBoxContainer"]
-custom_minimum_size = Vector2(500, 0)
 layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 20
 
 [node name="Label" type="Label" parent="MainContent/HBoxContainer/LeftPanel"]
@@ -186,7 +186,6 @@ layout_mode = 2
 size_flags_vertical = 3
 
 [node name="StatsPanel" type="Panel" parent="MainContent/HBoxContainer/RightPanel"]
-custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
 theme_override_styles/panel = SubResource("StyleBoxFlat_panel")
 
@@ -226,7 +225,6 @@ text = "已配置: 0/5"
 horizontal_alignment = 1
 
 [node name="StartButton" type="Button" parent="MainContent/HBoxContainer/RightPanel"]
-custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")

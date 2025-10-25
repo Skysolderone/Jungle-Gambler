@@ -21,13 +21,31 @@ UserSession="*res://systems/UserSession.gd"
 InventorySystem="*res://systems/InventorySystem.gd"
 SoulPrintSystem="*res://systems/SoulPrintSystem.gd"
 ThemeManager="*res://systems/ThemeManager.gd"
+ResponsiveLayoutManager="*res://systems/ResponsiveLayoutManager.gd"
+MobileInteractionHelper="*res://systems/MobileInteractionHelper.gd"
 GDAIMCPRuntime="*res://addons/gdai-mcp-plugin-godot/gdai_mcp_runtime.gd"
+
+[display]
+
+window/size/viewport_width=1280
+window/size/viewport_height=720
+window/size/mode=2
+window/stretch/mode="canvas_items"
+window/stretch/aspect="expand"
+window/handheld/orientation=1
 
 [editor_plugins]
 
 enabled=PackedStringArray("res://addons/gdai-mcp-plugin-godot/plugin.cfg")
 
+[input]
+
+pointing/emulate_touch_from_mouse=true
+pointing/emulate_mouse_from_touch=true
+
 [rendering]
 
+textures/canvas_textures/default_texture_filter=2
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
+textures/vram_compression/import_etc2_astc=true

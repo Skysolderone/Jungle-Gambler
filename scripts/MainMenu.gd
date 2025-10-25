@@ -17,11 +17,11 @@ extends Control
 @onready var register_confirm_password = $RegisterPanel/VBoxContainer/FormMargin/Form/ConfirmPasswordInput
 
 # 设置面板元素
-@onready var music_slider = $SettingsPanel/VBoxContainer/SettingsMargin/Settings/MusicControl/MusicSlider
-@onready var sound_slider = $SettingsPanel/VBoxContainer/SettingsMargin/Settings/SoundControl/SoundSlider
-@onready var brightness_slider = $SettingsPanel/VBoxContainer/SettingsMargin/Settings/BrightnessControl/BrightnessSlider
-@onready var fullscreen_checkbox = $SettingsPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl/FullscreenCheckbox
-@onready var theme_option = $SettingsPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl/ThemeOptionButton
+@onready var music_slider = $SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/MusicControl/MusicSlider
+@onready var sound_slider = $SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/SoundControl/SoundSlider
+@onready var brightness_slider = $SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/BrightnessControl/BrightnessSlider
+@onready var fullscreen_checkbox = $SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/FullscreenControl/FullscreenCheckbox
+@onready var theme_option = $SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/ThemeControl/ThemeOptionButton
 @onready var brightness_overlay = $BrightnessOverlay
 
 # 用户数据存储路径
@@ -33,6 +33,9 @@ func _ready():
 	register_panel.visible = false
 	settings_panel.visible = false
 	
+	# 应用响应式布局
+	_setup_responsive_layout()
+	
 	# 连接主题变更信号（如果 ThemeManager 存在）
 	if has_node("/root/ThemeManager"):
 		get_node("/root/ThemeManager").theme_changed.connect(_on_theme_changed)
@@ -40,6 +43,25 @@ func _ready():
 	
 	# 初始化设置
 	_load_settings()
+
+func _setup_responsive_layout():
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		
+		# 连接屏幕类型变化信号
+		responsive_manager.screen_type_changed.connect(_on_screen_type_changed)
+		
+		# 应用响应式布局
+		responsive_manager.apply_responsive_layout(self)
+		
+		# 为移动端优化触摸
+		responsive_manager.optimize_for_touch(self)
+		
+		print("主菜单已启用响应式布局，当前屏幕类型：", responsive_manager.get_screen_type_name())
+
+func _on_screen_type_changed(_new_type):
+	# 屏幕类型变化时重新应用布局
+	_setup_responsive_layout()
 
 # ========== 主菜单按钮 ==========
 

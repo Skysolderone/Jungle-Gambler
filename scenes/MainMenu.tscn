@@ -1,3 +1,5 @@
+
+
 [gd_scene load_steps=8 format=3 uid="uid://byfvb3hgje0yh"]
 
 [ext_resource type="Script" path="res://scripts/MainMenu.gd" id="1_main"]
@@ -141,15 +143,13 @@ text = "退出游戏"
 [node name="LoginPanel" type="Panel" parent="."]
 visible = false
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -250.0
-offset_top = -200.0
-offset_right = 250.0
-offset_bottom = 200.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 100.0
+offset_top = 100.0
+offset_right = -100.0
+offset_bottom = -100.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -235,15 +235,13 @@ text = "取消"
 [node name="RegisterPanel" type="Panel" parent="."]
 visible = false
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -250.0
-offset_top = -250.0
-offset_right = 250.0
-offset_bottom = 250.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 100.0
+offset_top = 100.0
+offset_right = -100.0
+offset_bottom = -100.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -340,15 +338,13 @@ text = "取消"
 [node name="SettingsPanel" type="Panel" parent="."]
 visible = false
 layout_mode = 1
-anchors_preset = 8
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-offset_left = -300.0
-offset_top = -250.0
-offset_right = 300.0
-offset_bottom = 250.0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 100.0
+offset_top = 100.0
+offset_right = -100.0
+offset_bottom = -100.0
 grow_horizontal = 2
 grow_vertical = 2
 
@@ -380,81 +376,87 @@ theme_override_constants/margin_top = 20
 theme_override_constants/margin_right = 40
 theme_override_constants/margin_bottom = 20
 
-[node name="Settings" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin"]
+[node name="ScrollContainer" type="ScrollContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin"]
 layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+
+[node name="Settings" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
 theme_override_constants/separation = 25
 
-[node name="MusicControl" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+[node name="MusicControl" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="MusicLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/MusicControl"]
+[node name="MusicLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/MusicControl"]
 layout_mode = 2
 text = "音乐音量"
 horizontal_alignment = 1
 
-[node name="MusicSlider" type="HSlider" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/MusicControl"]
+[node name="MusicSlider" type="HSlider" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/MusicControl"]
 layout_mode = 2
 max_value = 100.0
 value = 80.0
 
-[node name="SoundControl" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+[node name="SoundControl" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="SoundLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/SoundControl"]
+[node name="SoundLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/SoundControl"]
 layout_mode = 2
 text = "音效音量"
 horizontal_alignment = 1
 
-[node name="SoundSlider" type="HSlider" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/SoundControl"]
+[node name="SoundSlider" type="HSlider" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/SoundControl"]
 layout_mode = 2
 max_value = 100.0
 value = 80.0
 
-[node name="BrightnessControl" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+[node name="BrightnessControl" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings"]
 layout_mode = 2
 theme_override_constants/separation = 10
 
-[node name="BrightnessLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/BrightnessControl"]
+[node name="BrightnessLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/BrightnessControl"]
 layout_mode = 2
 text = "屏幕亮度"
 horizontal_alignment = 1
 
-[node name="BrightnessSlider" type="HSlider" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/BrightnessControl"]
+[node name="BrightnessSlider" type="HSlider" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/BrightnessControl"]
 layout_mode = 2
 min_value = 30.0
 max_value = 100.0
 value = 100.0
 
-[node name="FullscreenControl" type="HBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+[node name="FullscreenControl" type="HBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings"]
 layout_mode = 2
 alignment = 1
 
-[node name="FullscreenLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl"]
+[node name="FullscreenLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/FullscreenControl"]
 layout_mode = 2
 text = "全屏模式"
 
-[node name="Spacer" type="Control" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl"]
+[node name="Spacer" type="Control" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/FullscreenControl"]
 custom_minimum_size = Vector2(20, 0)
 layout_mode = 2
 
-[node name="FullscreenCheckbox" type="CheckButton" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl"]
+[node name="FullscreenCheckbox" type="CheckButton" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/FullscreenControl"]
 layout_mode = 2
 
-[node name="ThemeControl" type="HBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+[node name="ThemeControl" type="HBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings"]
 layout_mode = 2
 alignment = 1
 
-[node name="ThemeLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl"]
+[node name="ThemeLabel" type="Label" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/ThemeControl"]
 layout_mode = 2
 text = "外观模式"
 
-[node name="Spacer" type="Control" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl"]
+[node name="Spacer" type="Control" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/ThemeControl"]
 custom_minimum_size = Vector2(20, 0)
 layout_mode = 2
 
-[node name="ThemeOptionButton" type="OptionButton" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl"]
+[node name="ThemeOptionButton" type="OptionButton" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/ThemeControl"]
 layout_mode = 2
 item_count = 2
 selected = 0
@@ -463,12 +465,12 @@ popup/item_0/id = 0
 popup/item_1/text = "明亮模式"
 popup/item_1/id = 1
 
-[node name="Spacer" type="Control" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+[node name="Spacer" type="Control" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings"]
 custom_minimum_size = Vector2(0, 20)
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="CloseButton" type="Button" parent="SettingsPanel/VBoxContainer/SettingsMargin/Settings"]
+[node name="CloseButton" type="Button" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings"]
 custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
@@ -502,10 +504,10 @@ ok_button_text = "确定"
 [connection signal="pressed" from="LoginPanel/VBoxContainer/FormMargin/Form/CancelButton" to="." method="_on_login_cancel_pressed"]
 [connection signal="pressed" from="RegisterPanel/VBoxContainer/FormMargin/Form/ConfirmButton" to="." method="_on_register_confirm_pressed"]
 [connection signal="pressed" from="RegisterPanel/VBoxContainer/FormMargin/Form/CancelButton" to="." method="_on_register_cancel_pressed"]
-[connection signal="value_changed" from="SettingsPanel/VBoxContainer/SettingsMargin/Settings/MusicControl/MusicSlider" to="." method="_on_music_slider_changed"]
-[connection signal="value_changed" from="SettingsPanel/VBoxContainer/SettingsMargin/Settings/SoundControl/SoundSlider" to="." method="_on_sound_slider_changed"]
-[connection signal="value_changed" from="SettingsPanel/VBoxContainer/SettingsMargin/Settings/BrightnessControl/BrightnessSlider" to="." method="_on_brightness_slider_changed"]
-[connection signal="toggled" from="SettingsPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl/FullscreenCheckbox" to="." method="_on_fullscreen_toggled"]
-[connection signal="item_selected" from="SettingsPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl/ThemeOptionButton" to="." method="_on_theme_option_selected"]
-[connection signal="pressed" from="SettingsPanel/VBoxContainer/SettingsMargin/Settings/CloseButton" to="." method="_on_settings_close_pressed"]
+[connection signal="value_changed" from="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/MusicControl/MusicSlider" to="." method="_on_music_slider_changed"]
+[connection signal="value_changed" from="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/SoundControl/SoundSlider" to="." method="_on_sound_slider_changed"]
+[connection signal="value_changed" from="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/BrightnessControl/BrightnessSlider" to="." method="_on_brightness_slider_changed"]
+[connection signal="toggled" from="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/FullscreenControl/FullscreenCheckbox" to="." method="_on_fullscreen_toggled"]
+[connection signal="item_selected" from="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/ThemeControl/ThemeOptionButton" to="." method="_on_theme_option_selected"]
+[connection signal="pressed" from="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/CloseButton" to="." method="_on_settings_close_pressed"]
 

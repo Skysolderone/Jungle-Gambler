@@ -295,12 +295,17 @@ func _on_remove_soul(slot_index: int):
 	if slot_index < 0 or slot_index >= loadout.size():
 		return
 	
-	# 从配置中移除
+	# 从配置中移除指定索引的魂印
 	loadout.remove_at(slot_index)
+	
+	# 等待一帧确保队列中的节点被清理
+	await get_tree().process_frame
 	
 	# 重新创建所有槽位
 	for child in slots_container.get_children():
 		child.queue_free()
+	
+	await get_tree().process_frame
 	
 	_create_loadout_slots()
 	

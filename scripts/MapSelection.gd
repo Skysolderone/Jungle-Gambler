@@ -38,8 +38,39 @@ var maps = [
 ]
 
 func _ready():
+	# 应用响应式布局
+	_setup_responsive_layout()
+	
 	_apply_brightness_from_settings()
 	_create_map_cards()
+
+func _setup_responsive_layout():
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		
+		# 连接屏幕类型变化信号
+		responsive_manager.screen_type_changed.connect(_on_screen_type_changed)
+		
+		# 应用响应式布局
+		responsive_manager.apply_responsive_layout(self)
+		
+		# 为移动端优化触摸
+		responsive_manager.optimize_for_touch(self)
+		
+		# 根据屏幕类型调整地图卡片布局
+		_adjust_maps_layout_for_screen(responsive_manager.current_screen_type)
+		
+		print("地图选择已启用响应式布局，屏幕类型：", responsive_manager.get_screen_type_name())
+
+func _on_screen_type_changed(_new_type):
+	# 屏幕类型变化时重新应用布局
+	_setup_responsive_layout()
+
+func _adjust_maps_layout_for_screen(screen_type):
+	# HBoxContainer不需要调整columns，它会自动水平排列
+	# 如果需要垂直排列，可以在移动端竖屏时改变容器类型或布局
+	# 这里暂时保持HBoxContainer的默认行为
+	pass
 
 func _apply_brightness_from_settings():
 	var settings = {
@@ -67,7 +98,7 @@ func _create_map_cards():
 		var card = _create_map_card(map_data, i)
 		maps_container.add_child(card)
 
-func _create_map_card(map_data: Dictionary, index: int) -> Panel:
+func _create_map_card(map_data: Dictionary, _index: int) -> Panel:
 	var card = Panel.new()
 	card.custom_minimum_size = Vector2(250, 350)
 	
@@ -179,4 +210,3 @@ func _on_map_selected(map_data: Dictionary):
 
 func _on_back_button_pressed():
 	get_tree().change_scene_to_file("res://scenes/Lobby.tscn")
-

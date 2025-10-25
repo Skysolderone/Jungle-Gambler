@@ -133,12 +133,27 @@ class InventoryItem:
 	var grid_x: int  # 在背包网格中的起始X位置
 	var grid_y: int  # 在背包网格中的起始Y位置
 	var rotation: int  # 旋转状态 0-3
+	var uses_remaining: int  # 剩余使用次数
+	var max_uses: int  # 最大使用次数
 	
 	func _init(soul: SoulPrint, x: int, y: int, rot: int = 0):
 		soul_print = soul
 		grid_x = x
 		grid_y = y
 		rotation = rot
+		max_uses = _get_max_uses_by_quality(soul.quality)
+		uses_remaining = max_uses
+	
+	func _get_max_uses_by_quality(quality: int) -> int:
+		# 根据品质确定使用次数：普通5次，非凡4次，稀有3次，史诗2次，传说1次，神话1次
+		match quality:
+			0: return 5  # 普通
+			1: return 4  # 非凡
+			2: return 3  # 稀有
+			3: return 2  # 史诗
+			4: return 1  # 传说
+			5: return 1  # 神话
+			_: return 3
 	
 	func get_occupied_cells() -> Array:
 		# 获取该物品占用的所有格子
@@ -153,8 +168,17 @@ class InventoryItem:
 			"soul_print": soul_print.to_dict(),
 			"grid_x": grid_x,
 			"grid_y": grid_y,
-			"rotation": rotation
+			"rotation": rotation,
+			"uses_remaining": uses_remaining,
+			"max_uses": max_uses
 		}
+	
+	static func from_dict(data: Dictionary) -> InventoryItem:
+		var soul = SoulPrint.from_dict(data["soul_print"])
+		var item = InventoryItem.new(soul, data["grid_x"], data["grid_y"], data["rotation"])
+		item.uses_remaining = data.get("uses_remaining", item.max_uses)
+		item.max_uses = data.get("max_uses", item.max_uses)
+		return item
 
 # 背包网格大小
 const GRID_WIDTH = 10
@@ -174,35 +198,115 @@ var soul_database: Dictionary = {}
 
 func _initialize_soul_database():
 	# 普通品质魂印
-	_register_soul(SoulPrint.new("soul_basic_1", "初始魂印", Quality.COMMON, ShapeType.SQUARE_1X1))
-	_register_soul(SoulPrint.new("soul_basic_2", "双生魂印", Quality.COMMON, ShapeType.RECT_1X2))
+	var soul_basic_1 = SoulPrint.new("soul_basic_1", "初始魂印", Quality.COMMON, ShapeType.SQUARE_1X1)
+	soul_basic_1.power = 5
+	soul_basic_1.description = "最基础的魂印，适合新手使用。"
+	_register_soul(soul_basic_1)
+	
+	var soul_basic_2 = SoulPrint.new("soul_basic_2", "双生魂印", Quality.COMMON, ShapeType.RECT_1X2)
+	soul_basic_2.power = 8
+	soul_basic_2.description = "双格魂印，提供额外的空间利用。"
+	_register_soul(soul_basic_2)
 	
 	# 非凡品质魂印
-	_register_soul(SoulPrint.new("soul_forest", "森林之魂", Quality.UNCOMMON, ShapeType.SQUARE_2X2))
-	_register_soul(SoulPrint.new("soul_wind", "疾风魂印", Quality.UNCOMMON, ShapeType.RECT_1X3))
+	var soul_forest = SoulPrint.new("soul_forest", "森林之魂", Quality.UNCOMMON, ShapeType.SQUARE_2X2)
+	soul_forest.power = 15
+	soul_forest.description = "蕴含森林之力，提升生命力。"
+	_register_soul(soul_forest)
+	
+	var soul_wind = SoulPrint.new("soul_wind", "疾风魂印", Quality.UNCOMMON, ShapeType.RECT_1X3)
+	soul_wind.power = 12
+	soul_wind.description = "风之力量，提升移动速度。"
+	_register_soul(soul_wind)
 	
 	# 稀有品质魂印
-	_register_soul(SoulPrint.new("soul_thunder", "雷霆魂印", Quality.RARE, ShapeType.L_SHAPE))
-	_register_soul(SoulPrint.new("soul_flame", "烈焰魂印", Quality.RARE, ShapeType.T_SHAPE))
+	var soul_flame = SoulPrint.new("soul_flame", "火焰之心", Quality.RARE, ShapeType.L_SHAPE)
+	soul_flame.power = 25
+	soul_flame.description = "炽热的火焰之力，增强攻击力。"
+	_register_soul(soul_flame)
 	
-	# 史诗品质魂印
-	_register_soul(SoulPrint.new("soul_dragon", "龙魂印记", Quality.EPIC, ShapeType.SQUARE_2X2))
-	_register_soul(SoulPrint.new("soul_shadow", "暗影魂印", Quality.EPIC, ShapeType.L_SHAPE))
+	var soul_ocean = SoulPrint.new("soul_ocean", "深海之力", Quality.RARE, ShapeType.T_SHAPE)
+	soul_ocean.power = 28
+	soul_ocean.description = "深海的神秘力量，提升防御。"
+	_register_soul(soul_ocean)
+	
+	var soul_thunder = SoulPrint.new("soul_thunder", "雷霆之怒", Quality.EPIC, ShapeType.RECT_1X3)
+	soul_thunder.power = 40
+	soul_thunder.description = "雷霆之怒，闪电般的速度。"
+	_register_soul(soul_thunder)
+	
+	# 史诗品质魂印  
+	var soul_shadow = SoulPrint.new("soul_shadow", "暗影追踪", Quality.EPIC, ShapeType.TRIANGLE)
+	soul_shadow.power = 45
+	soul_shadow.description = "来自暗影的追踪者，提升暴击。"
+	_register_soul(soul_shadow)
 	
 	# 传说品质魂印
-	_register_soul(SoulPrint.new("soul_phoenix", "凤凰魂印", Quality.LEGENDARY, ShapeType.T_SHAPE))
-	_register_soul(SoulPrint.new("soul_celestial", "天命魂印", Quality.LEGENDARY, ShapeType.SQUARE_2X2))
+	var soul_phoenix = SoulPrint.new("soul_phoenix", "不死鸟", Quality.LEGENDARY, ShapeType.SQUARE_2X2)
+	soul_phoenix.power = 60
+	soul_phoenix.description = "浴火重生的不死鸟之力。"
+	_register_soul(soul_phoenix)
+	
+	var soul_dragon = SoulPrint.new("soul_dragon", "龙之魂", Quality.LEGENDARY, ShapeType.T_SHAPE)
+	soul_dragon.power = 70
+	soul_dragon.description = "远古巨龙的灵魂力量。"
+	_register_soul(soul_dragon)
 	
 	# 神话品质魂印
-	_register_soul(SoulPrint.new("soul_chaos", "混沌之魂", Quality.MYTHIC, ShapeType.SQUARE_2X2))
-	_register_soul(SoulPrint.new("soul_eternity", "永恒魂印", Quality.MYTHIC, ShapeType.T_SHAPE))
-	_register_soul(SoulPrint.new("soul_phoenix", "凤凰魂印", Quality.EPIC, ShapeType.RECT_3X1))
+	var soul_god = SoulPrint.new("soul_god", "神之祝福", Quality.MYTHIC, ShapeType.L_SHAPE)
+	soul_god.power = 100
+	soul_god.description = "神明的祝福，至高无上的力量。"
+	_register_soul(soul_god)
+
+# ========== 魂印使用次数管理 ==========
+
+# 使用魂印（战斗中调用）
+func use_soul_print(username: String, item_index: int) -> bool:
+	if not _user_inventories.has(username):
+		return false
 	
-	# 传说品质魂印
-	_register_soul(SoulPrint.new("soul_titan", "泰坦魂印", Quality.LEGENDARY, ShapeType.T_SHAPE))
+	var inventory = _user_inventories[username]
+	if item_index < 0 or item_index >= inventory["items"].size():
+		return false
 	
-	# 神话品质魂印
-	_register_soul(SoulPrint.new("soul_god", "神祇魂印", Quality.MYTHIC, ShapeType.SQUARE_2X2))
+	var item = inventory["items"][item_index]
+	if item.uses_remaining <= 0:
+		return false
+	
+	item.uses_remaining -= 1
+	print("使用魂印：", item.soul_print.name, " 剩余次数：", item.uses_remaining)
+	
+	# 如果使用次数为0，从背包中移除
+	if item.uses_remaining <= 0:
+		print("魂印使用次数耗尽，永久消失：", item.soul_print.name)
+		inventory["items"].remove_at(item_index)
+		_update_grid_occupation(username)
+	
+	_save_inventory(username)
+	return true
+
+# 重置所有魂印使用次数（通关或逃离时调用）
+func reset_all_soul_uses(username: String):
+	if not _user_inventories.has(username):
+		return
+	
+	var inventory = _user_inventories[username]
+	for item in inventory["items"]:
+		item.uses_remaining = item.max_uses
+	
+	print("重置所有魂印使用次数")
+	_save_inventory(username)
+
+# 获取魂印剩余使用次数
+func get_soul_uses_remaining(username: String, item_index: int) -> int:
+	if not _user_inventories.has(username):
+		return 0
+	
+	var inventory = _user_inventories[username]
+	if item_index < 0 or item_index >= inventory["items"].size():
+		return 0
+	
+	return inventory["items"][item_index].uses_remaining
 
 func _register_soul(soul: SoulPrint):
 	soul_database[soul.id] = soul
@@ -405,13 +509,8 @@ func _load_all_inventories():
 	for username in data.keys():
 		var items = []
 		for item_data in data[username]:
-			var soul = SoulPrint.from_dict(item_data["soul_print"])
-			var item = InventoryItem.new(
-				soul,
-				item_data["grid_x"],
-				item_data["grid_y"],
-				item_data["rotation"]
-			)
+			# 使用新的from_dict方法来正确加载所有属性
+			var item = InventoryItem.from_dict(item_data)
 			items.append(item)
 		
 		_user_inventories[username] = {
@@ -443,4 +542,3 @@ func give_starter_souls(username: String):
 	add_soul_print(username, "soul_basic_2")
 	add_soul_print(username, "soul_forest")
 	print("新手魂印已发放给: ", username)
-

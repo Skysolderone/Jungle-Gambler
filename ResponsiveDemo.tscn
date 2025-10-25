@@ -1,0 +1,8 @@
+[gd_scene load_steps=2 format=3 uid="uid://c7gsgojus410g"]
+
+[ext_resource type="Script" uid="uid://dd4sg6me80b8x" path="res://ResponsiveTestDemo.gd" id="1_qd5d8"]
+
+[node name="ResponsiveDemo" type="Control"]
+layout_mode = 3
+anchors_preset = 0
+script = ExtResource("1_qd5d8")

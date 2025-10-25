@@ -38,9 +38,49 @@ var shape_names = {
 }
 
 func _ready():
+	# 应用响应式布局
+	_setup_responsive_layout()
+	
 	current_username = UserSession.get_username()
 	_load_shop_items()
 	_create_item_cards()
+
+func _setup_responsive_layout():
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		
+		# 连接屏幕类型变化信号
+		responsive_manager.screen_type_changed.connect(_on_screen_type_changed)
+		
+		# 应用响应式布局
+		responsive_manager.apply_responsive_layout(self)
+		
+		# 为移动端优化触摸
+		responsive_manager.optimize_for_touch(self)
+		
+		# 根据屏幕类型调整布局
+		_adjust_layout_for_screen(responsive_manager.current_screen_type)
+		
+		print("商店已启用响应式布局，屏幕类型：", responsive_manager.get_screen_type_name())
+
+func _on_screen_type_changed(_new_type):
+	# 屏幕类型变化时重新应用布局
+	_setup_responsive_layout()
+
+func _adjust_layout_for_screen(screen_type):
+	var content_container = $MainPanel/VBoxContainer/ContentContainer
+	
+	# 根据屏幕类型调整网格列数
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		items_container.columns = responsive_manager.get_grid_columns_for_screen()
+	
+	# 在移动端竖屏时将左右面板垂直排列
+	if screen_type == 0:  # MOBILE_PORTRAIT
+		content_container.vertical = true
+	else:
+		# 其他情况水平排列
+		content_container.vertical = false
 
 func _input(event):
 	if event is InputEventKey and event.pressed:
@@ -242,4 +282,3 @@ func _show_message(text: String):
 
 func _on_close_button_pressed():
 	shop_closed.emit()
-

@@ -156,7 +156,7 @@ func get_item_by_id(item_id: String) -> Item:
 
 # ========== 背包管理 ==========
 
-func get_inventory_size(username: String) -> int:
+func get_inventory_size(_username: String) -> int:
 	# 根据用户等级或VIP状态返回不同的背包大小
 	# 这里可以扩展为从用户数据读取
 	return MAX_INVENTORY_SIZE

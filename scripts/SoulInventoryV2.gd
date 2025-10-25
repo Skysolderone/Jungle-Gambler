@@ -58,6 +58,9 @@ var shape_names = {
 }
 
 func _ready():
+	# 应用响应式布局
+	_setup_responsive_layout()
+	
 	current_username = UserSession.get_username()
 	
 	grid_container.draw.connect(_draw_grid)
@@ -67,6 +70,47 @@ func _ready():
 	
 	_check_starter_eligibility()
 	_refresh_inventory()
+
+func _setup_responsive_layout():
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		
+		# 连接屏幕类型变化信号
+		responsive_manager.screen_type_changed.connect(_on_screen_type_changed)
+		
+		# 应用响应式布局
+		responsive_manager.apply_responsive_layout(self)
+		
+		# 为移动端优化触摸
+		responsive_manager.optimize_for_touch(self)
+		
+		# 根据屏幕类型调整布局
+		_adjust_layout_for_screen(responsive_manager.current_screen_type)
+		
+		print("魂印背包已启用响应式布局，屏幕类型：", responsive_manager.get_screen_type_name())
+
+func _on_screen_type_changed(_new_type):
+	# 屏幕类型变化时重新应用布局
+	_setup_responsive_layout()
+
+func _adjust_layout_for_screen(screen_type):
+	var content_container = $MainPanel/ContentContainer
+	
+	# 在移动端竖屏时将左右面板垂直排列
+	if screen_type == 0:  # MOBILE_PORTRAIT
+		content_container.vertical = true
+		# 调整面板比例
+		var left_panel = $MainPanel/ContentContainer/LeftPanel
+		var right_panel = $MainPanel/ContentContainer/RightPanel
+		left_panel.size_flags_stretch_ratio = 1.5
+		right_panel.size_flags_stretch_ratio = 1.0
+	else:
+		# 其他情况水平排列
+		content_container.vertical = false
+		var left_panel = $MainPanel/ContentContainer/LeftPanel
+		var right_panel = $MainPanel/ContentContainer/RightPanel
+		left_panel.size_flags_stretch_ratio = 2.0
+		right_panel.size_flags_stretch_ratio = 1.0
 
 func _get_soul_system():
 	if has_node("/root/SoulPrintSystem"):

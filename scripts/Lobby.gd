@@ -13,6 +13,9 @@ var shop_instance = null
 const SETTINGS_PATH = "user://settings.json"
 
 func _ready():
+	# 应用响应式布局
+	_setup_responsive_layout()
+	
 	# 获取当前登录的用户信息
 	if UserSession.is_logged_in():
 		current_username = UserSession.get_username()
@@ -25,6 +28,40 @@ func _ready():
 	
 	# 应用亮度设置
 	_apply_brightness_from_settings()
+
+func _setup_responsive_layout():
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		
+		# 连接屏幕类型变化信号
+		responsive_manager.screen_type_changed.connect(_on_screen_type_changed)
+		
+		# 应用响应式布局
+		responsive_manager.apply_responsive_layout(self)
+		
+		# 为移动端优化触摸
+		responsive_manager.optimize_for_touch(self)
+		
+		# 根据屏幕类型调整按钮布局
+		_adjust_button_layout_for_screen(responsive_manager.current_screen_type)
+		
+		print("大厅已启用响应式布局，屏幕类型：", responsive_manager.get_screen_type_name())
+
+func _on_screen_type_changed(_new_type):
+	# 屏幕类型变化时重新应用布局
+	_setup_responsive_layout()
+
+func _adjust_button_layout_for_screen(screen_type):
+	var game_buttons = $MainContent/VBoxContainer/GameButtons
+	
+	# 根据屏幕类型调整按钮容器方向
+	if screen_type in [0, 1]:  # 移动端
+		# 将HBoxContainer改为VBoxContainer以适应窄屏
+		if game_buttons is HBoxContainer:
+			game_buttons.columns = 2  # 如果是GridContainer的话
+	else:
+		# 桌面端和平板横屏保持水平布局
+		pass
 
 func _on_logout_button_pressed():
 	UserSession.logout()
@@ -118,4 +155,3 @@ func _on_shop_closed():
 	if shop_instance != null:
 		shop_instance.queue_free()
 		shop_instance = null
-

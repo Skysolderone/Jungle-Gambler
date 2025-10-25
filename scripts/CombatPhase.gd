@@ -26,6 +26,9 @@ var enemy_souls: Array = []  # 敌人的魂印
 var battle_over: bool = false
 
 func _ready():
+	# 应用响应式布局
+	_setup_responsive_layout()
+	
 	# 从UserSession获取战斗数据
 	var session = get_node("/root/UserSession")
 	
@@ -51,6 +54,39 @@ func _ready():
 	# 延迟开始第一回合
 	await get_tree().create_timer(1.0).timeout
 	_execute_combat_round()
+
+func _setup_responsive_layout():
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		
+		# 连接屏幕类型变化信号
+		responsive_manager.screen_type_changed.connect(_on_screen_type_changed)
+		
+		# 应用响应式布局
+		responsive_manager.apply_responsive_layout(self)
+		
+		# 为移动端优化触摸
+		responsive_manager.optimize_for_touch(self)
+		
+		# 根据屏幕类型调整信息布局
+		_adjust_info_layout_for_screen(responsive_manager.current_screen_type)
+		
+		print("战斗阶段已启用响应式布局，屏幕类型：", responsive_manager.get_screen_type_name())
+
+func _on_screen_type_changed(_new_type):
+	# 屏幕类型变化时重新应用布局
+	_setup_responsive_layout()
+
+func _adjust_info_layout_for_screen(screen_type):
+	var info_container = $BattlePanel/MarginContainer/VBoxContainer/InfoContainer
+	
+	# 在移动端竖屏时将HBoxContainer改为VBoxContainer
+	if screen_type == 0:  # MOBILE_PORTRAIT
+		# 移动端竖屏时垂直排列信息
+		info_container.vertical = true
+	else:
+		# 其他情况水平排列
+		info_container.vertical = false
 
 func _execute_combat_round():
 	if battle_over:

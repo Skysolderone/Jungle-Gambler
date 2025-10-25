@@ -18,9 +18,31 @@ func _ready():
 		get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
 		return
 	
+	# 应用响应式布局
+	_setup_responsive_layout()
+	
 	current_username = UserSession.get_username()
 	_load_user_info()
 	_apply_brightness_from_settings()
+
+func _setup_responsive_layout():
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		
+		# 连接屏幕类型变化信号
+		responsive_manager.screen_type_changed.connect(_on_screen_type_changed)
+		
+		# 应用响应式布局
+		responsive_manager.apply_responsive_layout(self)
+		
+		# 为移动端优化触摸
+		responsive_manager.optimize_for_touch(self)
+		
+		print("个人资料界面已启用响应式布局，屏幕类型：", responsive_manager.get_screen_type_name())
+
+func _on_screen_type_changed(_new_type):
+	# 屏幕类型变化时重新应用布局
+	_setup_responsive_layout()
 
 func _load_user_info():
 	# 显示用户名（只读）
@@ -154,4 +176,3 @@ func _apply_brightness_from_settings():
 	var brightness = settings.get("brightness", 100.0)
 	var alpha = (100.0 - brightness) / 100.0 * 0.7
 	brightness_overlay.color = Color(0, 0, 0, alpha)
-

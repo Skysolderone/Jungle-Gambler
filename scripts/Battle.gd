@@ -43,6 +43,9 @@ var loot_souls: Array = []
 var loot_selection_time: float = 10.0
 
 func _ready():
+	# 应用响应式布局
+	_setup_responsive_layout()
+	
 	# 从UserSession获取战斗数据
 	var session = get_node("/root/UserSession")
 	
@@ -61,7 +64,94 @@ func _ready():
 	_initialize_loadout()
 	_update_display()
 	_add_log("[color=#FFFF00]遭遇敌人：" + enemy_data.get("name", "未知敌人") + "！[/color]")
-	_add_log("[color=#00FF00]配置阶段：选择你要使用的魂印！[/color]")
+	_add_log("[color=#00FF00]━━━ 准备阶段 ━━━[/color]")
+	_add_log("[color=#FFFF00]点击下方魂印来选择/取消[/color]")
+	_add_log("[color=#FFAA00]你有 " + str(int(countdown)) + " 秒时间配置魂印[/color]")
+	if player_all_souls.size() == 0:
+		_add_log("[color=#FF6666]警告：你没有任何魂印！只能依靠基础力量战斗[/color]")
+	else:
+		_add_log("[color=#AAFFAA]可用魂印：" + str(player_all_souls.size()) + " 个[/color]")
+
+func _setup_responsive_layout():
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		
+		# 连接屏幕类型变化信号
+		responsive_manager.screen_type_changed.connect(_on_screen_type_changed)
+		
+		# 应用响应式布局
+		responsive_manager.apply_responsive_layout(self)
+		
+		# 为移动端优化触摸
+		responsive_manager.optimize_for_touch(self)
+		
+		# 根据屏幕类型调整布局
+		_adjust_battle_layout_for_screen(responsive_manager.current_screen_type)
+		
+		print("战斗场景已启用响应式布局，屏幕类型：", responsive_manager.get_screen_type_name())
+	
+	# 为移动端添加手势支持
+	_setup_mobile_gestures()
+
+func _setup_mobile_gestures():
+	if has_node("/root/MobileInteractionHelper"):
+		var mobile_helper = get_node("/root/MobileInteractionHelper")
+		
+		# 连接手势信号
+		mobile_helper.gesture_detected.connect(_on_gesture_detected)
+		
+		print("战斗场景手势支持已启用")
+
+func _on_gesture_detected(gesture, position: Vector2):
+	# 处理移动端手势
+	if current_phase == Phase.PREPARATION:
+		# 在准备阶段，双击可以快速选择/取消选择魂印
+		if gesture == 1:  # DOUBLE_TAP
+			_handle_quick_select_at_position(position)
+	elif current_phase == Phase.LOOT:
+		# 在战利品阶段，长按可以显示物品详情
+		if gesture == 2:  # LONG_PRESS
+			_handle_loot_item_info_at_position(position)
+
+func _handle_quick_select_at_position(position: Vector2):
+	# 将屏幕坐标转换为相对于loadout_grid的坐标
+	var local_pos = loadout_grid.get_global_rect()
+	if not local_pos.has_point(position):
+		return
+	
+	# 这里可以添加基于位置的快速选择逻辑
+	print("快速选择手势检测到，位置：", position)
+
+func _handle_loot_item_info_at_position(position: Vector2):
+	# 显示战利品详细信息
+	print("长按显示物品信息，位置：", position)
+	_add_log("[color=#FFAA00]长按查看物品详情功能[/color]")
+
+func _on_screen_type_changed(_new_type):
+	# 屏幕类型变化时重新应用布局
+	_setup_responsive_layout()
+
+func _adjust_battle_layout_for_screen(screen_type):
+	var info_container = $BattlePanel/MarginContainer/VBoxContainer/InfoContainer
+	
+	# 在移动端竖屏时将玩家和敌人信息垂直排列
+	if screen_type == 0:  # MOBILE_PORTRAIT
+		info_container.vertical = true
+		# 隐藏VSeparator在移动端
+		var vseparator = $BattlePanel/MarginContainer/VBoxContainer/InfoContainer/VSeparator
+		if vseparator:
+			vseparator.visible = false
+	else:
+		# 其他情况水平排列
+		info_container.vertical = false
+		var vseparator = $BattlePanel/MarginContainer/VBoxContainer/InfoContainer/VSeparator
+		if vseparator:
+			vseparator.visible = true
+	
+	# 根据屏幕类型调整网格列数
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		loadout_grid.columns = responsive_manager.get_grid_columns_for_screen()
 
 func _process(delta):
 	if battle_over:
@@ -125,7 +215,10 @@ func _create_soul_card(soul, index: int) -> Button:
 	button.add_theme_stylebox_override("hover", style_selected)
 	button.add_theme_stylebox_override("pressed", style_selected)
 	
-	button.text = soul.name + "\n力量+" + str(soul.power)
+	# 获取魂印使用次数信息
+	var soul_item = player_all_souls[index]
+	var uses_text = str(soul_item.uses_remaining) + "/" + str(soul_item.max_uses)
+	button.text = soul.name + "\n力量+" + str(soul.power) + "\n次数:" + uses_text
 	button.pressed.connect(_on_soul_card_pressed.bind(index))
 	
 	return button
@@ -150,6 +243,20 @@ func _start_combat_phase():
 	phase_label.text = "战斗回合"
 	timer_label.visible = false
 	_add_log("[color=#FFD700]准备阶段结束！开始战斗！[/color]")
+	
+	# 显示玩家配置的魂印信息
+	if player_selected_souls.size() > 0:
+		_add_log("[color=#FFFF00]━━━ 你的魂印配置 ━━━[/color]")
+		var total_soul_power = 0
+		for soul_item in player_selected_souls:
+			var soul = soul_item.soul_print
+			total_soul_power += soul.power
+			var quality_names = ["普通", "非凡", "稀有", "史诗", "传说", "神话"]
+			var quality_name = quality_names[soul.quality]
+			_add_log("[color=#FFD700]" + soul.name + "[/color] (" + quality_name + ") - 力量加成: [color=#FF6600]+" + str(soul.power) + "[/color]")
+		_add_log("[color=#00FFFF]总魂印加成: +" + str(total_soul_power) + " 点力量！[/color]")
+	else:
+		_add_log("[color=#888888]未配置任何魂印，仅依靠基础力量战斗[/color]")
 	
 	# 延迟开始第一回合
 	await get_tree().create_timer(1.0).timeout
@@ -178,7 +285,10 @@ func _execute_combat_round():
 	var player_final = player_base_power * dice + player_soul_bonus
 	player_final_power_label.text = "最终力量: " + str(player_final)
 	
-	_add_log("玩家力量：[color=#00FF00]" + str(player_base_power) + " × " + str(dice) + " + " + str(player_soul_bonus) + " = " + str(player_final) + "[/color]")
+	if player_soul_bonus > 0:
+		_add_log("玩家力量：[color=#00FF00]基础 " + str(player_base_power) + " × 骰子 " + str(dice) + " + [color=#FFD700]魂印加成 " + str(player_soul_bonus) + "[/color] = " + str(player_final) + "[/color]")
+	else:
+		_add_log("玩家力量：[color=#00FF00]" + str(player_base_power) + " × " + str(dice) + " = " + str(player_final) + "[/color]")
 	
 	# 计算敌人力量
 	var enemy_soul_bonus = 0
@@ -292,20 +402,36 @@ func _start_loot_selection():
 	for child in loadout_grid.get_children():
 		child.queue_free()
 	
+	# 等待一帧确保清理完成
+	await get_tree().process_frame
+	
 	# 显示战利品和当前背包
+	_create_loot_interface()
+
+func _create_loot_interface():
 	var container = VBoxContainer.new()
 	container.name = "LootContainer"
+	
+	# 获取响应式网格列数
+	var grid_columns = 5  # 默认值
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		grid_columns = responsive_manager.get_grid_columns_for_screen()
+		# 对于战利品界面，适当减少列数以避免过于拥挤
+		if responsive_manager.is_mobile_device():
+			grid_columns = max(2, grid_columns - 2)
 	
 	# 战利品区域
 	var loot_label = Label.new()
 	loot_label.text = "战利品（可获得）："
 	loot_label.add_theme_font_size_override("font_size", 16)
+	loot_label.add_theme_color_override("font_color", Color(1, 0.8, 0.2))
 	container.add_child(loot_label)
 	
 	var loot_grid = GridContainer.new()
-	loot_grid.columns = 5
-	loot_grid.add_theme_constant_override("h_separation", 10)
-	loot_grid.add_theme_constant_override("v_separation", 10)
+	loot_grid.columns = grid_columns
+	loot_grid.add_theme_constant_override("h_separation", 8)
+	loot_grid.add_theme_constant_override("v_separation", 8)
 	
 	for soul in loot_souls:
 		var card = _create_loot_card(soul, true)
@@ -313,17 +439,24 @@ func _start_loot_selection():
 	
 	container.add_child(loot_grid)
 	
+	# 添加分隔空间
+	var spacer = Control.new()
+	spacer.custom_minimum_size = Vector2(0, 15)
+	container.add_child(spacer)
+	
 	# 当前背包区域
 	var inventory_label = Label.new()
-	inventory_label.text = "\n当前背包（点击丢弃）："
+	inventory_label.text = "当前背包（点击丢弃）："
 	inventory_label.add_theme_font_size_override("font_size", 16)
+	inventory_label.add_theme_color_override("font_color", Color(0.8, 0.8, 1))
 	container.add_child(inventory_label)
 	
 	var inventory_grid = GridContainer.new()
-	inventory_grid.columns = 5
-	inventory_grid.add_theme_constant_override("h_separation", 10)
-	inventory_grid.add_theme_constant_override("v_separation", 10)
+	inventory_grid.columns = grid_columns
+	inventory_grid.add_theme_constant_override("h_separation", 8)
+	inventory_grid.add_theme_constant_override("v_separation", 8)
 	
+	# 显示背包中的前10个魂印
 	for i in range(min(10, player_all_souls.size())):
 		var soul_item = player_all_souls[i]
 		var card = _create_loot_card(soul_item.soul_print, false, i)
@@ -331,29 +464,76 @@ func _start_loot_selection():
 	
 	container.add_child(inventory_grid)
 	
+	# 添加操作提示
+	var hint_label = Label.new()
+	hint_label.text = "提示：点击背包中的魂印丢弃，自动获得战利品"
+	hint_label.add_theme_font_size_override("font_size", 12)
+	hint_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))
+	hint_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	container.add_child(hint_label)
+	
 	loadout_grid.add_child(container)
 
 func _create_loot_card(soul, is_loot: bool, inventory_index: int = -1) -> Button:
 	var button = Button.new()
-	button.custom_minimum_size = Vector2(100, 70)
+	
+	# 根据屏幕类型调整按钮大小
+	var min_size = Vector2(100, 70)  # 默认大小
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		min_size = responsive_manager.get_min_button_size()
+		# 战利品卡片稍微调整比例
+		min_size.y = min_size.y * 1.2
+	
+	button.custom_minimum_size = min_size
 	
 	var quality_colors = [
 		Color(0.5, 0.5, 0.5), Color(0.2, 0.7, 0.2), Color(0.2, 0.5, 0.9),
 		Color(0.6, 0.2, 0.8), Color(0.9, 0.6, 0.2), Color(0.9, 0.3, 0.3)
 	]
 	
+	var quality_names = ["普通", "非凡", "稀有", "史诗", "传说", "神话"]
 	var color = quality_colors[soul.quality]
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(color.r * 0.4, color.g * 0.4, color.b * 0.4, 0.8)
-	style.border_color = color
-	style.set_border_width_all(2)
-	style.set_corner_radius_all(5)
 	
-	button.add_theme_stylebox_override("normal", style)
-	button.text = soul.name + "\n+" + str(soul.power)
+	# 设置按钮样式
+	var style_normal = StyleBoxFlat.new()
+	style_normal.bg_color = Color(color.r * 0.3, color.g * 0.3, color.b * 0.3, 0.9)
+	style_normal.border_color = color
+	style_normal.set_border_width_all(2)
+	style_normal.set_corner_radius_all(8)
 	
+	var style_hover = StyleBoxFlat.new()
+	style_hover.bg_color = Color(color.r * 0.5, color.g * 0.5, color.b * 0.5, 1.0)
+	style_hover.border_color = color.lightened(0.3)
+	style_hover.set_border_width_all(3)
+	style_hover.set_corner_radius_all(8)
+	
+	var style_pressed = StyleBoxFlat.new()
+	style_pressed.bg_color = Color(color.r * 0.7, color.g * 0.7, color.b * 0.7, 1.0)
+	style_pressed.border_color = Color.WHITE
+	style_pressed.set_border_width_all(3)
+	style_pressed.set_corner_radius_all(8)
+	
+	button.add_theme_stylebox_override("normal", style_normal)
+	button.add_theme_stylebox_override("hover", style_hover)
+	button.add_theme_stylebox_override("pressed", style_pressed)
+	
+	# 设置文本内容和颜色
+	var text = soul.name + "\n力量: +" + str(soul.power) + "\n" + quality_names[soul.quality]
+	button.text = text
+	button.add_theme_color_override("font_color", Color.WHITE)
+	
+	# 添加触摸反馈
+	if has_node("/root/MobileInteractionHelper"):
+		var mobile_helper = get_node("/root/MobileInteractionHelper")
+		mobile_helper.add_touch_feedback(button)
+	
+	# 连接信号
 	if not is_loot:
 		button.pressed.connect(_on_discard_soul.bind(inventory_index))
+		# 为背包物品添加不同的提示色调
+		style_normal.bg_color = Color(0.6, 0.3, 0.3, 0.8)  # 稍微偏红，表示可丢弃
+		button.add_theme_stylebox_override("normal", style_normal)
 	
 	return button
 
@@ -431,46 +611,8 @@ func _refresh_loot_display():
 	if not is_instance_valid(loadout_grid):
 		return
 	
-	# 重新创建显示
-	var container = VBoxContainer.new()
-	
-	# 战利品区域
-	if loot_souls.size() > 0:
-		var loot_label = Label.new()
-		loot_label.text = "剩余战利品（可获得）："
-		loot_label.add_theme_font_size_override("font_size", 16)
-		container.add_child(loot_label)
-		
-		var loot_grid = GridContainer.new()
-		loot_grid.columns = 5
-		loot_grid.add_theme_constant_override("h_separation", 10)
-		loot_grid.add_theme_constant_override("v_separation", 10)
-		
-		for soul in loot_souls:
-			var card = _create_loot_card(soul, true)
-			loot_grid.add_child(card)
-		
-		container.add_child(loot_grid)
-	
-	# 当前背包区域
-	var inventory_label = Label.new()
-	inventory_label.text = "\n当前背包（点击丢弃）："
-	inventory_label.add_theme_font_size_override("font_size", 16)
-	container.add_child(inventory_label)
-	
-	var inventory_grid = GridContainer.new()
-	inventory_grid.columns = 5
-	inventory_grid.add_theme_constant_override("h_separation", 10)
-	inventory_grid.add_theme_constant_override("v_separation", 10)
-	
-	for i in range(min(10, player_all_souls.size())):
-		var soul_item = player_all_souls[i]
-		var card = _create_loot_card(soul_item.soul_print, false, i)
-		inventory_grid.add_child(card)
-	
-	container.add_child(inventory_grid)
-	
-	loadout_grid.add_child(container)
+	# 使用统一的界面创建函数
+	_create_loot_interface()
 
 func _finish_loot_selection():
 	print("战利品选择结束，剩余战利品：", loot_souls.size())
@@ -481,6 +623,9 @@ func _finish_loot_selection():
 
 func _finish_battle_success():
 	print("_finish_battle_success 被调用")
+	
+	# 消耗选中魂印的使用次数
+	_consume_selected_soul_uses()
 	
 	# 保存战斗结果到UserSession
 	var session = get_node("/root/UserSession")
@@ -516,12 +661,79 @@ func _update_display():
 		total_bonus += soul_item.soul_print.power
 	
 	if current_phase == Phase.PREPARATION:
-		player_final_power_label.text = "魂印加成: +" + str(total_bonus)
+		player_final_power_label.text = "魂印加成: +" + str(total_bonus) + " (总力量: " + str(player_base_power + total_bonus) + ")"
+		# 更新魂印卡片的选中状态
+		_update_soul_card_states()
+	else:
+		# 在战斗阶段也显示魂印加成效果
+		player_final_power_label.text = "总力量: " + str(player_base_power + total_bonus) + " (基础:" + str(player_base_power) + " +魂印:" + str(total_bonus) + ")"
+
+func _update_soul_card_states():
+	# 更新所有魂印卡片的选中状态
+	for i in range(loadout_grid.get_child_count()):
+		if i >= player_all_souls.size():
+			break
+		var button = loadout_grid.get_child(i)
+		var soul_item = player_all_souls[i]
+		var soul = soul_item.soul_print
+		
+		# 品质颜色
+		var quality_colors = [
+			Color(0.5, 0.5, 0.5), Color(0.2, 0.7, 0.2), Color(0.2, 0.5, 0.9),
+			Color(0.6, 0.2, 0.8), Color(0.9, 0.6, 0.2), Color(0.9, 0.3, 0.3)
+		]
+		var color = quality_colors[soul.quality]
+		
+		# 根据选中状态设置样式
+		if player_selected_souls.has(soul_item):
+			# 选中状态 - 更亮，黄色边框
+			var style_selected = StyleBoxFlat.new()
+			style_selected.bg_color = Color(color.r * 0.8, color.g * 0.8, color.b * 0.8, 1.0)
+			style_selected.border_color = Color(1, 1, 0, 1)
+			style_selected.set_border_width_all(4)
+			style_selected.set_corner_radius_all(5)
+			button.add_theme_stylebox_override("normal", style_selected)
+		else:
+			# 未选中状态 - 正常样式
+			var style_normal = StyleBoxFlat.new()
+			style_normal.bg_color = Color(color.r * 0.3, color.g * 0.3, color.b * 0.3, 0.8)
+			style_normal.border_color = color
+			style_normal.set_border_width_all(2)
+			style_normal.set_corner_radius_all(5)
+			button.add_theme_stylebox_override("normal", style_normal)
 
 func _add_log(text: String):
 	battle_log.text += "\n" + text
 	await get_tree().process_frame
 	battle_log.scroll_to_line(battle_log.get_line_count())
+
+func _consume_selected_soul_uses():
+	# 消耗选中魂印的使用次数
+	var soul_system = _get_soul_system()
+	if not soul_system:
+		return
+	
+	var username = _get_username()
+	var consumed_souls = []
+	
+	# 找到所有选中魂印在player_all_souls中的索引并消耗使用次数
+	for selected_soul_item in player_selected_souls:
+		for i in range(player_all_souls.size()):
+			var soul_item = player_all_souls[i]
+			# 通过ID和位置匹配魂印实例
+			if (soul_item.soul_print.id == selected_soul_item.soul_print.id and 
+				soul_item.grid_x == selected_soul_item.grid_x and 
+				soul_item.grid_y == selected_soul_item.grid_y):
+				var success = soul_system.use_soul_print(username, i)
+				if success:
+					consumed_souls.append(soul_item.soul_print.name)
+				break
+	
+	# 更新显示信息
+	if consumed_souls.size() > 0:
+		_add_log("[color=#FFAA00]消耗魂印使用次数：[/color]")
+		for soul_name in consumed_souls:
+			_add_log("[color=#FF6666]- " + soul_name + "[/color]")
 
 func _get_soul_system():
 	if has_node("/root/SoulPrintSystem"):

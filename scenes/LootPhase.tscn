@@ -4,49 +4,121 @@
 
 [node name="LootPhase" type="Control"]
 layout_mode = 3
-anchors_preset = 0
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 script = ExtResource("1_ota5y")
+
+[node name="Background" type="ColorRect" parent="."]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+color = Color(0.05, 0.15, 0.05, 1)
 
 [node name="LootPanel" type="Panel" parent="."]
 self_modulate = Color(0.8, 1, 0.8, 0.95)
-custom_minimum_size = Vector2(800, 600)
-layout_mode = 0
-anchor_left = 0.5
-anchor_top = 0.5
-anchor_right = 0.5
-anchor_bottom = 0.5
-
-[node name="MarginContainer" type="MarginContainer" parent="LootPanel"]
-layout_mode = 0
+layout_mode = 1
+anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
+offset_left = 50.0
+offset_top = 50.0
+offset_right = -50.0
+offset_bottom = -50.0
+grow_horizontal = 2
+grow_vertical = 2
+
+[node name="MarginContainer" type="MarginContainer" parent="LootPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="LootPanel/MarginContainer"]
 layout_mode = 2
+theme_override_constants/separation = 20
 
-[node name="TitleLabel" type="Label" parent="LootPanel/MarginContainer/VBoxContainer"]
+[node name="HeaderContainer" type="VBoxContainer" parent="LootPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 10
+
+[node name="TitleLabel" type="Label" parent="LootPanel/MarginContainer/VBoxContainer/HeaderContainer"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 32
 text = "战利品获得阶段"
 horizontal_alignment = 1
 
-[node name="TimerLabel" type="Label" parent="LootPanel/MarginContainer/VBoxContainer"]
+[node name="TimerLabel" type="Label" parent="LootPanel/MarginContainer/VBoxContainer/HeaderContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 horizontal_alignment = 1
 
-[node name="LootContainer" type="ScrollContainer" parent="LootPanel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(800, 200)
+[node name="ContentContainer" type="VBoxContainer" parent="LootPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 15
+
+[node name="LootSection" type="VBoxContainer" parent="LootPanel/MarginContainer/VBoxContainer/ContentContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="LootLabel" type="Label" parent="LootPanel/MarginContainer/VBoxContainer/ContentContainer/LootSection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "战利品"
+horizontal_alignment = 1
+
+[node name="LootContainer" type="ScrollContainer" parent="LootPanel/MarginContainer/VBoxContainer/ContentContainer/LootSection"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="LootGrid" type="GridContainer" parent="LootPanel/MarginContainer/VBoxContainer/ContentContainer/LootSection/LootContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 4
+
+[node name="InventorySection" type="VBoxContainer" parent="LootPanel/MarginContainer/VBoxContainer/ContentContainer"]
+layout_mode = 2
+size_flags_vertical = 3
+theme_override_constants/separation = 10
+
+[node name="InventoryLabel" type="Label" parent="LootPanel/MarginContainer/VBoxContainer/ContentContainer/InventorySection"]
+layout_mode = 2
+theme_override_font_sizes/font_size = 20
+text = "当前背包"
+horizontal_alignment = 1
+
+[node name="InventoryContainer" type="ScrollContainer" parent="LootPanel/MarginContainer/VBoxContainer/ContentContainer/InventorySection"]
+layout_mode = 2
+size_flags_horizontal = 3
+size_flags_vertical = 3
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
+
+[node name="InventoryGrid" type="GridContainer" parent="LootPanel/MarginContainer/VBoxContainer/ContentContainer/InventorySection/InventoryContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/h_separation = 10
+theme_override_constants/v_separation = 10
+columns = 4
+
+[node name="ButtonContainer" type="CenterContainer" parent="LootPanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
 
-[node name="InventoryContainer" type="ScrollContainer" parent="LootPanel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(800, 200)
-layout_mode = 2
-
-[node name="ContinueButton" type="Button" parent="LootPanel/MarginContainer/VBoxContainer"]
+[node name="ContinueButton" type="Button" parent="LootPanel/MarginContainer/VBoxContainer/ButtonContainer"]
 custom_minimum_size = Vector2(200, 50)
 layout_mode = 2
-
-[node name="Background" type="ColorRect" parent="."]
-layout_mode = 0
-anchor_right = 1.0
-anchor_bottom = 1.0
-color = Color(0.05, 0.15, 0.05, 1)
+theme_override_font_sizes/font_size = 20

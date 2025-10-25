@@ -12,7 +12,29 @@ signal brightness_changed(value: float)
 const SETTINGS_PATH = "user://settings.json"
 
 func _ready():
+	# 应用响应式布局
+	_setup_responsive_layout()
+	
 	_load_settings()
+
+func _setup_responsive_layout():
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		
+		# 连接屏幕类型变化信号
+		responsive_manager.screen_type_changed.connect(_on_screen_type_changed)
+		
+		# 应用响应式布局
+		responsive_manager.apply_responsive_layout(self)
+		
+		# 为移动端优化触摸
+		responsive_manager.optimize_for_touch(self)
+		
+		print("设置界面已启用响应式布局，屏幕类型：", responsive_manager.get_screen_type_name())
+
+func _on_screen_type_changed(_new_type):
+	# 屏幕类型变化时重新应用布局
+	_setup_responsive_layout()
 
 func _input(event):
 	if event is InputEventKey and event.pressed:
@@ -110,4 +132,3 @@ func _on_theme_option_selected(index: int):
 
 func _on_close_button_pressed():
 	settings_closed.emit()
-
