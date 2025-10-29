@@ -12,7 +12,7 @@ var enemy_data: Dictionary = {}
 var player_all_souls: Array = []  # 玩家所有魂印
 var player_selected_souls: Array = []  # 玩家选中的魂印
 
-var countdown: float = 15.0
+var countdown: float = 60.0
 var auto_start: bool = false
 
 func _ready():
@@ -34,6 +34,15 @@ func _ready():
 	if session.has_meta("battle_player_souls"):
 		player_all_souls = session.get_meta("battle_player_souls")
 		print("获取到玩家魂印数据，数量: ", player_all_souls.size())
+		
+		# 如果获取到的魂印配置为空，从背包获取所有魂印
+		if player_all_souls.size() == 0:
+			print("魂印配置为空，从背包获取所有魂印")
+			var soul_system = get_node("/root/SoulPrintSystem")
+			if soul_system:
+				var username = session.get_username() if session.has_method("get_username") else "default"
+				player_all_souls = soul_system.get_user_inventory(username)
+				print("从背包获取到魂印数量: ", player_all_souls.size())
 	else:
 		print("警告：未找到玩家魂印数据，尝试从魂印系统获取")
 		# 直接从魂印系统获取
@@ -107,6 +116,12 @@ func _initialize_loadout():
 	await get_tree().process_frame
 
 	print("=== 初始化魂印选择界面 ===")
+	print("loadout_grid节点: ", loadout_grid)
+	print("loadout_grid是否有效: ", loadout_grid != null)
+	if loadout_grid != null:
+		print("loadout_grid列数: ", loadout_grid.columns)
+		print("loadout_grid大小: ", loadout_grid.size)
+		print("loadout_grid可见: ", loadout_grid.visible)
 	print("player_all_souls数量: ", player_all_souls.size())
 
 	if player_all_souls.size() == 0:
@@ -146,7 +161,12 @@ func _initialize_loadout():
 			continue
 
 		var card = _create_soul_card(soul, i)
-		loadout_grid.add_child(card)
+		if card != null:
+			print("准备添加卡片到网格:", soul.name, " 卡片类型:", typeof(card))
+			loadout_grid.add_child(card)
+			print("成功添加魂印卡片:", soul.name, " 网格子节点数量:", loadout_grid.get_child_count())
+		else:
+			print("警告：创建魂印卡片失败:", soul.name)
 
 func _create_soul_card(soul, index: int) -> Button:
 	var button = Button.new()

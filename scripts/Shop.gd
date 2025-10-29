@@ -2,7 +2,7 @@ extends Control
 
 signal shop_closed
 
-@onready var items_container = $MainPanel/VBoxContainer/ContentContainer/LeftPanel/ScrollContainer/ItemsContainer
+@onready var items_container = $MainPanel/VBoxContainer/ContentContainer/LeftPanel/LeftPanelContainer/ScrollContainer/ItemsContainer
 @onready var detail_title = $MainPanel/VBoxContainer/ContentContainer/RightPanel/ScrollContainer/DetailContainer/DetailTitle
 @onready var quality_label = $MainPanel/VBoxContainer/ContentContainer/RightPanel/ScrollContainer/DetailContainer/InfoMargin/InfoContainer/QualityLabel
 @onready var shape_label = $MainPanel/VBoxContainer/ContentContainer/RightPanel/ScrollContainer/DetailContainer/InfoMargin/InfoContainer/ShapeLabel
@@ -76,11 +76,7 @@ func _adjust_layout_for_screen(screen_type):
 		items_container.columns = responsive_manager.get_grid_columns_for_screen()
 	
 	# 在移动端竖屏时将左右面板垂直排列
-	if screen_type == 0:  # MOBILE_PORTRAIT
-		content_container.vertical = true
-	else:
-		# 其他情况水平排列
-		content_container.vertical = false
+	# 注意：HBoxContainer 没有 vertical 属性，需要通过其他方式处理布局
 
 func _input(event):
 	if event is InputEventKey and event.pressed:
@@ -94,60 +90,34 @@ func _get_soul_system():
 	return null
 
 func _load_shop_items():
-	# 创建商城物品列表（所有已注册的魂印）
+	# 从 SoulPrintSystem 数据库中获取所有已配置的魂印
 	var soul_system = _get_soul_system()
 	if soul_system == null:
 		return
 	
-	# 从 SoulPrintSystem 获取所有可用的魂印
-	# 这里我们手动创建一些商城物品
-	var SoulPrint = soul_system.SoulPrint
-	var Quality = soul_system.Quality
-	var ShapeType = soul_system.ShapeType
-	
-	shop_items = [
-		SoulPrint.new("soul_basic_1", "初始魂印", Quality.COMMON, ShapeType.SQUARE_1X1),
-		SoulPrint.new("soul_basic_2", "双生魂印", Quality.COMMON, ShapeType.RECT_1X2),
-		SoulPrint.new("soul_forest", "森林之魂", Quality.UNCOMMON, ShapeType.SQUARE_2X2),
-		SoulPrint.new("soul_flame", "火焰之心", Quality.RARE, ShapeType.L_SHAPE),
-		SoulPrint.new("soul_ocean", "深海之力", Quality.RARE, ShapeType.T_SHAPE),
-		SoulPrint.new("soul_thunder", "雷霆之怒", Quality.EPIC, ShapeType.RECT_1X3),
-		SoulPrint.new("soul_shadow", "暗影追踪", Quality.EPIC, ShapeType.TRIANGLE),
-		SoulPrint.new("soul_phoenix", "不死鸟", Quality.LEGENDARY, ShapeType.SQUARE_2X2),
-		SoulPrint.new("soul_dragon", "龙之魂", Quality.LEGENDARY, ShapeType.T_SHAPE),
-		SoulPrint.new("soul_god", "神之祝福", Quality.MYTHIC, ShapeType.L_SHAPE),
+	# 定义商城中要售卖的魂印ID列表
+	var shop_soul_ids = [
+		"soul_basic_1",   # 初始魂印
+		"soul_basic_2",   # 双生魂印
+		"soul_forest",    # 森林之魂
+		"soul_wind",      # 疾风魂印
+		"soul_flame",     # 火焰之心
+		"soul_ocean",     # 深海之力
+		"soul_thunder",   # 雷霆之怒
+		"soul_shadow",    # 暗影追踪
+		"soul_phoenix",   # 不死鸟
+		"soul_dragon",    # 龙之魂
+		"soul_god"        # 神之祝福
 	]
 	
-	# 设置每个魂印的描述和力量
-	shop_items[0].description = "最基础的魂印，适合新手使用。"
-	shop_items[0].power = 5
-	
-	shop_items[1].description = "双格魂印，提供额外的空间利用。"
-	shop_items[1].power = 8
-	
-	shop_items[2].description = "蕴含森林之力，提升生命力。"
-	shop_items[2].power = 15
-	
-	shop_items[3].description = "炽热的火焰之力，增强攻击力。"
-	shop_items[3].power = 25
-	
-	shop_items[4].description = "深海的神秘力量，提升防御。"
-	shop_items[4].power = 28
-	
-	shop_items[5].description = "雷霆之怒，闪电般的速度。"
-	shop_items[5].power = 40
-	
-	shop_items[6].description = "来自暗影的追踪者，提升暴击。"
-	shop_items[6].power = 45
-	
-	shop_items[7].description = "浴火重生的不死鸟之力。"
-	shop_items[7].power = 60
-	
-	shop_items[8].description = "远古巨龙的灵魂力量。"
-	shop_items[8].power = 70
-	
-	shop_items[9].description = "神明的祝福，至高无上的力量。"
-	shop_items[9].power = 100
+	# 从数据库中获取完整的魂印数据（包含被动效果）
+	shop_items = []
+	for soul_id in shop_soul_ids:
+		var soul = soul_system.get_soul_by_id(soul_id)
+		if soul != null:
+			shop_items.append(soul)
+		else:
+			print("警告：商城中的魂印不存在于数据库中: ", soul_id)
 
 func _create_item_cards():
 	# 清空容器
@@ -256,7 +226,14 @@ func _show_soul_details(soul):
 	
 	shape_label.text = "形状：" + shape_names.get(soul.shape_type, "未知")
 	power_label.text = "力量：" + str(soul.power)
-	desc_label.text = "描述：" + soul.description
+	
+	# 更新描述，包含被动效果
+	var full_description = soul.description
+	var passive_desc = soul.get_passive_description()
+	if passive_desc != "":
+		full_description += "\n被动：" + passive_desc
+	
+	desc_label.text = "描述：" + full_description
 	price_label.text = "价格：免费（调试）"
 
 func _on_buy_button_pressed():

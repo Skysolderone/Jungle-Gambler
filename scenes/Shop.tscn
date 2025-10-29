@@ -64,6 +64,18 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_list"]
+bg_color = Color(0.12, 0.12, 0.15, 0.9)
+border_width_left = 2
+border_width_top = 2
+border_width_right = 2
+border_width_bottom = 2
+border_color = Color(0.4, 0.35, 0.2, 0.8)
+corner_radius_top_left = 8
+corner_radius_top_right = 8
+corner_radius_bottom_right = 8
+corner_radius_bottom_left = 8
+
 [node name="Shop" type="Control"]
 layout_mode = 3
 anchors_preset = 15
@@ -150,20 +162,29 @@ layout_mode = 2
 size_flags_vertical = 3
 theme_override_constants/separation = 10
 
-[node name="LeftPanel" type="VBoxContainer" parent="MainPanel/VBoxContainer/ContentContainer"]
+[node name="LeftPanel" type="Panel" parent="MainPanel/VBoxContainer/ContentContainer"]
 custom_minimum_size = Vector2(700, 0)
 layout_mode = 2
+theme_override_styles/panel = SubResource("StyleBoxFlat_list")
+
+[node name="LeftPanelContainer" type="VBoxContainer" parent="MainPanel/VBoxContainer/ContentContainer/LeftPanel"]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
 theme_override_constants/separation = 10
 
-[node name="TopMargin" type="Control" parent="MainPanel/VBoxContainer/ContentContainer/LeftPanel"]
+[node name="TopMargin" type="Control" parent="MainPanel/VBoxContainer/ContentContainer/LeftPanel/LeftPanelContainer"]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
-[node name="ScrollContainer" type="ScrollContainer" parent="MainPanel/VBoxContainer/ContentContainer/LeftPanel"]
+[node name="ScrollContainer" type="ScrollContainer" parent="MainPanel/VBoxContainer/ContentContainer/LeftPanel/LeftPanelContainer"]
 layout_mode = 2
 size_flags_vertical = 3
 
-[node name="ItemsContainer" type="GridContainer" parent="MainPanel/VBoxContainer/ContentContainer/LeftPanel/ScrollContainer"]
+[node name="ItemsContainer" type="GridContainer" parent="MainPanel/VBoxContainer/ContentContainer/LeftPanel/LeftPanelContainer/ScrollContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 size_flags_vertical = 3
@@ -171,7 +192,7 @@ theme_override_constants/h_separation = 15
 theme_override_constants/v_separation = 15
 columns = 3
 
-[node name="BottomMargin" type="Control" parent="MainPanel/VBoxContainer/ContentContainer/LeftPanel"]
+[node name="BottomMargin" type="Control" parent="MainPanel/VBoxContainer/ContentContainer/LeftPanel/LeftPanelContainer"]
 custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 

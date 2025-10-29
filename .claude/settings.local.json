@@ -10,7 +10,9 @@
       "mcp__godot-mcp__play_scene",
       "mcp__godot-mcp__get_running_scene_screenshot",
       "mcp__godot-mcp__stop_running_scene",
-      "mcp__godot-mcp__view_script"
+      "mcp__godot-mcp__view_script",
+      "mcp__ide__getDiagnostics",
+      "Bash(godot:*)"
     ],
     "deny": [],
     "ask": []

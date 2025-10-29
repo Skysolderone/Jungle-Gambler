@@ -80,9 +80,13 @@ func _ready():
 		if session.has_meta("map_collected_souls"):
 			collected_souls = session.get_meta("map_collected_souls")
 		
-		# 重新初始化地图（需要grid_data）
-		_initialize_grid()
-		_generate_map_content()
+		# 恢复网格数据（如果有保存的话）
+		if session.has_meta("map_grid_data"):
+			_restore_grid_data(session.get_meta("map_grid_data"))
+		else:
+			# 没有保存的网格数据，重新初始化
+			_initialize_grid()
+			_generate_map_content()
 		
 		# 处理战斗结果
 		if session.has_meta("battle_result"):
@@ -819,7 +823,7 @@ func _start_battle(enemy_data: Dictionary):
 	# 生成敌人魂印（根据敌人力量随机生成1-3个）
 	var enemy_souls = _generate_enemy_souls(enemy_data.get("power", 30))
 	
-	# 保存地图状态
+	# 保存地图状态（包括网格数据）
 	session.set_meta("map_player_pos", player_pos)
 	session.set_meta("map_player_hp", player_hp)
 	session.set_meta("map_max_hp", max_hp)
@@ -827,6 +831,8 @@ func _start_battle(enemy_data: Dictionary):
 	session.set_meta("map_show_evacuation", show_evacuation)
 	session.set_meta("map_collapse_ring_index", collapse_ring_index)
 	session.set_meta("map_collected_souls", collected_souls)
+	# 保存网格数据（探索状态、资源等）
+	session.set_meta("map_grid_data", _serialize_grid_data())
 	
 	# 保存战斗数据 - 使用带入地图的魂印配置而不是全部背包
 	session.set_meta("battle_enemy_data", enemy_data)
@@ -1094,3 +1100,43 @@ func _on_exit_confirmed():
 						break
 	
 	get_tree().change_scene_to_file("res://scenes/Lobby.tscn")
+
+# ========== 地图状态序列化 ==========
+
+func _serialize_grid_data() -> Array:
+	# 将网格数据序列化为可保存的数组
+	var serialized_data = []
+	for y in range(GRID_SIZE):
+		var row = []
+		for x in range(GRID_SIZE):
+			var cell = grid_data[y][x]
+			var cell_data = {
+				"quality": cell.quality,
+				"resource_count": cell.resource_count,
+				"explored": cell.explored,
+				"has_enemy": cell.has_enemy,
+				"enemy_data": cell.enemy_data,
+				"collapsed": cell.collapsed
+			}
+			row.append(cell_data)
+		serialized_data.append(row)
+	return serialized_data
+
+func _restore_grid_data(serialized_data: Array):
+	# 从序列化数据恢复网格
+	grid_data = []
+	for y in range(GRID_SIZE):
+		var row: Array[GridCell] = []
+		for x in range(GRID_SIZE):
+			var cell = GridCell.new()
+			if y < serialized_data.size() and x < serialized_data[y].size():
+				var cell_data = serialized_data[y][x]
+				cell.quality = cell_data.get("quality", 0)
+				cell.resource_count = cell_data.get("resource_count", 1)
+				cell.explored = cell_data.get("explored", false)
+				cell.has_enemy = cell_data.get("has_enemy", false)
+				cell.enemy_data = cell_data.get("enemy_data", {})
+				cell.collapsed = cell_data.get("collapsed", false)
+			row.append(cell)
+		grid_data.append(row)
+	print("恢复网格数据完成，探索格子数量: ", explored_count)
