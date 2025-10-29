@@ -10,6 +10,10 @@ extends Control
 @onready var inventory_grid = $LootPanel/MarginContainer/VBoxContainer/ContentContainer/InventorySection/InventoryContainer/InventoryGrid
 @onready var continue_button = $LootPanel/MarginContainer/VBoxContainer/ButtonContainer/ContinueButton
 
+# 动态创建的对话框
+var confirm_dialog: ConfirmationDialog = null
+var pending_discard_index: int = -1
+
 # 战利品数据
 var enemy_souls: Array = []
 var loot_souls: Array = []
@@ -58,6 +62,9 @@ func _ready():
 	
 	# 应用响应式布局
 	_setup_responsive_layout()
+
+	# 创建确认对话框
+	_create_confirm_dialog()
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):
@@ -250,20 +257,17 @@ func _create_loot_card(soul, is_interactive: bool, index: int, is_loot: bool) ->
 	if is_interactive:
 		if is_loot:
 			# 战利品交互 - 获取战利品
-			var signal_connection = button.pressed.connect(_on_loot_selected.bind(index))
-			print("连接战利品选择信号，索引：", index, " 魂印：", soul.name, " 连接结果：", signal_connection)
-			
-			# 确保按钮可以接收输入
-			button.mouse_filter = Control.MOUSE_FILTER_STOP
-			button.focus_mode = Control.FOCUS_ALL
+			button.pressed.connect(func(): _on_loot_selected(index))
+			print("连接战利品选择信号，索引：", index, " 魂印：", soul.name)
 		else:
 			# 背包交互 - 丢弃物品
-			var signal_connection = button.pressed.connect(_on_inventory_discard.bind(index))
-			print("连接背包丢弃信号，索引：", index, " 魂印：", soul.name, " 连接结果：", signal_connection)
-			
-			# 确保按钮可以接收输入
-			button.mouse_filter = Control.MOUSE_FILTER_STOP
-			button.focus_mode = Control.FOCUS_ALL
+			button.pressed.connect(func(): _on_inventory_discard_request(index))
+			print("连接背包丢弃信号，索引：", index, " 魂印：", soul.name)
+
+		# 确保按钮可以接收输入
+		button.disabled = false
+		button.mouse_filter = Control.MOUSE_FILTER_STOP
+		button.focus_mode = Control.FOCUS_ALL
 	
 	return button
 
@@ -312,23 +316,70 @@ func _on_loot_selected(loot_index: int):
 		# 显示错误提示
 		title_label.text = "背包空间不足！请先清理背包空间"
 
+func _create_confirm_dialog():
+	# 动态创建确认对话框
+	confirm_dialog = ConfirmationDialog.new()
+	confirm_dialog.title = "确认丢弃"
+	confirm_dialog.get_ok_button().text = "确认丢弃"
+	confirm_dialog.get_cancel_button().text = "取消"
+	add_child(confirm_dialog)
+
+	# 连接确认信号
+	confirm_dialog.confirmed.connect(_on_discard_confirmed)
+
+func _on_inventory_discard_request(inventory_index: int):
+	# 先检查品质，高品质魂印需要确认
+	if inventory_index >= player_all_souls.size():
+		return
+
+	var soul_item = player_all_souls[inventory_index]
+	var soul = soul_item.soul_print
+
+	# 稀有及以上品质需要确认（品质>=2）
+	if soul.quality >= 2:
+		pending_discard_index = inventory_index
+
+		var quality_names = ["普通", "非凡", "稀有", "史诗", "传说", "神话"]
+		var quality_name = quality_names[soul.quality]
+
+		confirm_dialog.dialog_text = "确定要丢弃 [" + quality_name + "] 品质的魂印吗？\n\n" + soul.name + "\n力量: +" + str(soul.power)
+
+		# 显示被动效果
+		if soul.passive_type > 0:
+			confirm_dialog.dialog_text += "\n被动: " + soul.get_passive_description()
+
+		confirm_dialog.dialog_text += "\n\n此操作无法撤销！"
+		confirm_dialog.popup_centered()
+	else:
+		# 普通和非凡品质直接丢弃
+		_on_inventory_discard(inventory_index)
+
+func _on_discard_confirmed():
+	# 确认丢弃
+	if pending_discard_index >= 0:
+		_on_inventory_discard(pending_discard_index)
+		pending_discard_index = -1
+
 func _on_inventory_discard(inventory_index: int):
 	if inventory_index >= player_all_souls.size():
 		return
-	
+
 	var soul_system = _get_soul_system()
 	if not soul_system:
 		return
-	
+
 	var username = _get_username()
 	var soul_item = player_all_souls[inventory_index]
-	
+
 	print("丢弃魂印：", soul_item.soul_print.name)
-	
+
 	# 从背包移除
 	soul_system.remove_soul_print(username, inventory_index)
 	player_all_souls = soul_system.get_user_inventory(username)
-	
+
+	# 显示提示
+	title_label.text = "已丢弃：" + soul_item.soul_print.name
+
 	# 刷新显示
 	_refresh_loot_display()
 

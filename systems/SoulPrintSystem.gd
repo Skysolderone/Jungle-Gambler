@@ -25,6 +25,18 @@ enum ShapeType {
 	TRIANGLE,     # 三角形（占3格）
 }
 
+# 被动效果类型
+enum PassiveType {
+	NONE,           # 无被动
+	HEAL,           # 回血：每回合恢复HP
+	POWER_CHANCE,   # 力量几率：有几率额外增加力量
+	MULT_CHANCE,    # 倍率几率：有几率额外增加倍率
+	SHIELD,         # 护盾：减少受到的伤害
+	VAMPIRE,        # 吸血：造成伤害时回血
+	CRIT_CHANCE,    # 暴击几率：有几率造成额外伤害
+	DODGE,          # 闪避：有几率完全躲避伤害
+}
+
 # 魂印数据类
 class SoulPrint:
 	var id: String
@@ -35,8 +47,13 @@ class SoulPrint:
 	var shape_data: Array  # 形状数据 [[0,0], [0,1], [1,0]] 表示占用的相对格子
 	var icon: String
 	var power: int  # 魂印力量值
-	var special_effect: String  # 特殊效果
-	
+	var special_effect: String  # 特殊效果（已弃用，使用passive_type）
+
+	# 被动效果系统
+	var passive_type: PassiveType  # 被动类型
+	var passive_value: float  # 被动数值（回血量/力量值/倍率值/几率等）
+	var passive_chance: float  # 触发几率（0-1），对于需要几率判定的被动
+
 	func _init(soul_id: String, soul_name: String, soul_quality: Quality, soul_shape: ShapeType):
 		id = soul_id
 		name = soul_name
@@ -47,6 +64,32 @@ class SoulPrint:
 		icon = ""
 		power = 10
 		special_effect = ""
+
+		# 初始化被动效果
+		passive_type = PassiveType.NONE
+		passive_value = 0.0
+		passive_chance = 0.0
+
+	func get_passive_description() -> String:
+		# 返回被动效果的描述文本
+		match passive_type:
+			PassiveType.NONE:
+				return ""
+			PassiveType.HEAL:
+				return "每回合回复 " + str(int(passive_value)) + " HP"
+			PassiveType.POWER_CHANCE:
+				return str(int(passive_chance * 100)) + "% 几率额外 +" + str(int(passive_value)) + " 力量"
+			PassiveType.MULT_CHANCE:
+				return str(int(passive_chance * 100)) + "% 几率额外 +" + str(int(passive_value * 100)) + "% 倍率"
+			PassiveType.SHIELD:
+				return "减少 " + str(int(passive_value)) + "% 受到的伤害"
+			PassiveType.VAMPIRE:
+				return "造成伤害时回复 " + str(int(passive_value * 100)) + "% HP"
+			PassiveType.CRIT_CHANCE:
+				return str(int(passive_chance * 100)) + "% 几率造成 " + str(int(passive_value * 100)) + "% 额外伤害"
+			PassiveType.DODGE:
+				return str(int(passive_value * 100)) + "% 几率闪避伤害"
+		return ""
 	
 	func _get_shape_data(shape: ShapeType) -> Array:
 		match shape:
@@ -112,7 +155,10 @@ class SoulPrint:
 			"quality": quality,
 			"shape_type": shape_type,
 			"power": power,
-			"special_effect": special_effect
+			"special_effect": special_effect,
+			"passive_type": passive_type,
+			"passive_value": passive_value,
+			"passive_chance": passive_chance
 		}
 	
 	static func from_dict(data: Dictionary) -> SoulPrint:
@@ -125,6 +171,9 @@ class SoulPrint:
 		soul.description = data.get("description", "")
 		soul.power = data.get("power", 10)
 		soul.special_effect = data.get("special_effect", "")
+		soul.passive_type = data.get("passive_type", PassiveType.NONE)
+		soul.passive_value = data.get("passive_value", 0.0)
+		soul.passive_chance = data.get("passive_chance", 0.0)
 		return soul
 
 # 背包中的魂印实例
@@ -212,50 +261,72 @@ func _initialize_soul_database():
 	var soul_forest = SoulPrint.new("soul_forest", "森林之魂", Quality.UNCOMMON, ShapeType.SQUARE_2X2)
 	soul_forest.power = 15
 	soul_forest.description = "蕴含森林之力，提升生命力。"
+	soul_forest.passive_type = PassiveType.HEAL
+	soul_forest.passive_value = 3.0  # 每回合回复3点HP
 	_register_soul(soul_forest)
-	
+
 	var soul_wind = SoulPrint.new("soul_wind", "疾风魂印", Quality.UNCOMMON, ShapeType.RECT_1X3)
 	soul_wind.power = 12
 	soul_wind.description = "风之力量，提升移动速度。"
+	soul_wind.passive_type = PassiveType.DODGE
+	soul_wind.passive_value = 0.15  # 15%闪避率
 	_register_soul(soul_wind)
 	
 	# 稀有品质魂印
 	var soul_flame = SoulPrint.new("soul_flame", "火焰之心", Quality.RARE, ShapeType.L_SHAPE)
 	soul_flame.power = 25
 	soul_flame.description = "炽热的火焰之力，增强攻击力。"
+	soul_flame.passive_type = PassiveType.POWER_CHANCE
+	soul_flame.passive_value = 15.0  # 额外15点力量
+	soul_flame.passive_chance = 0.30  # 30%触发几率
 	_register_soul(soul_flame)
-	
+
 	var soul_ocean = SoulPrint.new("soul_ocean", "深海之力", Quality.RARE, ShapeType.T_SHAPE)
 	soul_ocean.power = 28
 	soul_ocean.description = "深海的神秘力量，提升防御。"
+	soul_ocean.passive_type = PassiveType.SHIELD
+	soul_ocean.passive_value = 0.20  # 减少20%受到的伤害
 	_register_soul(soul_ocean)
 	
 	var soul_thunder = SoulPrint.new("soul_thunder", "雷霆之怒", Quality.EPIC, ShapeType.RECT_1X3)
 	soul_thunder.power = 40
 	soul_thunder.description = "雷霆之怒，闪电般的速度。"
+	soul_thunder.passive_type = PassiveType.MULT_CHANCE
+	soul_thunder.passive_value = 0.25  # 额外25%倍率
+	soul_thunder.passive_chance = 0.35  # 35%触发几率
 	_register_soul(soul_thunder)
-	
-	# 史诗品质魂印  
+
+	# 史诗品质魂印
 	var soul_shadow = SoulPrint.new("soul_shadow", "暗影追踪", Quality.EPIC, ShapeType.TRIANGLE)
 	soul_shadow.power = 45
 	soul_shadow.description = "来自暗影的追踪者，提升暴击。"
+	soul_shadow.passive_type = PassiveType.CRIT_CHANCE
+	soul_shadow.passive_value = 0.50  # 50%额外暴击伤害
+	soul_shadow.passive_chance = 0.25  # 25%暴击率
 	_register_soul(soul_shadow)
 	
 	# 传说品质魂印
 	var soul_phoenix = SoulPrint.new("soul_phoenix", "不死鸟", Quality.LEGENDARY, ShapeType.SQUARE_2X2)
 	soul_phoenix.power = 60
 	soul_phoenix.description = "浴火重生的不死鸟之力。"
+	soul_phoenix.passive_type = PassiveType.HEAL
+	soul_phoenix.passive_value = 8.0  # 每回合回复8点HP
 	_register_soul(soul_phoenix)
-	
+
 	var soul_dragon = SoulPrint.new("soul_dragon", "龙之魂", Quality.LEGENDARY, ShapeType.T_SHAPE)
 	soul_dragon.power = 70
 	soul_dragon.description = "远古巨龙的灵魂力量。"
+	soul_dragon.passive_type = PassiveType.VAMPIRE
+	soul_dragon.passive_value = 0.30  # 吸血30%造成的伤害
 	_register_soul(soul_dragon)
-	
+
 	# 神话品质魂印
 	var soul_god = SoulPrint.new("soul_god", "神之祝福", Quality.MYTHIC, ShapeType.L_SHAPE)
 	soul_god.power = 100
 	soul_god.description = "神明的祝福，至高无上的力量。"
+	soul_god.passive_type = PassiveType.CRIT_CHANCE
+	soul_god.passive_value = 1.0  # 100%额外暴击伤害（双倍伤害）
+	soul_god.passive_chance = 0.40  # 40%暴击率
 	_register_soul(soul_god)
 
 # ========== 魂印使用次数管理 ==========

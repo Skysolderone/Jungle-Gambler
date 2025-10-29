@@ -428,6 +428,13 @@ func _show_tooltip(item, pos: Vector2):
 	text += "[center]━━━━━━━━━━[/center]\n"
 	text += "[color=#FFD700]力量:[/color] [color=#FFFFFF]%d[/color]\n" % soul.power
 	text += "[color=#FFD700]形状:[/color] [color=#AAAAAA]%s[/color]\n" % shape_names.get(soul.shape_type, "未知")
+
+	# 显示被动效果
+	if soul.passive_type > 0:
+		var passive_desc = soul.get_passive_description()
+		var passive_color = "#90EE90"  # 浅绿色表示被动
+		text += "[color=#FFD700]被动:[/color] [color=%s]%s[/color]\n" % [passive_color, passive_desc]
+
 	if soul.description != "":
 		text += "[center]━━━━━━━━━━[/center]\n"
 		text += "[color=#CCCCCC][i]%s[/i][/color]" % soul.description

@@ -103,20 +103,61 @@ func _initialize_loadout():
 	# 清空网格
 	for child in loadout_grid.get_children():
 		child.queue_free()
-	
+
 	await get_tree().process_frame
-	
+
+	print("=== 初始化魂印选择界面 ===")
+	print("player_all_souls数量: ", player_all_souls.size())
+
+	if player_all_souls.size() == 0:
+		print("警告：没有可用的魂印！")
+		var label = Label.new()
+		label.text = "没有可用的魂印\n请先在魂印配置界面选择魂印"
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+		loadout_grid.add_child(label)
+		return
+
 	# 创建魂印选择卡片
 	for i in range(player_all_souls.size()):
 		var soul_item = player_all_souls[i]
-		var soul = soul_item.soul_print
+		print("处理魂印", i, ": ", soul_item)
+
+		# 检查数据结构
+		if soul_item == null:
+			print("错误：魂印", i, "为null")
+			continue
+
+		# InventoryItem可能是对象而不是字典
+		var soul = null
+		if typeof(soul_item) == TYPE_OBJECT:
+			# 对象类型，直接访问属性
+			soul = soul_item.soul_print
+			print("  对象类型魂印，名称: ", soul.name, " 力量:", soul.power, " 次数:", soul_item.uses_remaining)
+		elif typeof(soul_item) == TYPE_DICTIONARY and soul_item.has("soul_print"):
+			# 字典类型
+			soul = soul_item.soul_print
+			print("  字典类型魂印，名称: ", soul.name, " 力量:", soul.power)
+		else:
+			print("错误：魂印", i, "数据格式不正确，类型:", typeof(soul_item))
+			continue
+
+		if soul == null:
+			print("错误：无法获取魂印数据")
+			continue
+
 		var card = _create_soul_card(soul, i)
 		loadout_grid.add_child(card)
 
 func _create_soul_card(soul, index: int) -> Button:
 	var button = Button.new()
-	button.custom_minimum_size = Vector2(120, 80)
+	# 增加卡片高度以容纳被动效果描述
+	var card_height = 100 if soul.passive_type > 0 else 80
+	button.custom_minimum_size = Vector2(140, card_height)
 	button.toggle_mode = true
+
+	# 设置文字自动换行和对齐
+	button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+	button.vertical_icon_alignment = VERTICAL_ALIGNMENT_TOP
 	
 	# 安全获取魂印物品数据来显示使用次数
 	var soul_item = player_all_souls[index]
@@ -168,8 +209,37 @@ func _create_soul_card(soul, index: int) -> Button:
 		uses_text = "\n(已耗尽)"
 	else:
 		uses_text = "\n次数: " + str(uses_remaining) + "/" + str(max_uses)
-	
-	button.text = soul.name + "\n力量: +" + str(soul.power) + uses_text + "\n" + quality_names[soul.quality]
+
+	# 被动效果描述
+	var passive_text = ""
+	var passive_icon = ""
+	if soul.passive_type > 0:  # 有被动效果
+		# 根据被动类型添加图标
+		match soul.passive_type:
+			1:  # HEAL
+				passive_icon = "❤"
+			2:  # POWER_CHANCE
+				passive_icon = "⚡"
+			3:  # MULT_CHANCE
+				passive_icon = "✦"
+			4:  # SHIELD
+				passive_icon = "🛡"
+			5:  # VAMPIRE
+				passive_icon = "🩸"
+			6:  # CRIT_CHANCE
+				passive_icon = "💥"
+			7:  # DODGE
+				passive_icon = "💨"
+
+		passive_text = "\n" + passive_icon + " " + soul.get_passive_description()
+
+	# 构建卡片文本
+	var card_text = soul.name + "\n"
+	card_text += "力量: +" + str(soul.power) + " | " + quality_names[soul.quality] + "\n"
+	card_text += "次数: " + str(uses_remaining) + "/" + str(max_uses) if uses_remaining > 0 else "(已耗尽)"
+	card_text += passive_text
+
+	button.text = card_text
 	
 	# 只有可用的魂印才能被选择
 	if uses_remaining > 0:
@@ -200,16 +270,24 @@ func _on_soul_card_toggled(is_pressed: bool, index: int):
 
 func _update_selected_info():
 	var total_power = 0
+	var total_multiplier = 0.0
 	var selected_count = player_selected_souls.size()
-	
+
 	for soul_item in player_selected_souls:
-		total_power += soul_item.soul_print.power
-	
+		var soul = soul_item.soul_print
+		total_power += soul.power
+		# 品质倍率加成：普通0% 非凡5% 稀有10% 史诗15% 传说20% 神话25%
+		total_multiplier += soul.quality * 0.05
+
 	var warning_text = ""
 	if selected_count == 0:
 		warning_text = " (建议选择至少1个魂印)"
-	
-	selected_info_label.text = "已选择: " + str(selected_count) + " 个魂印 | 总加成: +" + str(total_power) + warning_text
+
+	var mult_percent = int(total_multiplier * 100)
+	if mult_percent > 0:
+		selected_info_label.text = "已选择: " + str(selected_count) + " 个魂印 | 力量: +" + str(total_power) + " | 品质倍率: +" + str(mult_percent) + "%" + warning_text
+	else:
+		selected_info_label.text = "已选择: " + str(selected_count) + " 个魂印 | 总加成: +" + str(total_power) + warning_text
 
 func _start_combat():
 	auto_start = true

@@ -1,0 +1,18 @@
+{
+  "permissions": {
+    "allow": [
+      "Read(//c/Users/iask/**)",
+      "mcp__godot__run_project",
+      "mcp__godot__get_debug_output",
+      "mcp__godot-mcp__get_godot_errors",
+      "mcp__godot-mcp__get_editor_screenshot",
+      "mcp__godot-mcp__clear_output_logs",
+      "mcp__godot-mcp__play_scene",
+      "mcp__godot-mcp__get_running_scene_screenshot",
+      "mcp__godot-mcp__stop_running_scene",
+      "mcp__godot-mcp__view_script"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}
