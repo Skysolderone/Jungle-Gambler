@@ -149,9 +149,25 @@ func _setup_responsive_layout():
 	_setup_mobile_gestures()
 
 func _update_panel_size():
-	# Panel现在自动填充MainContent，无需手动设置尺寸
-	# 只需要确保网格绘制能适应Panel的实际大小
-	print("Panel将自动适配MainContent大小，网格大小：", GRID_SIZE, "x", GRID_SIZE, "，格子尺寸：", CELL_SIZE)
+	# 等待下一帧确保Panel大小已更新
+	await get_tree().process_frame
+
+	# 获取GridPanel的实际大小
+	var panel_size = grid_panel.size
+	print("GridPanel实际大小: ", panel_size)
+
+	# 立即计算网格布局参数
+	if panel_size.x > 0 and panel_size.y > 0:
+		var available_size = min(panel_size.x, panel_size.y) - 40  # 减去40px边距
+		current_cell_size = available_size / GRID_SIZE
+
+		# 居中偏移
+		current_offset_x = (panel_size.x - (GRID_SIZE * current_cell_size)) / 2
+		current_offset_y = (panel_size.y - (GRID_SIZE * current_cell_size)) / 2
+
+		print("初始化网格布局: cell_size=", current_cell_size, " offset=(", current_offset_x, ",", current_offset_y, ")")
+	else:
+		print("警告: GridPanel尺寸无效，将在绘制时计算")
 
 func _setup_mobile_gestures():
 	if has_node("/root/MobileInteractionHelper"):
@@ -284,17 +300,17 @@ func _collapse_next_ring() -> bool:
 	return true
 
 func _update_grid_layout():
-	# 获取Panel的实际大小
-	var panel_size = grid_container.size
-	
+	# 使用GridPanel的实际大小而不是GridContainer
+	var panel_size = grid_panel.size
+
 	# 计算网格能适应的最大尺寸（正方形）
 	var available_size = min(panel_size.x, panel_size.y) - 40  # 减去40px边距
 	current_cell_size = available_size / GRID_SIZE
-	
+
 	# 居中偏移
 	current_offset_x = (panel_size.x - (GRID_SIZE * current_cell_size)) / 2
 	current_offset_y = (panel_size.y - (GRID_SIZE * current_cell_size)) / 2
-	
+
 	print("网格布局更新: panel_size=", panel_size, " cell_size=", current_cell_size, " offset=(", current_offset_x, ",", current_offset_y, ")")
 
 func _draw_grid():

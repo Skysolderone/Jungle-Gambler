@@ -12,7 +12,8 @@
       "mcp__godot-mcp__stop_running_scene",
       "mcp__godot-mcp__view_script",
       "mcp__ide__getDiagnostics",
-      "Bash(godot:*)"
+      "Bash(godot:*)",
+      "mcp__godot-mcp__search_files"
     ],
     "deny": [],
     "ask": []
