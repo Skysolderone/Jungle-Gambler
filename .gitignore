@@ -1,3 +1,9 @@
 # Godot 4+ specific ignores
 .godot/
 /android/
+
+# macOS 元数据文件
+_MACOSX/
+__MACOSX/
+.DS_Store
+._*

@@ -14,6 +14,9 @@ extends Control
 @onready var battle_log = $BattlePanel/MarginContainer/VBoxContainer/BattleLog
 @onready var message_dialog = $MessageDialog
 
+# 动画管理器
+var battle_animator: BattleAnimator
+
 # 战斗阶段
 enum Phase {
 	PREPARATION,  # 准备阶段（配置魂印）
@@ -43,9 +46,13 @@ var loot_souls: Array = []
 var loot_selection_time: float = 10.0
 
 func _ready():
+	# 初始化动画管理器
+	battle_animator = BattleAnimator.new()
+	add_child(battle_animator)
+
 	# 应用响应式布局
 	_setup_responsive_layout()
-	
+
 	# 从UserSession获取战斗数据
 	var session = get_node("/root/UserSession")
 	
@@ -136,14 +143,12 @@ func _adjust_battle_layout_for_screen(screen_type):
 	
 	# 在移动端竖屏时将玩家和敌人信息垂直排列
 	if screen_type == 0:  # MOBILE_PORTRAIT
-		info_container.vertical = true
-		# 隐藏VSeparator在移动端
+		# HBoxContainer 不支持切换方向，只能隐藏分隔符
 		var vseparator = $BattlePanel/MarginContainer/VBoxContainer/InfoContainer/VSeparator
 		if vseparator:
 			vseparator.visible = false
 	else:
-		# 其他情况水平排列
-		info_container.vertical = false
+		# 其他情况显示分隔符
 		var vseparator = $BattlePanel/MarginContainer/VBoxContainer/InfoContainer/VSeparator
 		if vseparator:
 			vseparator.visible = true
@@ -265,61 +270,124 @@ func _start_combat_phase():
 func _execute_combat_round():
 	if battle_over:
 		return
-	
-	# 掷一个共用骰子
-	var dice = randi() % 6 + 1
-	
+
+	_add_log("[color=#FFFF00]━━━ 新回合 ━━━[/color]")
+
+	# 1. 骰子滚动动画
+	var viewport_size = get_viewport_rect().size
+	var dice_pos = viewport_size / 2.0
+	var dice = await battle_animator.play_dice_roll(dice_pos)
+
 	player_dice_label.text = "骰子: " + str(dice)
 	enemy_dice_label.text = "骰子: " + str(dice)
-	
-	_add_log("[color=#FFFF00]━━━ 新回合 ━━━[/color]")
 	_add_log("掷出骰子：[color=#FFD700]" + str(dice) + "[/color]（双方共用）")
-	
-	await get_tree().create_timer(1.0).timeout
-	
-	# 计算玩家力量
+
+	await get_tree().create_timer(0.5).timeout
+
+	# 2. 玩家魂印激活动画
+	var player_soul_effects = []
+	for soul_item in player_selected_souls:
+		var soul = soul_item.soul_print
+		player_soul_effects.append({
+			"name": soul.name,
+			"power": soul.power,
+			"quality": soul.quality
+		})
+
+		# 播放魂印激活特效
+		var soul_pos = Vector2(viewport_size.x * 0.3, viewport_size.y * 0.5)
+		battle_animator.play_soul_activation(soul.name, soul_pos, soul.quality)
+		await get_tree().create_timer(0.3).timeout
+
+	# 3. 计算玩家力量
 	var player_soul_bonus = 0
 	for soul_item in player_selected_souls:
 		player_soul_bonus += soul_item.soul_print.power
-	
+
 	var player_final = player_base_power * dice + player_soul_bonus
 	player_final_power_label.text = "最终力量: " + str(player_final)
-	
+
+	# 4. 播放玩家积分计算动画
+	var player_calc_pos = Vector2(viewport_size.x * 0.25, viewport_size.y * 0.3)
+	battle_animator.play_score_calculation(
+		player_base_power,
+		dice,
+		player_soul_effects,
+		player_final,
+		player_calc_pos
+	)
+
 	if player_soul_bonus > 0:
 		_add_log("玩家力量：[color=#00FF00]基础 " + str(player_base_power) + " × 骰子 " + str(dice) + " + [color=#FFD700]魂印加成 " + str(player_soul_bonus) + "[/color] = " + str(player_final) + "[/color]")
 	else:
 		_add_log("玩家力量：[color=#00FF00]" + str(player_base_power) + " × " + str(dice) + " = " + str(player_final) + "[/color]")
-	
-	# 计算敌人力量
+
+	# 等待玩家计算动画完成
+	await battle_animator.animation_completed
+
+	# 5. 计算敌人力量
+	var enemy_soul_effects = []
 	var enemy_soul_bonus = 0
 	for soul in enemy_souls:
 		enemy_soul_bonus += soul.power
-	
+		enemy_soul_effects.append({
+			"name": soul.name,
+			"power": soul.power,
+			"quality": soul.quality
+		})
+
 	var enemy_final = enemy_base_power * dice + enemy_soul_bonus
 	enemy_final_power_label.text = "最终力量: " + str(enemy_final)
-	
+
+	# 6. 播放敌人积分计算动画
+	var enemy_calc_pos = Vector2(viewport_size.x * 0.75, viewport_size.y * 0.3)
+	battle_animator.play_score_calculation(
+		enemy_base_power,
+		dice,
+		enemy_soul_effects,
+		enemy_final,
+		enemy_calc_pos
+	)
+
 	_add_log("敌人力量：[color=#FF0000]" + str(enemy_base_power) + " × " + str(dice) + " + " + str(enemy_soul_bonus) + " = " + str(enemy_final) + "[/color]")
-	
-	await get_tree().create_timer(1.0).timeout
-	
-	# 计算伤害
+
+	# 等待敌人计算动画完成
+	await battle_animator.animation_completed
+
+	await get_tree().create_timer(0.5).timeout
+
+	# 7. 计算伤害并播放伤害动画
 	var damage_diff = abs(player_final - enemy_final)
-	
+
 	if player_final > enemy_final:
 		enemy_hp -= damage_diff
 		if enemy_hp < 0:
 			enemy_hp = 0
+
 		_add_log("[color=#00FF00]玩家获胜！对敌人造成 " + str(damage_diff) + " 点伤害！[/color]")
+
+		# 敌人受伤动画
+		var enemy_pos = Vector2(viewport_size.x * 0.75, viewport_size.y * 0.5)
+		battle_animator.play_damage_number(damage_diff, enemy_pos, damage_diff > 100)
+		battle_animator.play_screen_shake(min(damage_diff / 10.0, 15.0), 0.3)
+
 	elif enemy_final > player_final:
 		player_hp -= damage_diff
 		if player_hp < 0:
 			player_hp = 0
+
 		_add_log("[color=#FF0000]敌人获胜！受到 " + str(damage_diff) + " 点伤害！[/color]")
+
+		# 玩家受伤动画
+		var player_pos = Vector2(viewport_size.x * 0.25, viewport_size.y * 0.5)
+		battle_animator.play_damage_number(damage_diff, player_pos, false)
+		battle_animator.play_screen_shake(min(damage_diff / 10.0, 15.0), 0.3)
+
 	else:
 		_add_log("[color=#FFFF00]平局！双方均未受伤！[/color]")
-	
+
 	_update_display()
-	
+
 	await get_tree().create_timer(1.5).timeout
 	
 	# 检查战斗结果
@@ -333,8 +401,12 @@ func _execute_combat_round():
 func _player_defeated():
 	battle_over = true
 	_add_log("[color=#808080]战斗失败！你被击败了...[/color]")
-	
-	await get_tree().create_timer(2.0).timeout
+
+	# 播放失败动画
+	var viewport_size = get_viewport_rect().size
+	await battle_animator.play_defeat_animation(viewport_size / 2.0)
+
+	await get_tree().create_timer(1.0).timeout
 	
 	# 保存战斗结果到UserSession
 	var session = get_node("/root/UserSession")
@@ -353,8 +425,12 @@ func _enemy_defeated():
 	battle_over = true
 	_add_log("[color=#FFD700]战斗胜利！敌人被击败了！[/color]")
 	_add_log("[color=#00FF00]获得敌人的魂印！[/color]")
-	
-	await get_tree().create_timer(2.0).timeout
+
+	# 播放胜利动画
+	var viewport_size = get_viewport_rect().size
+	await battle_animator.play_victory_animation(viewport_size / 2.0)
+
+	await get_tree().create_timer(1.0).timeout
 	
 	# 检查背包空间
 	var soul_system = _get_soul_system()
