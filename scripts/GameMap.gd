@@ -859,8 +859,8 @@ func _start_battle(enemy_data: Dictionary):
 	
 	print("保存到UserSession的战斗魂印数量: ", soul_loadout.size())
 	
-	# 跳转到战前准备阶段
-	get_tree().change_scene_to_file("res://scenes/PreparationPhase.tscn")
+	# 跳转到战斗场景
+	get_tree().change_scene_to_file("res://scenes/Battle.tscn")
 
 func _generate_enemy_souls(enemy_power: int) -> Array:
 	# 根据敌人力量生成魂印
