@@ -1,0 +1,53 @@
+[gd_scene load_steps=2 format=3 uid="uid://cqm3406n4rr6x"]
+
+[ext_resource type="Script" uid="uid://cyctwxlxp67ki" path="res://scripts/BattleVictory.gd" id="1_daok5"]
+
+[node name="BattleVictory" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_daok5")
+
+[node name="MainPanel" type="PanelContainer" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="MarginContainer" type="MarginContainer" parent="MainPanel"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="MainPanel/MarginContainer"]
+layout_mode = 2
+
+[node name="TitleLabel" type="Label" parent="MainPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "战斗胜利！"
+horizontal_alignment = 1
+
+[node name="ResultLabel" type="Label" parent="MainPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "HP 变化: 0"
+horizontal_alignment = 1
+
+[node name="LootScroll" type="ScrollContainer" parent="MainPanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 400)
+layout_mode = 2
+
+[node name="LootContainer" type="VBoxContainer" parent="MainPanel/MarginContainer/VBoxContainer/LootScroll"]
+layout_mode = 2
+
+[node name="ButtonContainer" type="HBoxContainer" parent="MainPanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="TakeAllButton" type="Button" parent="MainPanel/MarginContainer/VBoxContainer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "全部拾取"
+
+[node name="SkipButton" type="Button" parent="MainPanel/MarginContainer/VBoxContainer/ButtonContainer"]
+layout_mode = 2
+size_flags_horizontal = 3
+text = "直接结束"

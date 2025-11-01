@@ -150,6 +150,17 @@ theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 text = "退出地图"
 
+[node name="VSeparator4" type="ColorRect" parent="TopBar/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 2
+color = Color(0.5, 0.5, 0.5, 1)
+
+[node name="EvacuationLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(200, 30)
+layout_mode = 2
+horizontal_alignment = 1
+vertical_alignment = 1
+
 [node name="MainContent" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15

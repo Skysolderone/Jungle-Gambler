@@ -1,6 +1,6 @@
 # CLAUDE.md
 
-没有要求不需要生成文档，使用 godot-expert 搭配 mcp 工具进行代码编写跟调试
+没有要求不需要生成文档，使用 godot-expert 搭配 mcp 工具进行代码编写跟调试，如果mcp工具返回的数据太大，分页读取
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
 ## 项目概述

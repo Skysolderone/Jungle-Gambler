@@ -223,7 +223,12 @@ func _create_soul_card(soul, index: int) -> Button:
 	# 获取魂印使用次数信息
 	var soul_item = player_all_souls[index]
 	var uses_text = str(soul_item.uses_remaining) + "/" + str(soul_item.max_uses)
-	button.text = soul.name + "\n力量+" + str(soul.power) + "\n次数:" + uses_text
+
+	# 显示魂印类型和效果
+	var type_text = "[主动]" if soul.soul_type == 0 else "[被动]"
+	var effect_desc = soul.get_effect_description()
+
+	button.text = soul.name + " " + type_text + "\n力量+" + str(soul.power) + "\n" + effect_desc + "\n次数:" + uses_text
 	button.pressed.connect(_on_soul_card_pressed.bind(index))
 	
 	return button
@@ -595,7 +600,10 @@ func _create_loot_card(soul, is_loot: bool, inventory_index: int = -1) -> Button
 	button.add_theme_stylebox_override("pressed", style_pressed)
 	
 	# 设置文本内容和颜色
-	var text = soul.name + "\n力量: +" + str(soul.power) + "\n" + quality_names[soul.quality]
+	var type_text = "[主动]" if soul.soul_type == 0 else "[被动]"
+	var effect_desc = soul.get_effect_description()
+
+	var text = soul.name + " " + type_text + "\n力量: +" + str(soul.power) + "\n" + quality_names[soul.quality] + "\n" + effect_desc
 	button.text = text
 	button.add_theme_color_override("font_color", Color.WHITE)
 	

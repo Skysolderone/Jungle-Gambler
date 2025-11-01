@@ -25,7 +25,13 @@ enum ShapeType {
 	TRIANGLE,     # 三角形（占3格）
 }
 
-# 被动效果类型
+# 魂印类型（新增）
+enum SoulType {
+	ACTIVE,   # 主动类型：战斗中直接生效
+	PASSIVE   # 被动类型：战斗中有概率触发
+}
+
+# 被动效果类型（已弃用，保留兼容性）
 enum PassiveType {
 	NONE,           # 无被动
 	HEAL,           # 回血：每回合恢复HP
@@ -46,13 +52,25 @@ class SoulPrint:
 	var shape_type: ShapeType
 	var shape_data: Array  # 形状数据 [[0,0], [0,1], [1,0]] 表示占用的相对格子
 	var icon: String
-	var power: int  # 魂印力量值
-	var special_effect: String  # 特殊效果（已弃用，使用passive_type）
+	var power: int  # 魂印基础力量值
+	var special_effect: String  # 特殊效果（已弃用）
 
-	# 被动效果系统
+	# 新的魂印类型系统
+	var soul_type: SoulType  # 魂印类型（主动/被动）
+
+	# 主动类型属性
+	var active_multiplier: float  # 主动纯倍率（如 1.5 表示 1.5x）
+	var active_bonus_percent: float  # 主动加成百分比（如 0.5 表示 +50%）
+
+	# 被动类型属性
+	var passive_trigger_chance: float  # 被动触发概率（0.0-1.0）
+	var passive_bonus_flat: int  # 被动纯数值加成
+	var passive_bonus_multiplier: float  # 被动倍率加成（如 1.5 表示 1.5x）
+
+	# 旧的被动效果系统（保留兼容性）
 	var passive_type: PassiveType  # 被动类型
-	var passive_value: float  # 被动数值（回血量/力量值/倍率值/几率等）
-	var passive_chance: float  # 触发几率（0-1），对于需要几率判定的被动
+	var passive_value: float  # 被动数值
+	var passive_chance: float  # 触发几率
 
 	func _init(soul_id: String, soul_name: String, soul_quality: Quality, soul_shape: ShapeType):
 		id = soul_id
@@ -65,31 +83,50 @@ class SoulPrint:
 		power = 10
 		special_effect = ""
 
-		# 初始化被动效果
+		# 初始化新的魂印类型系统
+		soul_type = SoulType.ACTIVE
+		active_multiplier = 0.0
+		active_bonus_percent = 0.0
+		passive_trigger_chance = 0.0
+		passive_bonus_flat = 0
+		passive_bonus_multiplier = 0.0
+
+		# 初始化旧的被动效果（兼容性）
 		passive_type = PassiveType.NONE
 		passive_value = 0.0
 		passive_chance = 0.0
 
-	func get_passive_description() -> String:
-		# 返回被动效果的描述文本
-		match passive_type:
-			PassiveType.NONE:
-				return ""
-			PassiveType.HEAL:
-				return "每回合回复 " + str(int(passive_value)) + " HP"
-			PassiveType.POWER_CHANCE:
-				return str(int(passive_chance * 100)) + "% 几率额外 +" + str(int(passive_value)) + " 力量"
-			PassiveType.MULT_CHANCE:
-				return str(int(passive_chance * 100)) + "% 几率额外 +" + str(int(passive_value * 100)) + "% 倍率"
-			PassiveType.SHIELD:
-				return "减少 " + str(int(passive_value)) + "% 受到的伤害"
-			PassiveType.VAMPIRE:
-				return "造成伤害时回复 " + str(int(passive_value * 100)) + "% HP"
-			PassiveType.CRIT_CHANCE:
-				return str(int(passive_chance * 100)) + "% 几率造成 " + str(int(passive_value * 100)) + "% 额外伤害"
-			PassiveType.DODGE:
-				return str(int(passive_value * 100)) + "% 几率闪避伤害"
+	func get_effect_description() -> String:
+		# 返回魂印效果的描述文本
+		match soul_type:
+			SoulType.ACTIVE:
+				# 主动类型描述
+				var desc = "主动："
+				if active_multiplier > 0:
+					desc += " %.1fx 伤害倍率" % active_multiplier
+				elif active_bonus_percent > 0:
+					desc += " +%d%% 伤害" % int(active_bonus_percent * 100)
+				else:
+					desc += " 无特殊效果"
+				return desc
+			SoulType.PASSIVE:
+				# 被动类型描述
+				var desc = "被动："
+				var chance_text = " %d%% 概率" % int(passive_trigger_chance * 100)
+				if passive_bonus_flat > 0 and passive_bonus_multiplier > 0:
+					desc += chance_text + " +%d 伤害 + %.1fx 暴击" % [passive_bonus_flat, passive_bonus_multiplier]
+				elif passive_bonus_flat > 0:
+					desc += chance_text + " +%d 伤害" % passive_bonus_flat
+				elif passive_bonus_multiplier > 0:
+					desc += chance_text + " %.1fx 暴击" % passive_bonus_multiplier
+				else:
+					desc += " 无特殊效果"
+				return desc
 		return ""
+
+	func get_passive_description() -> String:
+		# 保留旧方法用于兼容性，调用新方法
+		return get_effect_description()
 	
 	func _get_shape_data(shape: ShapeType) -> Array:
 		match shape:
@@ -156,11 +193,19 @@ class SoulPrint:
 			"shape_type": shape_type,
 			"power": power,
 			"special_effect": special_effect,
+			# 新的魂印类型系统
+			"soul_type": soul_type,
+			"active_multiplier": active_multiplier,
+			"active_bonus_percent": active_bonus_percent,
+			"passive_trigger_chance": passive_trigger_chance,
+			"passive_bonus_flat": passive_bonus_flat,
+			"passive_bonus_multiplier": passive_bonus_multiplier,
+			# 旧的被动效果系统（兼容性）
 			"passive_type": passive_type,
 			"passive_value": passive_value,
 			"passive_chance": passive_chance
 		}
-	
+
 	static func from_dict(data: Dictionary) -> SoulPrint:
 		var soul = SoulPrint.new(
 			data.get("id", ""),
@@ -171,6 +216,14 @@ class SoulPrint:
 		soul.description = data.get("description", "")
 		soul.power = data.get("power", 10)
 		soul.special_effect = data.get("special_effect", "")
+		# 加载新的魂印类型系统
+		soul.soul_type = data.get("soul_type", SoulType.ACTIVE)
+		soul.active_multiplier = data.get("active_multiplier", 0.0)
+		soul.active_bonus_percent = data.get("active_bonus_percent", 0.0)
+		soul.passive_trigger_chance = data.get("passive_trigger_chance", 0.0)
+		soul.passive_bonus_flat = data.get("passive_bonus_flat", 0)
+		soul.passive_bonus_multiplier = data.get("passive_bonus_multiplier", 0.0)
+		# 加载旧的被动效果系统（兼容性）
 		soul.passive_type = data.get("passive_type", PassiveType.NONE)
 		soul.passive_value = data.get("passive_value", 0.0)
 		soul.passive_chance = data.get("passive_chance", 0.0)
@@ -246,87 +299,124 @@ func _ready():
 var soul_database: Dictionary = {}
 
 func _initialize_soul_database():
-	# 普通品质魂印
+	# ========== 主动类型魂印 ==========
+
+	# 普通品质 - 主动类型
 	var soul_basic_1 = SoulPrint.new("soul_basic_1", "初始魂印", Quality.COMMON, ShapeType.SQUARE_1X1)
 	soul_basic_1.power = 5
+	soul_basic_1.soul_type = SoulType.ACTIVE
+	soul_basic_1.active_bonus_percent = 0.10  # +10% 伤害
 	soul_basic_1.description = "最基础的魂印，适合新手使用。"
 	_register_soul(soul_basic_1)
-	
+
 	var soul_basic_2 = SoulPrint.new("soul_basic_2", "双生魂印", Quality.COMMON, ShapeType.RECT_1X2)
 	soul_basic_2.power = 8
+	soul_basic_2.soul_type = SoulType.ACTIVE
+	soul_basic_2.active_bonus_percent = 0.15  # +15% 伤害
 	soul_basic_2.description = "双格魂印，提供额外的空间利用。"
 	_register_soul(soul_basic_2)
-	
-	# 非凡品质魂印
-	var soul_forest = SoulPrint.new("soul_forest", "森林之魂", Quality.UNCOMMON, ShapeType.SQUARE_2X2)
-	soul_forest.power = 15
-	soul_forest.description = "蕴含森林之力，提升生命力。"
-	soul_forest.passive_type = PassiveType.HEAL
-	soul_forest.passive_value = 3.0  # 每回合回复3点HP
-	_register_soul(soul_forest)
 
-	var soul_wind = SoulPrint.new("soul_wind", "疾风魂印", Quality.UNCOMMON, ShapeType.RECT_1X3)
-	soul_wind.power = 12
-	soul_wind.description = "风之力量，提升移动速度。"
-	soul_wind.passive_type = PassiveType.DODGE
-	soul_wind.passive_value = 0.15  # 15%闪避率
-	_register_soul(soul_wind)
-	
-	# 稀有品质魂印
+	# 非凡品质 - 主动类型
+	var soul_force = SoulPrint.new("soul_force", "力量之源", Quality.UNCOMMON, ShapeType.SQUARE_2X2)
+	soul_force.power = 15
+	soul_force.soul_type = SoulType.ACTIVE
+	soul_force.active_bonus_percent = 0.30  # +30% 伤害
+	soul_force.description = "蕴含纯粹的力量，主动增强你的攻击。"
+	_register_soul(soul_force)
+
+	var soul_rage = SoulPrint.new("soul_rage", "狂暴打击", Quality.UNCOMMON, ShapeType.RECT_1X3)
+	soul_rage.power = 12
+	soul_rage.soul_type = SoulType.ACTIVE
+	soul_rage.active_multiplier = 1.5  # 1.5x 伤害倍率
+	soul_rage.description = "狂暴的力量，直接提升伤害倍率。"
+	_register_soul(soul_rage)
+
+	# 稀有品质 - 主动类型
 	var soul_flame = SoulPrint.new("soul_flame", "火焰之心", Quality.RARE, ShapeType.L_SHAPE)
 	soul_flame.power = 25
-	soul_flame.description = "炽热的火焰之力，增强攻击力。"
-	soul_flame.passive_type = PassiveType.POWER_CHANCE
-	soul_flame.passive_value = 15.0  # 额外15点力量
-	soul_flame.passive_chance = 0.30  # 30%触发几率
+	soul_flame.soul_type = SoulType.ACTIVE
+	soul_flame.active_bonus_percent = 0.50  # +50% 伤害
+	soul_flame.description = "炽热的火焰之力，持续增强攻击力。"
 	_register_soul(soul_flame)
 
-	var soul_ocean = SoulPrint.new("soul_ocean", "深海之力", Quality.RARE, ShapeType.T_SHAPE)
-	soul_ocean.power = 28
-	soul_ocean.description = "深海的神秘力量，提升防御。"
-	soul_ocean.passive_type = PassiveType.SHIELD
-	soul_ocean.passive_value = 0.20  # 减少20%受到的伤害
-	_register_soul(soul_ocean)
-	
-	var soul_thunder = SoulPrint.new("soul_thunder", "雷霆之怒", Quality.EPIC, ShapeType.RECT_1X3)
-	soul_thunder.power = 40
-	soul_thunder.description = "雷霆之怒，闪电般的速度。"
-	soul_thunder.passive_type = PassiveType.MULT_CHANCE
-	soul_thunder.passive_value = 0.25  # 额外25%倍率
-	soul_thunder.passive_chance = 0.35  # 35%触发几率
+	var soul_storm = SoulPrint.new("soul_storm", "风暴核心", Quality.RARE, ShapeType.T_SHAPE)
+	soul_storm.power = 28
+	soul_storm.soul_type = SoulType.ACTIVE
+	soul_storm.active_multiplier = 1.8  # 1.8x 伤害倍率
+	soul_storm.description = "风暴的核心力量，大幅提升伤害倍率。"
+	_register_soul(soul_storm)
+
+	# 史诗品质 - 主动类型
+	var soul_titan = SoulPrint.new("soul_titan", "泰坦之力", Quality.EPIC, ShapeType.SQUARE_2X2)
+	soul_titan.power = 40
+	soul_titan.soul_type = SoulType.ACTIVE
+	soul_titan.active_multiplier = 2.0  # 2.0x 伤害倍率
+	soul_titan.description = "泰坦的巨大力量，双倍伤害输出。"
+	_register_soul(soul_titan)
+
+	# ========== 被动类型魂印 ==========
+
+	# 非凡品质 - 被动类型
+	var soul_lucky = SoulPrint.new("soul_lucky", "幸运一击", Quality.UNCOMMON, ShapeType.RECT_2X1)
+	soul_lucky.power = 10
+	soul_lucky.soul_type = SoulType.PASSIVE
+	soul_lucky.passive_trigger_chance = 0.25  # 25% 触发概率
+	soul_lucky.passive_bonus_flat = 50  # +50 纯数值伤害
+	soul_lucky.description = "幸运女神的眷顾，有概率造成额外伤害。"
+	_register_soul(soul_lucky)
+
+	# 稀有品质 - 被动类型
+	var soul_thunder = SoulPrint.new("soul_thunder", "雷霆一击", Quality.RARE, ShapeType.RECT_1X3)
+	soul_thunder.power = 20
+	soul_thunder.soul_type = SoulType.PASSIVE
+	soul_thunder.passive_trigger_chance = 0.30  # 30% 触发概率
+	soul_thunder.passive_bonus_flat = 100  # +100 纯数值伤害
+	soul_thunder.description = "雷霆之怒，有概率释放强大的额外伤害。"
 	_register_soul(soul_thunder)
 
-	# 史诗品质魂印
-	var soul_shadow = SoulPrint.new("soul_shadow", "暗影追踪", Quality.EPIC, ShapeType.TRIANGLE)
-	soul_shadow.power = 45
-	soul_shadow.description = "来自暗影的追踪者，提升暴击。"
-	soul_shadow.passive_type = PassiveType.CRIT_CHANCE
-	soul_shadow.passive_value = 0.50  # 50%额外暴击伤害
-	soul_shadow.passive_chance = 0.25  # 25%暴击率
+	var soul_shadow = SoulPrint.new("soul_shadow", "暗影追踪", Quality.RARE, ShapeType.TRIANGLE)
+	soul_shadow.power = 22
+	soul_shadow.soul_type = SoulType.PASSIVE
+	soul_shadow.passive_trigger_chance = 0.20  # 20% 触发概率
+	soul_shadow.passive_bonus_multiplier = 1.5  # 1.5x 暴击
+	soul_shadow.description = "来自暗影的追踪者，有概率造成暴击伤害。"
 	_register_soul(soul_shadow)
-	
-	# 传说品质魂印
-	var soul_phoenix = SoulPrint.new("soul_phoenix", "不死鸟", Quality.LEGENDARY, ShapeType.SQUARE_2X2)
-	soul_phoenix.power = 60
-	soul_phoenix.description = "浴火重生的不死鸟之力。"
-	soul_phoenix.passive_type = PassiveType.HEAL
-	soul_phoenix.passive_value = 8.0  # 每回合回复8点HP
+
+	# 史诗品质 - 被动类型
+	var soul_crit = SoulPrint.new("soul_crit", "致命暴击", Quality.EPIC, ShapeType.L_SHAPE)
+	soul_crit.power = 35
+	soul_crit.soul_type = SoulType.PASSIVE
+	soul_crit.passive_trigger_chance = 0.15  # 15% 触发概率
+	soul_crit.passive_bonus_multiplier = 2.0  # 2.0x 暴击
+	soul_crit.description = "致命的一击，低概率但造成双倍暴击伤害。"
+	_register_soul(soul_crit)
+
+	# 传说品质 - 被动类型
+	var soul_phoenix = SoulPrint.new("soul_phoenix", "凤凰之羽", Quality.LEGENDARY, ShapeType.SQUARE_2X2)
+	soul_phoenix.power = 50
+	soul_phoenix.soul_type = SoulType.PASSIVE
+	soul_phoenix.passive_trigger_chance = 0.35  # 35% 触发概率
+	soul_phoenix.passive_bonus_flat = 200  # +200 纯数值伤害
+	soul_phoenix.passive_bonus_multiplier = 1.5  # 1.5x 暴击
+	soul_phoenix.description = "浴火重生的不死鸟之力，强大的被动效果。"
 	_register_soul(soul_phoenix)
 
+	# 传说品质 - 主动类型
 	var soul_dragon = SoulPrint.new("soul_dragon", "龙之魂", Quality.LEGENDARY, ShapeType.T_SHAPE)
 	soul_dragon.power = 70
-	soul_dragon.description = "远古巨龙的灵魂力量。"
-	soul_dragon.passive_type = PassiveType.VAMPIRE
-	soul_dragon.passive_value = 0.30  # 吸血30%造成的伤害
+	soul_dragon.soul_type = SoulType.ACTIVE
+	soul_dragon.active_multiplier = 2.5  # 2.5x 伤害倍率
+	soul_dragon.description = "远古巨龙的灵魂力量，巨大的伤害提升。"
 	_register_soul(soul_dragon)
 
-	# 神话品质魂印
+	# 神话品质 - 被动类型
 	var soul_god = SoulPrint.new("soul_god", "神之祝福", Quality.MYTHIC, ShapeType.L_SHAPE)
 	soul_god.power = 100
+	soul_god.soul_type = SoulType.PASSIVE
+	soul_god.passive_trigger_chance = 0.40  # 40% 触发概率
+	soul_god.passive_bonus_flat = 300  # +300 纯数值伤害
+	soul_god.passive_bonus_multiplier = 2.0  # 2.0x 暴击
 	soul_god.description = "神明的祝福，至高无上的力量。"
-	soul_god.passive_type = PassiveType.CRIT_CHANCE
-	soul_god.passive_value = 1.0  # 100%额外暴击伤害（双倍伤害）
-	soul_god.passive_chance = 0.40  # 40%暴击率
 	_register_soul(soul_god)
 
 # ========== 魂印使用次数管理 ==========

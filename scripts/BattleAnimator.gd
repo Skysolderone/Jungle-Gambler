@@ -39,6 +39,9 @@ func play_score_calculation(
 	var calculation_panel = _create_calculation_panel(position)
 	animation_layer.add_child(calculation_panel)
 
+	# 等待一帧确保节点完全添加到场景树
+	await get_tree().process_frame
+
 	# 动画序列
 	await _show_base_calculation(calculation_panel, base_power, dice)
 	await get_tree().create_timer(0.5).timeout
@@ -119,7 +122,13 @@ func _create_calculation_panel(pos: Vector2) -> Control:
 
 func _show_base_calculation(panel: Control, base_power: int, dice: int) -> void:
 	"""显示基础计算"""
-	var calc_container = panel.find_child("CalcContainer")
+	# 获取容器：PanelContainer -> VBoxContainer(0) -> CalcContainer(1)
+	var vbox = panel.get_child(0)
+	var calc_container = vbox.get_child(1)
+
+	if calc_container == null:
+		push_error("无法找到 CalcContainer")
+		return
 
 	# 基础力量行
 	var base_line = _create_calculation_line("基础力量", str(base_power), Color(0.8, 0.8, 1.0))
@@ -144,7 +153,13 @@ func _show_soul_effects(panel: Control, soul_effects: Array) -> void:
 	if soul_effects.is_empty():
 		return
 
-	var calc_container = panel.find_child("CalcContainer")
+	# 获取容器：PanelContainer -> VBoxContainer(0) -> CalcContainer(1)
+	var vbox = panel.get_child(0)
+	var calc_container = vbox.get_child(1)
+
+	if calc_container == null:
+		push_error("无法找到 CalcContainer")
+		return
 
 	# 添加魂印标题
 	var soul_title = Label.new()
@@ -188,7 +203,13 @@ func _show_soul_effects(panel: Control, soul_effects: Array) -> void:
 
 func _show_final_result(panel: Control, final_damage: int) -> void:
 	"""显示最终结果"""
-	var final_label = panel.find_child("FinalLabel")
+	# 获取 FinalLabel：PanelContainer -> VBoxContainer(0) -> FinalLabel(3)
+	var vbox = panel.get_child(0)
+	var final_label = vbox.get_child(3)
+
+	if final_label == null:
+		push_error("无法找到 FinalLabel")
+		return
 	final_label.text = "最终伤害: " + str(final_damage)
 	final_label.visible = true
 	final_label.modulate.a = 0
@@ -362,7 +383,11 @@ func _create_dice_panel(pos: Vector2) -> Control:
 
 func _animate_dice_roll(dice_panel: Control) -> int:
 	"""骰子滚动动画"""
-	var dice_label = dice_panel.find_child("DiceLabel") as Label
+	var dice_label = dice_panel.get_child(0) as Label
+
+	if dice_label == null:
+		push_error("无法找到骰子标签")
+		return 1
 
 	# 快速切换数字模拟滚动
 	var roll_duration = 1.5  # 滚动时间

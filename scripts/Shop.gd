@@ -131,9 +131,13 @@ func _create_item_cards():
 		items_container.add_child(card)
 
 func _create_soul_card(soul, index: int) -> Panel:
+	var soul_system = _get_soul_system()
+	if soul_system == null:
+		return Panel.new()
+
 	var card = Panel.new()
-	card.custom_minimum_size = Vector2(200, 180)
-	
+	card.custom_minimum_size = Vector2(200, 220)  # 增加高度以容纳新内容
+
 	# 设置卡片样式
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.15, 0.15, 0.18, 1)
@@ -175,14 +179,28 @@ func _create_soul_card(soul, index: int) -> Panel:
 	quality_label_card.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(quality_label_card)
 	
-	# 力量
-	var power_label_card = Label.new()
-	power_label_card.text = "力量: " + str(soul.power)
-	power_label_card.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	power_label_card.add_theme_color_override("font_color", Color(1, 0.85, 0.4, 1))
-	power_label_card.add_theme_font_size_override("font_size", 16)
-	vbox.add_child(power_label_card)
-	
+	# 类型标签
+	var type_label = Label.new()
+	if soul.soul_type == soul_system.SoulType.ACTIVE:
+		type_label.text = "[主动]"
+		type_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.0))  # 橙色
+	else:
+		type_label.text = "[被动]"
+		type_label.add_theme_color_override("font_color", Color(0.5, 0.5, 1.0))  # 蓝色
+	type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	type_label.add_theme_font_size_override("font_size", 14)
+	vbox.add_child(type_label)
+
+	# 效果描述
+	var effect_label = Label.new()
+	effect_label.text = soul.get_effect_description()
+	effect_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	effect_label.add_theme_color_override("font_color", Color(0.8, 0.8, 1.0))
+	effect_label.add_theme_font_size_override("font_size", 12)
+	effect_label.autowrap_mode = TextServer.AUTOWRAP_WORD
+	effect_label.custom_minimum_size = Vector2(180, 0)
+	vbox.add_child(effect_label)
+
 	# 间距
 	var spacer = Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -225,14 +243,20 @@ func _show_soul_details(soul):
 	quality_label.add_theme_color_override("font_color", quality_colors.get(soul.quality, Color.WHITE))
 	
 	shape_label.text = "形状：" + shape_names.get(soul.shape_type, "未知")
-	power_label.text = "力量：" + str(soul.power)
-	
-	# 更新描述，包含被动效果
+
+	# 显示魂印类型
+	var soul_system = _get_soul_system()
+	var type_text = ""
+	if soul_system:
+		if soul.soul_type == soul_system.SoulType.ACTIVE:
+			type_text = "[主动] "
+		else:
+			type_text = "[被动] "
+	power_label.text = type_text + "效果：" + soul.get_effect_description()
+
+	# 更新描述
 	var full_description = soul.description
-	var passive_desc = soul.get_passive_description()
-	if passive_desc != "":
-		full_description += "\n被动：" + passive_desc
-	
+
 	desc_label.text = "描述：" + full_description
 	price_label.text = "价格：免费（调试）"
 

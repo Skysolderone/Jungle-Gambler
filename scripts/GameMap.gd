@@ -4,6 +4,7 @@ extends Control
 @onready var player_info_label = $TopBar/MarginContainer/HBoxContainer/PlayerInfoLabel
 @onready var power_label = $TopBar/MarginContainer/HBoxContainer/PowerLabel
 @onready var exploration_label = $TopBar/MarginContainer/HBoxContainer/ExplorationLabel
+@onready var evacuation_label = $TopBar/MarginContainer/HBoxContainer/EvacuationLabel
 @onready var grid_container = $MainContent/GridPanel/GridContainer
 @onready var grid_panel = $MainContent/GridPanel
 @onready var brightness_overlay = $BrightnessOverlay
@@ -112,7 +113,8 @@ func _ready():
 		_generate_map_content()
 	
 	_update_info()
-	
+	_update_evacuation_status()
+
 	# 连接绘制和输入
 	grid_container.draw.connect(_draw_grid)
 	grid_container.gui_input.connect(_on_grid_gui_input)
@@ -804,6 +806,7 @@ func _move_to_cell(target_pos: Vector2i):
 		if explored_count >= explore_threshold and not show_evacuation:
 			show_evacuation = true
 			_show_message("探索进度已达 " + str(int(explored_count * 100.0 / (GRID_SIZE * GRID_SIZE))) + "%\n撤离点已显示在地图上！")
+			_update_evacuation_status()
 
 	# 移动玩家
 	var old_pos = player_pos
@@ -858,9 +861,9 @@ func _start_battle(enemy_data: Dictionary):
 	session.set_meta("return_to_map", true)
 	
 	print("保存到UserSession的战斗魂印数量: ", soul_loadout.size())
-	
-	# 跳转到战斗场景
-	get_tree().change_scene_to_file("res://scenes/Battle.tscn")
+
+	# 跳转到准备场景
+	get_tree().change_scene_to_file("res://scenes/BattlePreparation.tscn")
 
 func _generate_enemy_souls(enemy_power: int) -> Array:
 	# 根据敌人力量生成魂印
@@ -1032,11 +1035,41 @@ func _get_soul_system():
 func _update_info():
 	player_info_label.text = "位置: (" + str(player_pos.x) + "," + str(player_pos.y) + ") | HP: " + str(player_hp) + "/" + str(max_hp)
 	power_label.text = "总力量: " + str(_calculate_total_power())
-	
+
 	# 更新探索进度
 	var total_cells = GRID_SIZE * GRID_SIZE
 	var exploration_percent = int(explored_count * 100.0 / total_cells)
 	exploration_label.text = "探索: " + str(exploration_percent) + "% (" + str(explored_count) + "/" + str(total_cells) + ")"
+
+func _update_evacuation_status():
+	"""更新撤离点状态显示"""
+	if show_evacuation:
+		evacuation_label.text = "⚠ 撤离点已出现 ⚠"
+		evacuation_label.add_theme_font_size_override("font_size", 20)
+		evacuation_label.add_theme_color_override("font_color", Color(1.0, 1.0, 0.0))  # 黄色
+
+		# 添加背景高亮
+		var style_box = StyleBoxFlat.new()
+		style_box.bg_color = Color(0.0, 0.5, 0.0, 0.8)  # 深绿色背景
+		style_box.set_corner_radius_all(5)
+		evacuation_label.add_theme_stylebox_override("normal", style_box)
+
+		# 开始闪烁动画
+		_start_evacuation_blink()
+	else:
+		evacuation_label.text = "撤离点: 未出现"
+		evacuation_label.add_theme_font_size_override("font_size", 14)
+		evacuation_label.add_theme_color_override("font_color", Color(0.7, 0.7, 0.7))  # 灰色
+		evacuation_label.remove_theme_stylebox_override("normal")
+
+func _start_evacuation_blink():
+	"""撤离点标签闪烁动画"""
+	var tween = create_tween()
+	tween.set_loops()  # 无限循环
+
+	# 在黄色和白色之间闪烁
+	tween.tween_property(evacuation_label, "theme_override_colors/font_color", Color(1.0, 1.0, 1.0), 0.5)
+	tween.tween_property(evacuation_label, "theme_override_colors/font_color", Color(1.0, 1.0, 0.0), 0.5)
 
 func _evacuate():
 	# 成功撤离，保留所有收集的魂印

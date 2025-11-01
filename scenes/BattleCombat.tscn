@@ -1,0 +1,69 @@
+[gd_scene load_steps=2 format=3 uid="uid://b2wqvjnlo7468"]
+
+[ext_resource type="Script" uid="uid://fuanv0uiedt0" path="res://scripts/BattleCombat.gd" id="1_xh58a"]
+
+[node name="BattleCombat" type="Control"]
+layout_mode = 3
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+grow_horizontal = 2
+grow_vertical = 2
+script = ExtResource("1_xh58a")
+
+[node name="BattlePanel" type="PanelContainer" parent="."]
+layout_mode = 0
+anchor_right = 1.0
+anchor_bottom = 1.0
+
+[node name="MarginContainer" type="MarginContainer" parent="BattlePanel"]
+layout_mode = 2
+
+[node name="VBoxContainer" type="VBoxContainer" parent="BattlePanel/MarginContainer"]
+layout_mode = 2
+
+[node name="PhaseLabel" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+text = "战斗回合"
+horizontal_alignment = 1
+
+[node name="InfoContainer" type="HBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
+layout_mode = 2
+
+[node name="PlayerInfo" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer"]
+layout_mode = 2
+
+[node name="PlayerHP" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
+layout_mode = 2
+
+[node name="PlayerPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
+layout_mode = 2
+
+[node name="PlayerDice" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
+layout_mode = 2
+
+[node name="PlayerFinalPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
+layout_mode = 2
+
+[node name="VSeparator" type="VSeparator" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer"]
+layout_mode = 2
+
+[node name="EnemyInfo" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer"]
+layout_mode = 2
+
+[node name="EnemyHP" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
+layout_mode = 2
+
+[node name="EnemyPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
+layout_mode = 2
+
+[node name="EnemyDice" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
+layout_mode = 2
+
+[node name="EnemyFinalPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
+layout_mode = 2
+
+[node name="BattleLog" type="RichTextLabel" parent="BattlePanel/MarginContainer/VBoxContainer"]
+custom_minimum_size = Vector2(0, 300)
+layout_mode = 2
+bbcode_enabled = true

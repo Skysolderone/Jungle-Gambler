@@ -243,14 +243,19 @@ func _create_loot_card(soul, is_interactive: bool, index: int, is_loot: bool) ->
 	button.add_theme_stylebox_override("normal", style)
 	
 	var quality_names = ["普通", "非凡", "稀有", "史诗", "传说", "神话"]
-	var button_text = soul.name + "\n力量: " + str(soul.power) + "\n" + quality_names[soul.quality]
-	
+
+	# 添加魂印类型和效果描述
+	var type_text = "[主动]" if soul.soul_type == 0 else "[被动]"
+	var effect_desc = soul.get_effect_description()
+
+	var button_text = soul.name + " " + type_text + "\n力量: " + str(soul.power) + "\n" + quality_names[soul.quality] + "\n" + effect_desc
+
 	# 为战利品添加提示文本
 	if is_loot and is_interactive:
 		button_text += "\n点击获取"
 	elif not is_loot and is_interactive:
 		button_text += "\n点击丢弃"
-	
+
 	button.text = button_text
 	
 	# 连接正确的信号
