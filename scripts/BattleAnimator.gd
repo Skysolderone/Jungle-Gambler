@@ -43,14 +43,16 @@ func play_score_calculation(
 	await get_tree().process_frame
 
 	# 动画序列
-	await _show_base_calculation(calculation_panel, base_power, dice)
-	await get_tree().create_timer(0.5).timeout
+	var base_damage = await _show_base_calculation(calculation_panel, base_power, dice)
+	await get_tree().create_timer(0.3).timeout
 
-	await _show_soul_effects(calculation_panel, soul_effects)
-	await get_tree().create_timer(0.5).timeout
+	# 显示初始伤害
+	await _show_final_result(calculation_panel, base_damage)
+	await get_tree().create_timer(0.3).timeout
 
-	await _show_final_result(calculation_panel, final_damage)
-	await get_tree().create_timer(1.0).timeout
+	# 显示魂印效果，每个魂印都会更新最终伤害
+	await _show_soul_effects(calculation_panel, soul_effects, base_damage)
+	await get_tree().create_timer(2.0).timeout  # 显示时间2秒，让玩家看清魂印明细
 
 	# 清理
 	await _hide_calculation_panel(calculation_panel)
@@ -72,29 +74,63 @@ func _create_calculation_panel(pos: Vector2) -> Control:
 	style.shadow_size = 10
 	panel.add_theme_stylebox_override("panel", style)
 
-	# 设置位置和大小
-	panel.position = pos - Vector2(200, 150)
-	panel.custom_minimum_size = Vector2(400, 300)
+	# 根据视口大小自适应面板尺寸
+	var viewport = animation_layer.get_viewport()
+	var viewport_size = viewport.get_visible_rect().size
+	var panel_width = min(500, viewport_size.x * 0.8)  # 最大500px或屏幕宽度的80%
+	var panel_height = min(450, viewport_size.y * 0.7)  # 最大450px或屏幕高度的70%
+
+	# 面板居中显示
+	var panel_x = (viewport_size.x - panel_width) / 2
+	var panel_y = (viewport_size.y - panel_height) / 2
+
+	panel.position = Vector2(panel_x, panel_y)
+	panel.custom_minimum_size = Vector2(panel_width, panel_height)
 	panel.modulate.a = 0  # 初始透明
+
+	# 根据面板宽度计算合适的字体大小
+	var title_font_size = int(panel_width * 0.05)  # 标题为面板宽度的5%
+	var content_font_size = int(panel_width * 0.04)  # 内容为面板宽度的4%
+	var separation = int(panel_height * 0.02)  # 间距为面板高度的2%
+
+	# 添加边距容器，使内容在面板中更加居中
+	var margin = MarginContainer.new()
+	var side_margin = int(panel_width * 0.08)  # 左右边距为面板宽度的8%
+	margin.add_theme_constant_override("margin_left", side_margin)
+	margin.add_theme_constant_override("margin_right", side_margin)
+	margin.add_theme_constant_override("margin_top", 15)
+	margin.add_theme_constant_override("margin_bottom", 15)
+	panel.add_child(margin)
 
 	# 添加内容容器
 	var vbox = VBoxContainer.new()
-	vbox.add_theme_constant_override("separation", 10)
-	panel.add_child(vbox)
+	vbox.add_theme_constant_override("separation", separation)
+	margin.add_child(vbox)
 
 	# 添加标题
 	var title = Label.new()
 	title.text = "━━━ 力量计算 ━━━"
 	title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	title.add_theme_font_size_override("font_size", 20)
+	title.add_theme_font_size_override("font_size", title_font_size)
 	title.add_theme_color_override("font_color", Color(1, 0.8, 0.2))
 	vbox.add_child(title)
+
+	# 添加滚动容器以支持大量魂印
+	var scroll_container = ScrollContainer.new()
+	# 滚动容器高度为面板高度的60%，确保有足够空间显示魂印
+	var scroll_height = panel_height * 0.6
+	scroll_container.custom_minimum_size = Vector2(0, scroll_height)
+	scroll_container.horizontal_scroll_mode = ScrollContainer.SCROLL_MODE_DISABLED
+	vbox.add_child(scroll_container)
 
 	# 计算内容容器
 	var calc_container = VBoxContainer.new()
 	calc_container.name = "CalcContainer"
-	calc_container.add_theme_constant_override("separation", 8)
-	vbox.add_child(calc_container)
+	calc_container.add_theme_constant_override("separation", separation)
+	calc_container.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	# 保存字体大小供后续使用
+	calc_container.set_meta("content_font_size", content_font_size)
+	scroll_container.add_child(calc_container)
 
 	# 分隔线
 	var separator = HSeparator.new()
@@ -105,8 +141,10 @@ func _create_calculation_panel(pos: Vector2) -> Control:
 	var final_label = Label.new()
 	final_label.name = "FinalLabel"
 	final_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	final_label.add_theme_font_size_override("font_size", 28)
-	final_label.add_theme_color_override("font_color", Color(1, 0.2, 0.2))
+	# 使用响应式字体大小
+	var final_font_size = int(panel_width * 0.06)  # 最终伤害为面板宽度的6%
+	final_label.add_theme_font_size_override("font_size", final_font_size)
+	final_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))  # 默认白色
 	final_label.visible = false
 	vbox.add_child(final_label)
 
@@ -120,63 +158,73 @@ func _create_calculation_panel(pos: Vector2) -> Control:
 
 	return panel
 
-func _show_base_calculation(panel: Control, base_power: int, dice: int) -> void:
-	"""显示基础计算"""
-	# 获取容器：PanelContainer -> VBoxContainer(0) -> CalcContainer(1)
-	var vbox = panel.get_child(0)
-	var calc_container = vbox.get_child(1)
+func _show_base_calculation(panel: Control, base_power: int, dice: int) -> int:
+	"""显示基础计算，返回基础伤害值"""
+	# 获取容器：PanelContainer -> MarginContainer(0) -> VBoxContainer(0) -> ScrollContainer(1) -> CalcContainer(0)
+	var vbox = panel.get_child(0).get_child(0)
+	var scroll_container = vbox.get_child(1)
+	var calc_container = scroll_container.get_child(0)
 
 	if calc_container == null:
 		push_error("无法找到 CalcContainer")
-		return
+		return 0
+
+	# 获取自适应字体大小
+	var font_size = calc_container.get_meta("content_font_size", 16)
 
 	# 基础力量行
-	var base_line = _create_calculation_line("基础力量", str(base_power), Color(0.8, 0.8, 1.0))
+	var base_line = _create_calculation_line("基础力量", str(base_power), Color(0.8, 0.8, 1.0), font_size)
 	calc_container.add_child(base_line)
 	await _animate_line_in(base_line)
 	await get_tree().create_timer(0.2).timeout
 
 	# 骰子行
-	var dice_line = _create_calculation_line("骰子点数", "× " + str(dice), Color(1.0, 0.8, 0.2))
+	var dice_line = _create_calculation_line("骰子点数", "× " + str(dice), Color(1.0, 0.8, 0.2), font_size)
 	calc_container.add_child(dice_line)
 	await _animate_line_in(dice_line)
 	await get_tree().create_timer(0.2).timeout
 
 	# 结果行
 	var result = base_power * dice
-	var result_line = _create_calculation_line("", "= " + str(result), Color(0.2, 1.0, 0.5), 18)
+	var result_line = _create_calculation_line("", "= " + str(result), Color(0.2, 1.0, 0.5), int(font_size * 1.2))
 	calc_container.add_child(result_line)
 	await _animate_line_in(result_line)
 
-func _show_soul_effects(panel: Control, soul_effects: Array) -> void:
-	"""显示魂印效果"""
+	return result
+
+func _show_soul_effects(panel: Control, soul_effects: Array, base_damage: int) -> void:
+	"""显示魂印效果，每个魂印添加后更新最终伤害"""
 	if soul_effects.is_empty():
 		return
 
-	# 获取容器：PanelContainer -> VBoxContainer(0) -> CalcContainer(1)
-	var vbox = panel.get_child(0)
-	var calc_container = vbox.get_child(1)
+	# 获取容器：PanelContainer -> MarginContainer(0) -> VBoxContainer(0) -> ScrollContainer(1) -> CalcContainer(0)
+	var vbox = panel.get_child(0).get_child(0)
+	var scroll_container = vbox.get_child(1)
+	var calc_container = scroll_container.get_child(0)
 
 	if calc_container == null:
 		push_error("无法找到 CalcContainer")
 		return
 
+	# 获取自适应字体大小
+	var font_size = calc_container.get_meta("content_font_size", 16)
+
 	# 添加魂印标题
 	var soul_title = Label.new()
 	soul_title.text = "━━━ 魂印加成 ━━━"
 	soul_title.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	soul_title.add_theme_font_size_override("font_size", 16)
+	soul_title.add_theme_font_size_override("font_size", int(font_size * 1.1))
 	soul_title.add_theme_color_override("font_color", Color(0.8, 0.4, 1.0))
 	calc_container.add_child(soul_title)
 	await _animate_line_in(soul_title)
 	await get_tree().create_timer(0.2).timeout
 
-	# 逐个显示魂印效果
-	var total_soul_power = 0
+	# 逐个显示魂印效果，并更新最终伤害
+	var current_damage = base_damage
 	for soul_effect in soul_effects:
-		var name = soul_effect.get("name", "未知魂印")
+		var soul_name = soul_effect.get("name", "未知魂印")
 		var power = soul_effect.get("power", 0)
-		total_soul_power += power
+		current_damage += power
 
 		# 魂印效果行
 		var quality_colors = [
@@ -190,27 +238,48 @@ func _show_soul_effects(panel: Control, soul_effects: Array) -> void:
 		var quality = soul_effect.get("quality", 0)
 		var color = quality_colors[quality]
 
-		var soul_line = _create_calculation_line(name, "+ " + str(power), color)
+		var soul_line = _create_calculation_line(soul_name, "+ " + str(power), color, font_size)
 		calc_container.add_child(soul_line)
 		await _animate_line_in(soul_line, true)  # 带特效
-		await get_tree().create_timer(0.15).timeout
 
-	# 魂印总和
-	if total_soul_power > 0:
-		var total_line = _create_calculation_line("魂印总加成", "+ " + str(total_soul_power), Color(1.0, 0.5, 1.0), 18)
-		calc_container.add_child(total_line)
-		await _animate_line_in(total_line, true)
+		# 根据品质决定动画强度和延迟
+		var delay = 0.15
+		var shake_intensity = 0.0
+
+		match quality:
+			0, 1:  # 普通、非凡 - 快速
+				delay = 0.08
+			2, 3:  # 稀有、史诗 - 中等
+				delay = 0.12
+			4, 5:  # 传说、神话 - 慢速 + 屏幕震动
+				delay = 0.2
+				shake_intensity = 3.0 if quality == 4 else 5.0  # 传说3, 神话5
+
+		# 每添加一个魂印，立即更新最终伤害并跳动（带品质颜色）
+		await _update_final_damage(panel, current_damage, color, quality)
+
+		# 高品质魂印添加屏幕震动
+		if shake_intensity > 0:
+			play_screen_shake(shake_intensity, 0.15)
+
+		await get_tree().create_timer(delay).timeout
 
 func _show_final_result(panel: Control, final_damage: int) -> void:
-	"""显示最终结果"""
-	# 获取 FinalLabel：PanelContainer -> VBoxContainer(0) -> FinalLabel(3)
-	var vbox = panel.get_child(0)
+	"""首次显示最终伤害标签"""
+	# 获取 FinalLabel：PanelContainer -> MarginContainer(0) -> VBoxContainer(0) -> FinalLabel(3)
+	var vbox = panel.get_child(0).get_child(0)
 	var final_label = vbox.get_child(3)
 
 	if final_label == null:
 		push_error("无法找到 FinalLabel")
 		return
+
+	# 获取面板宽度，计算最终结果的字体大小
+	var panel_width = panel.custom_minimum_size.x
+	var final_font_size = int(panel_width * 0.06)  # 最终伤害为面板宽度的6%
+
 	final_label.text = "最终伤害: " + str(final_damage)
+	final_label.add_theme_font_size_override("font_size", final_font_size)
 	final_label.visible = true
 	final_label.modulate.a = 0
 	final_label.scale = Vector2(0.5, 0.5)
@@ -221,10 +290,98 @@ func _show_final_result(panel: Control, final_damage: int) -> void:
 	tween.parallel().tween_property(final_label, "scale", Vector2(1.2, 1.2), 0.2).set_ease(Tween.EASE_OUT)
 	tween.tween_property(final_label, "scale", Vector2(1.0, 1.0), 0.1).set_ease(Tween.EASE_IN)
 
-	# 颜色闪烁效果
+	# 根据伤害值决定颜色（白色 -> 伤害颜色 -> 白色）
+	var damage_color = _get_damage_color(final_damage)
 	for i in range(3):
-		tween.tween_property(final_label, "modulate", Color(1.5, 0.5, 0.5), 0.1)
-		tween.tween_property(final_label, "modulate", Color(1.0, 1.0, 1.0), 0.1)
+		tween.tween_method(
+			func(color): final_label.add_theme_color_override("font_color", color),
+			Color.WHITE,
+			damage_color,
+			0.1
+		)
+		tween.tween_method(
+			func(color): final_label.add_theme_color_override("font_color", color),
+			damage_color,
+			Color.WHITE,
+			0.1
+		)
+
+	await tween.finished
+
+func _update_final_damage(panel: Control, new_damage: int, soul_color: Color = Color.WHITE, quality: int = 0) -> void:
+	"""更新最终伤害并根据伤害值添加差异化的跳动动画"""
+	# 获取 FinalLabel：PanelContainer -> MarginContainer(0) -> VBoxContainer(0) -> FinalLabel(3)
+	var vbox = panel.get_child(0).get_child(0)
+	var final_label = vbox.get_child(3)
+
+	if final_label == null:
+		push_error("无法找到 FinalLabel")
+		return
+
+	# 更新文本
+	final_label.text = "最终伤害: " + str(new_damage)
+
+	# 根据伤害值决定跳动强度和动画速度
+	var scale_factor = 1.15  # 默认缩放
+	var animation_time = 0.1  # 默认动画时间
+
+	if new_damage < 50:
+		scale_factor = 1.1
+		animation_time = 0.08
+	elif new_damage < 100:
+		scale_factor = 1.15
+		animation_time = 0.1
+	elif new_damage < 150:
+		scale_factor = 1.25
+		animation_time = 0.12
+	elif new_damage < 200:
+		scale_factor = 1.35
+		animation_time = 0.14
+	elif new_damage < 300:
+		scale_factor = 1.45
+		animation_time = 0.16
+	else:  # 300+
+		scale_factor = 1.6
+		animation_time = 0.18
+
+	# 跳动动画
+	var tween = create_tween()
+	tween.tween_property(final_label, "scale", Vector2(scale_factor, scale_factor), animation_time).set_ease(Tween.EASE_OUT)
+	tween.tween_property(final_label, "scale", Vector2(1.0, 1.0), animation_time).set_ease(Tween.EASE_IN)
+
+	# 根据伤害值决定闪烁颜色
+	var damage_color = _get_damage_color(new_damage)
+
+	# 闪烁到伤害颜色，然后回到白色
+	tween.parallel().tween_method(
+		func(color): final_label.add_theme_color_override("font_color", color),
+		Color.WHITE,
+		damage_color,
+		animation_time
+	)
+	tween.tween_method(
+		func(color): final_label.add_theme_color_override("font_color", color),
+		damage_color,
+		Color.WHITE,
+		animation_time
+	)
+
+	await tween.finished
+
+func _get_damage_color(damage: int) -> Color:
+	"""根据伤害值返回对应的颜色"""
+	if damage < 50:
+		return Color(0.2, 1.0, 0.2)  # 低伤害 - 绿色
+	elif damage < 100:
+		return Color(0.2, 1.0, 0.8)  # 中低伤害 - 青色
+	elif damage < 150:
+		return Color(1.0, 1.0, 0.2)  # 中等伤害 - 黄色
+	elif damage < 200:
+		return Color(1.0, 0.6, 0.2)  # 中高伤害 - 橙色
+	elif damage < 300:
+		return Color(1.0, 0.2, 0.2)  # 高伤害 - 红色
+	else:
+		return Color(1.0, 0.2, 0.8)  # 超高伤害 - 紫红色
 
 func _hide_calculation_panel(panel: Control) -> void:
 	"""隐藏结算面板"""
@@ -238,6 +395,9 @@ func _create_calculation_line(label_text: String, value_text: String, color: Col
 	var hbox = HBoxContainer.new()
 	hbox.modulate.a = 0  # 初始透明
 
+	# 设置标签和数值之间的间距
+	hbox.add_theme_constant_override("separation", 10)
+
 	# 标签
 	if not label_text.is_empty():
 		var label = Label.new()
@@ -245,6 +405,7 @@ func _create_calculation_line(label_text: String, value_text: String, color: Col
 		label.add_theme_font_size_override("font_size", font_size)
 		label.add_theme_color_override("font_color", color)
 		label.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+		label.horizontal_alignment = HORIZONTAL_ALIGNMENT_LEFT
 		hbox.add_child(label)
 
 	# 值
@@ -270,10 +431,9 @@ func _animate_line_in(line: Control, with_effect: bool = false) -> void:
 		line.scale = Vector2(0.8, 0.8)
 		tween.parallel().tween_property(line, "scale", Vector2(1.0, 1.0), 0.2).set_ease(Tween.EASE_OUT)
 
-		# 发光效果
-		var original_color = line.modulate
-		tween.tween_property(line, "modulate", Color(1.5, 1.5, 1.5), 0.1)
-		tween.tween_property(line, "modulate", original_color, 0.1)
+		# 发光效果（确保最终颜色是完全不透明的）
+		tween.tween_property(line, "modulate", Color(1.5, 1.5, 1.5, 1.0), 0.1)
+		tween.tween_property(line, "modulate", Color(1.0, 1.0, 1.0, 1.0), 0.1)
 
 	await tween.finished
 
@@ -488,24 +648,39 @@ func play_screen_shake(intensity: float = 10.0, duration: float = 0.3) -> void:
 	- intensity: 震动强度
 	- duration: 持续时间
 	"""
+	# 优先使用 Camera2D
 	var camera = get_viewport().get_camera_2d()
-	if not camera:
-		return
+	if camera:
+		var original_offset = camera.offset
+		var elapsed = 0.0
+		var shake_interval = 0.05
 
-	var original_offset = camera.offset
-	var elapsed = 0.0
-	var shake_interval = 0.05
+		while elapsed < duration:
+			var shake_x = randf_range(-intensity, intensity)
+			var shake_y = randf_range(-intensity, intensity)
+			camera.offset = original_offset + Vector2(shake_x, shake_y)
 
-	while elapsed < duration:
-		var shake_x = randf_range(-intensity, intensity)
-		var shake_y = randf_range(-intensity, intensity)
-		camera.offset = original_offset + Vector2(shake_x, shake_y)
+			await get_tree().create_timer(shake_interval).timeout
+			elapsed += shake_interval
 
-		await get_tree().create_timer(shake_interval).timeout
-		elapsed += shake_interval
+		# 恢复原位
+		camera.offset = original_offset
+	else:
+		# 如果没有相机，震动动画层
+		var original_offset = animation_layer.offset
+		var elapsed = 0.0
+		var shake_interval = 0.05
 
-	# 恢复原位
-	camera.offset = original_offset
+		while elapsed < duration:
+			var shake_x = randf_range(-intensity, intensity)
+			var shake_y = randf_range(-intensity, intensity)
+			animation_layer.offset = original_offset + Vector2(shake_x, shake_y)
+
+			await get_tree().create_timer(shake_interval).timeout
+			elapsed += shake_interval
+
+		# 恢复原位
+		animation_layer.offset = original_offset
 
 # ========== 胜利/失败动画 ==========
 

@@ -16,6 +16,11 @@ var CELL_SIZE = 80  # 改为变量，支持响应式调整
 const SETTINGS_PATH = "user://settings.json"
 const COLLAPSE_INTERVAL := 30.0  # 坍塌间隔（秒），每30秒坍塌一圈
 
+# 调试模式配置
+const DEBUG_MODE = false  # 设置为 true 启用调试模式
+const DEBUG_NO_ENEMIES = false  # 调试模式：不生成敌人
+const DEBUG_NO_COLLAPSE = false  # 调试模式：禁用地形坍塌
+
 # 格子数据结构
 class GridCell:
 	var quality: int = 0  # 魂印品质 0-5
@@ -50,6 +55,10 @@ var collapse_ring_index: int = -1  # 已坍塌到第几圈（-1 表示未开始�
 # 输入锁定（防止对话框关闭时误触发点击）
 var input_locked: bool = false
 
+# 点击防抖（防止快速连续点击）
+var last_click_time: float = 0.0
+const CLICK_DEBOUNCE_TIME: float = 0.3  # 300ms 防抖间隔
+
 # 动态布局参数
 var current_cell_size: float = 80.0
 var current_offset_x: float = 0.0
@@ -57,11 +66,11 @@ var current_offset_y: float = 0.0
 
 func _ready():
 	# 应用响应式布局
-	_setup_responsive_layout()
-	
+	await _setup_responsive_layout()
+
 	_apply_brightness_from_settings()
 	_load_game_data()
-	
+
 	# 检查是否从战斗返回
 	var session = get_node("/root/UserSession")
 	if session.has_meta("return_to_map") and session.get_meta("return_to_map"):
@@ -129,24 +138,24 @@ func _ready():
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):
 		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
-		
+
 		# 连接屏幕类型变化信号
 		responsive_manager.screen_type_changed.connect(_on_screen_type_changed)
-		
+
 		# 根据屏幕类型调整网格大小
 		CELL_SIZE = responsive_manager.get_game_grid_cell_size()
-		
+
 		# 应用响应式布局
 		responsive_manager.apply_responsive_layout(self)
-		
+
 		# 为移动端优化触摸
 		responsive_manager.optimize_for_touch(self)
-		
-		# 动态设置Panel尺寸
-		_update_panel_size()
-		
+
+		# 动态设置Panel尺寸 - 等待完成以确保布局参数正确初始化
+		await _update_panel_size()
+
 		print("游戏地图已启用响应式布局，网格大小：", CELL_SIZE, "，屏幕类型：", responsive_manager.get_screen_type_name())
-	
+
 	# 为移动端添加手势支持
 	_setup_mobile_gestures()
 
@@ -156,7 +165,6 @@ func _update_panel_size():
 
 	# 获取GridPanel的实际大小
 	var panel_size = grid_panel.size
-	print("GridPanel实际大小: ", panel_size)
 
 	# 立即计算网格布局参数
 	if panel_size.x > 0 and panel_size.y > 0:
@@ -166,10 +174,6 @@ func _update_panel_size():
 		# 居中偏移
 		current_offset_x = (panel_size.x - (GRID_SIZE * current_cell_size)) / 2
 		current_offset_y = (panel_size.y - (GRID_SIZE * current_cell_size)) / 2
-
-		print("初始化网格布局: cell_size=", current_cell_size, " offset=(", current_offset_x, ",", current_offset_y, ")")
-	else:
-		print("警告: GridPanel尺寸无效，将在绘制时计算")
 
 func _setup_mobile_gestures():
 	if has_node("/root/MobileInteractionHelper"):
@@ -192,6 +196,11 @@ func _on_screen_type_changed(_new_type):
 		grid_container.queue_redraw()
 
 func _start_collapse_loop():
+	# 调试模式：禁用地形坍塌
+	if DEBUG_MODE and DEBUG_NO_COLLAPSE:
+		print("调试模式：地形坍塌已禁用")
+		return
+
 	# 延迟首轮30秒开始，再每30秒坍塌一圈
 	await get_tree().create_timer(COLLAPSE_INTERVAL).timeout
 	while true:
@@ -199,7 +208,7 @@ func _start_collapse_loop():
 			grid_container.queue_redraw()
 			# 如果玩家当前位置已坍塌，判定失败
 			if grid_data[player_pos.y][player_pos.x].collapsed:
-				_game_over()
+				await _game_over()
 				return
 		else:
 			return  # 所有圈已坍塌，结束
@@ -254,26 +263,46 @@ func _initialize_grid():
 	explored_count = 1
 
 func _generate_map_content():
-	# 随机给10-15个格子分配敌人（隐藏）
-	var enemy_count = randi() % 6 + 10
-	for i in range(enemy_count):
+	# 调试模式：跳过敌人生成
+	if not (DEBUG_MODE and DEBUG_NO_ENEMIES):
+		# 根据地图难度调整敌人数量
+		var enemy_count = 10  # 默认值
+		var difficulty = selected_map.get("difficulty", "普通") if selected_map else "普通"
+
+		match difficulty:
+			"简单":
+				enemy_count = randi() % 3 + 2  # 2-4 个敌人
+			"普通":
+				enemy_count = randi() % 6 + 10  # 10-15 个敌人
+			"困难":
+				enemy_count = randi() % 6 + 15  # 15-20 个敌人
+			"专家":
+				enemy_count = randi() % 6 + 20  # 20-25 个敌人
+
+		for i in range(enemy_count):
+			var pos = _get_random_cell_pos()
+			if pos != Vector2i(-1, -1):
+				var cell = grid_data[pos.y][pos.x]
+				if not cell.has_enemy:  # 避免重复
+					cell.has_enemy = true
+					cell.enemy_data = {
+						"name": "敌人" + str(i + 1),
+						"hp": randi() % 50 + 50,
+						"power": randi() % 20 + 10
+					}
+		print("生成了 ", enemy_count, " 个敌人")
+	else:
+		print("调试模式：已禁用敌人生成")
+
+	# 生成2-3个撤离点（隐藏，需要探索一定数量后显示）
+	var evac_count = randi() % 2 + 2  # 2-3 个撤离点，确保有足够的撤离机会
+	var attempts = 0
+	while evacuation_points.size() < evac_count and attempts < 50:
 		var pos = _get_random_cell_pos()
-		if pos != Vector2i(-1, -1):
-			var cell = grid_data[pos.y][pos.x]
-			if not cell.has_enemy:  # 避免重复
-				cell.has_enemy = true
-				cell.enemy_data = {
-					"name": "敌人" + str(i + 1),
-					"hp": randi() % 50 + 50,
-					"power": randi() % 20 + 10
-				}
-	
-	# 生成1-2个撤离点（隐藏，需要探索一定数量后显示）
-	var evac_count = randi() % 2 + 1
-	for i in range(evac_count):
-		var pos = _get_random_cell_pos()
-		if pos != Vector2i(-1, -1) and pos != player_pos:
+		if pos != player_pos and not evacuation_points.has(pos):
 			evacuation_points.append(pos)
+		attempts += 1
+	print("生成了 ", evacuation_points.size(), " 个撤离点")
 
 func _get_random_cell_pos() -> Vector2i:
 	var x = randi() % GRID_SIZE
@@ -313,8 +342,6 @@ func _update_grid_layout():
 	current_offset_x = (panel_size.x - (GRID_SIZE * current_cell_size)) / 2
 	current_offset_y = (panel_size.y - (GRID_SIZE * current_cell_size)) / 2
 
-	print("网格布局更新: panel_size=", panel_size, " cell_size=", current_cell_size, " offset=(", current_offset_x, ",", current_offset_y, ")")
-
 func _draw_grid():
 	# 只在需要时更新布局，避免频繁调用
 	if current_cell_size <= 0:
@@ -345,8 +372,11 @@ func _draw_cell(x: int, y: int, cell_size: float, offset_x: float, offset_y: flo
 	var rect = Rect2(offset_x + x * cell_size + 5, offset_y + y * cell_size + 5, cell_size - 10, cell_size - 10)
 	var center = Vector2(offset_x + x * cell_size + cell_size / 2.0, offset_y + y * cell_size + cell_size / 2.0)
 	var mouse_pos = grid_container.get_local_mouse_position()
-	var grid_x = int((mouse_pos.x - offset_x) / cell_size)
-	var grid_y = int((mouse_pos.y - offset_y) / cell_size)
+	# 使用与点击检测相同的计算方式，确保一致性
+	var relative_x = mouse_pos.x - offset_x
+	var relative_y = mouse_pos.y - offset_y
+	var grid_x = int(floor(relative_x / cell_size))
+	var grid_y = int(floor(relative_y / cell_size))
 
 	# 先绘制格子底色（所有格子都显示颜色）
 	var base_color = _get_cell_color(cell)
@@ -642,10 +672,17 @@ func _draw_text(center: Vector2, text: String, color: Color):
 
 func _on_grid_gui_input(event: InputEvent):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
+		var current_time = Time.get_ticks_msec() / 1000.0
+
 		# 如果输入被锁定，忽略点击
 		if input_locked:
-			print("输入被锁定，忽略点击")
 			return
+
+		# 防抖：忽略过快的连续点击
+		if current_time - last_click_time < CLICK_DEBOUNCE_TIME:
+			return
+
+		last_click_time = current_time
 
 		# 确保布局参数是最新的
 		if current_cell_size <= 0:
@@ -658,22 +695,14 @@ func _on_grid_gui_input(event: InputEvent):
 		var relative_x = mouse_pos.x - current_offset_x
 		var relative_y = mouse_pos.y - current_offset_y
 
-		print("=== 点击调试信息 ===")
-		print("本地鼠标位置: ", mouse_pos)
-		print("网格偏移: (", current_offset_x, ", ", current_offset_y, ")")
-		print("相对位置: (", relative_x, ", ", relative_y, ")")
-		print("格子大小: ", current_cell_size)
-
 		# 检查是否在网格范围内
 		if relative_x < 0 or relative_y < 0:
-			print("点击在网格外部（负坐标）")
 			return
 
 		var total_grid_width = GRID_SIZE * current_cell_size
 		var total_grid_height = GRID_SIZE * current_cell_size
 
 		if relative_x >= total_grid_width or relative_y >= total_grid_height:
-			print("点击在网格外部（超出范围）")
 			return
 
 		# 精确计算网格坐标 - 使用floor确保在正确的格子内
@@ -684,14 +713,6 @@ func _on_grid_gui_input(event: InputEvent):
 		grid_x = clamp(grid_x, 0, GRID_SIZE - 1)
 		grid_y = clamp(grid_y, 0, GRID_SIZE - 1)
 
-		print("计算的网格坐标: (", grid_x, ", ", grid_y, ")")
-		print("玩家当前位置: ", player_pos)
-
-		# 验证计算的坐标
-		var cell_center_x = current_offset_x + (grid_x + 0.5) * current_cell_size
-		var cell_center_y = current_offset_y + (grid_y + 0.5) * current_cell_size
-		print("对应格子中心: (", cell_center_x, ", ", cell_center_y, ")")
-
 		_on_cell_clicked(grid_x, grid_y)
 	
 	elif event is InputEventMouseMotion:
@@ -699,13 +720,28 @@ func _on_grid_gui_input(event: InputEvent):
 
 func _on_gesture_detected(gesture, position: Vector2):
 	# 处理移动端手势
+	# 在桌面平台禁用手势检测，避免与鼠标点击冲突
+	if OS.get_name() in ["Windows", "macOS", "Linux", "FreeBSD", "NetBSD", "OpenBSD", "BSD"]:
+		return
+
+	# 检查输入是否被锁定
+	if input_locked:
+		return
+
+	# 防抖：忽略过快的手势
+	var current_time = Time.get_ticks_msec() / 1000.0
+	if current_time - last_click_time < CLICK_DEBOUNCE_TIME:
+		return
+
 	var grid_x = int((position.x - current_offset_x) / current_cell_size)
 	var grid_y = int((position.y - current_offset_y) / current_cell_size)
-	
+
 	# 确保手势在网格范围内
 	if grid_x < 0 or grid_x >= GRID_SIZE or grid_y < 0 or grid_y >= GRID_SIZE:
 		return
-	
+
+	last_click_time = current_time
+
 	match gesture:
 		0:  # TAP - 正常点击移动
 			_on_cell_clicked(grid_x, grid_y)
@@ -752,31 +788,22 @@ func _show_cell_info(x: int, y: int):
 
 func _on_cell_clicked(x: int, y: int):
 	var clicked_pos = Vector2i(x, y)
-	
-	print("=== 点击格子调试信息 ===")
-	print("点击坐标: (", x, ", ", y, ")")
-	print("玩家当前位置: ", player_pos)
-	print("点击位置: ", clicked_pos)
-	
+
 	# 点击自己 - 如果在撤离点上就撤离
 	if clicked_pos == player_pos:
-		print("点击自己的位置")
 		if show_evacuation and evacuation_points.has(player_pos):
-			print("在撤离点，执行撤离")
 			_evacuate()
 		return
-	
+
 	# 只能移动到相邻格子
 	if not _is_adjacent(player_pos, clicked_pos):
-		print("不是相邻格子，无法移动")
 		return
+
 	# 禁止移动到已坍塌格子
 	if grid_data[clicked_pos.y][clicked_pos.x].collapsed:
-		print("目标格子已坍塌")
 		_show_message("该区域已坍塌，无法进入！")
 		return
-	
-	print("开始移动到目标格子: (", clicked_pos.x, ", ", clicked_pos.y, ")")
+
 	# 移动到目标格子
 	_move_to_cell(clicked_pos)
 
@@ -788,18 +815,13 @@ func _is_adjacent(pos1: Vector2i, pos2: Vector2i) -> bool:
 func _move_to_cell(target_pos: Vector2i):
 	var cell = grid_data[target_pos.y][target_pos.x]
 
-	print("=== 移动到格子调试信息 ===")
-	print("目标位置: (", target_pos.x, ", ", target_pos.y, ")")
-	print("移动前玩家位置: ", player_pos)
-	print("格子是否已探索: ", cell.explored)
-	print("格子是否有敌人: ", cell.has_enemy)
-	print("格子资源数量: ", cell.resource_count)
+	# 记录是否是首次探索（用于决定是否收集资源）
+	var is_first_exploration = not cell.explored
 
 	# 如果是未探索的格子，先探索
 	if not cell.explored:
 		cell.explored = true
 		explored_count += 1
-		print("探索新格子，总探索数: ", explored_count)
 
 		# 检查是否达到探索度阈值，显示撤离点（探索40%以上）
 		var explore_threshold = int(GRID_SIZE * GRID_SIZE * 0.4)
@@ -809,39 +831,27 @@ func _move_to_cell(target_pos: Vector2i):
 			_update_evacuation_status()
 
 	# 移动玩家
-	var old_pos = player_pos
 	player_pos = target_pos
-	print("玩家位置更新: ", old_pos, " -> ", player_pos)
-	print("移动完成后玩家位置确认: ", player_pos)
 
 	_update_info()
 	grid_container.queue_redraw()
 
 	# 检查是否触发战斗
 	if cell.has_enemy:
-		print("触发战斗！")
 		_start_battle(cell.enemy_data)
 		return
 
-	print("没有敌人，准备收集资源")
-	print("收集资源前玩家位置: ", player_pos)
-	# 没有敌人，可以收集资源
-	_collect_resources_from_cell(cell)
-	print("收集资源后玩家位置: ", player_pos)
+	# 只在首次探索且没有敌人时收集资源
+	if is_first_exploration:
+		_collect_resources_from_cell(cell)
 
 func _start_battle(enemy_data: Dictionary):
 	# 保存当前游戏状态到UserSession
 	var session = get_node("/root/UserSession")
-	
-	print("=== 开始战斗调试信息 ===")
-	print("带入地图的魂印配置数量: ", soul_loadout.size())
-	for i in range(soul_loadout.size()):
-		var item = soul_loadout[i]
-		print("  魂印", i+1, ": ", item.soul_print.name, " 力量:", item.soul_print.power, " 次数:", item.uses_remaining, "/", item.max_uses)
-	
+
 	# 生成敌人魂印（根据敌人力量随机生成1-3个）
 	var enemy_souls = _generate_enemy_souls(enemy_data.get("power", 30))
-	
+
 	# 保存地图状态（包括网格数据）
 	session.set_meta("map_player_pos", player_pos)
 	session.set_meta("map_player_hp", player_hp)
@@ -852,15 +862,13 @@ func _start_battle(enemy_data: Dictionary):
 	session.set_meta("map_collected_souls", collected_souls)
 	# 保存网格数据（探索状态、资源等）
 	session.set_meta("map_grid_data", _serialize_grid_data())
-	
+
 	# 保存战斗数据 - 使用带入地图的魂印配置而不是全部背包
 	session.set_meta("battle_enemy_data", enemy_data)
 	session.set_meta("battle_player_hp", player_hp)
 	session.set_meta("battle_player_souls", soul_loadout)  # 使用带入地图的魂印配置
 	session.set_meta("battle_enemy_souls", enemy_souls)
 	session.set_meta("return_to_map", true)
-	
-	print("保存到UserSession的战斗魂印数量: ", soul_loadout.size())
 
 	# 跳转到准备场景
 	get_tree().change_scene_to_file("res://scenes/BattlePreparation.tscn")
@@ -934,19 +942,14 @@ func _on_battle_finished(result: Dictionary):
 	grid_container.queue_redraw()
 
 func _collect_resources_from_cell(cell: GridCell):
-	print("=== 开始收集资源 ===")
-	print("当前玩家位置(收集开始): ", player_pos)
-
 	# 根据格子的品质和数量，收集魂印
 	var soul_system = _get_soul_system()
 	if not soul_system:
-		print("无法获取魂印系统")
 		return
 
 	var username = UserSession.get_username()
 	var souls_collected = []
 
-	print("准备收集", cell.resource_count, "个资源")
 	for i in range(cell.resource_count):
 		# 根据品质生成魂印ID
 		var soul_id = _get_soul_id_by_quality(cell.quality)
@@ -956,11 +959,8 @@ func _collect_resources_from_cell(cell: GridCell):
 			collected_souls.append(soul_id)
 			souls_collected.append(soul_id)
 
-		print("收集第", i+1, "个资源，当前玩家位置: ", player_pos)
-	
 	# 显示收集信息
 	if souls_collected.size() > 0:
-		print("准备显示收集信息，当前玩家位置: ", player_pos)
 		var quality_names = ["普通", "非凡", "稀有", "史诗", "传说", "神话"]
 		var quality_name = quality_names[cell.quality]
 
@@ -973,14 +973,10 @@ func _collect_resources_from_cell(cell: GridCell):
 
 		var message = "收集资源成功！\n获得 " + str(souls_collected.size()) + " 个" + quality_name + "品质魂印:\n"
 		message += "\n".join(soul_names)
-		print("调用_show_message前，玩家位置: ", player_pos)
 		_show_message(message)
-		print("调用_show_message后，玩家位置: ", player_pos)
 
 	# 清空格子资源
 	cell.resource_count = 0
-	print("=== 收集资源完成 ===")
-	print("最终玩家位置: ", player_pos)
 
 func _get_soul_id_by_quality(quality: int) -> String:
 	# 根据品质返回对应的魂印ID，随机选择一个
@@ -1015,10 +1011,11 @@ func _game_over():
 						soul_system.remove_soul_print(username, i)
 						break
 	
-	_show_message(message)
-	
-	# 延迟返回大厅
-	await get_tree().create_timer(2.0).timeout
+	# 等待用户关闭对话框
+	await _show_message(message)
+
+	# 短暂延迟后返回大厅
+	await get_tree().create_timer(0.5).timeout
 	get_tree().change_scene_to_file("res://scenes/Lobby.tscn")
 
 func _calculate_total_power() -> int:
@@ -1078,32 +1075,28 @@ func _evacuate():
 		message += "本次收集了 " + str(collected_souls.size()) + " 个魂印"
 	else:
 		message += "本次没有收集到魂印"
-	
-	_show_message(message)
-	
-	# 延迟返回大厅
-	await get_tree().create_timer(1.5).timeout
+
+	# 等待用户关闭对话框
+	await _show_message(message)
+
+	# 短暂延迟后返回大厅
+	await get_tree().create_timer(0.5).timeout
 	get_tree().change_scene_to_file("res://scenes/Lobby.tscn")
 
 func _show_message(text: String):
-	print("=== _show_message 调用 ===")
-	print("显示消息前玩家位置: ", player_pos)
-
 	# 锁定输入以防止对话框关闭时误触发点击
 	input_locked = true
-	print("输入已锁定")
 
 	message_dialog.dialog_text = text
 	message_dialog.popup_centered()
-	print("对话框已弹出，玩家位置: ", player_pos)
 
-	# 对话框关闭后短暂延迟解锁输入
-	await message_dialog.visibility_changed
-	print("对话框可见性改变，玩家位置: ", player_pos)
-	if not message_dialog.visible:
-		await get_tree().create_timer(0.1).timeout
-		input_locked = false
-		print("输入已解锁，玩家位置: ", player_pos)
+	# 等待对话框关闭（循环等待直到对话框不可见）
+	while message_dialog.visible:
+		await message_dialog.visibility_changed
+
+	# 对话框已关闭，短暂延迟后解锁输入（防止关闭点击穿透）
+	await get_tree().create_timer(0.15).timeout
+	input_locked = false
 
 func _on_inventory_button_pressed():
 	if inventory_instance != null:
@@ -1188,4 +1181,3 @@ func _restore_grid_data(serialized_data: Array):
 				cell.collapsed = cell_data.get("collapsed", false)
 			row.append(cell)
 		grid_data.append(row)
-	print("恢复网格数据完成，探索格子数量: ", explored_count)

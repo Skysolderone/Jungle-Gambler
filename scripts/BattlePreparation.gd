@@ -87,6 +87,11 @@ func _create_soul_card(soul, index: int) -> Button:
 	var button = Button.new()
 	button.custom_minimum_size = Vector2(120, 80)
 
+	# 获取魂印使用次数信息
+	var soul_item = player_all_souls[index]
+	var uses_text = str(soul_item.uses_remaining) + "/" + str(soul_item.max_uses)
+	var is_depleted = soul_item.uses_remaining <= 0
+
 	# 品质颜色
 	var quality_colors = [
 		Color(0.5, 0.5, 0.5),    # 普通
@@ -98,6 +103,11 @@ func _create_soul_card(soul, index: int) -> Button:
 	]
 
 	var color = quality_colors[soul.quality]
+
+	# 如果使用次数为0，变成灰色
+	if is_depleted:
+		color = Color(0.3, 0.3, 0.3)  # 灰色
+		button.disabled = true
 
 	# 设置按钮样式
 	var style_normal = StyleBoxFlat.new()
@@ -112,15 +122,23 @@ func _create_soul_card(soul, index: int) -> Button:
 	style_selected.set_border_width_all(3)
 	style_selected.set_corner_radius_all(5)
 
+	var style_disabled = StyleBoxFlat.new()
+	style_disabled.bg_color = Color(0.2, 0.2, 0.2, 0.6)
+	style_disabled.border_color = Color(0.3, 0.3, 0.3)
+	style_disabled.set_border_width_all(2)
+	style_disabled.set_corner_radius_all(5)
+
 	button.add_theme_stylebox_override("normal", style_normal)
 	button.add_theme_stylebox_override("hover", style_selected)
 	button.add_theme_stylebox_override("pressed", style_selected)
+	button.add_theme_stylebox_override("disabled", style_disabled)
 
-	# 获取魂印使用次数信息
-	var soul_item = player_all_souls[index]
-	var uses_text = str(soul_item.uses_remaining) + "/" + str(soul_item.max_uses)
-	button.text = soul.name + "\n力量+" + str(soul.power) + "\n次数:" + uses_text
-	button.pressed.connect(_on_soul_card_pressed.bind(index))
+	# 设置按钮文本
+	var status_text = "[已耗尽]" if is_depleted else ""
+	button.text = soul.name + " " + status_text + "\n力量+" + str(soul.power) + "\n次数:" + uses_text
+
+	if not is_depleted:
+		button.pressed.connect(_on_soul_card_pressed.bind(index))
 
 	# 添加触摸反馈
 	if has_node("/root/MobileInteractionHelper"):

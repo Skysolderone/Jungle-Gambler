@@ -436,13 +436,11 @@ func use_soul_print(username: String, item_index: int) -> bool:
 	
 	item.uses_remaining -= 1
 	print("使用魂印：", item.soul_print.name, " 剩余次数：", item.uses_remaining)
-	
-	# 如果使用次数为0，从背包中移除
+
+	# 使用次数为0时，魂印保留在背包中但无法使用
 	if item.uses_remaining <= 0:
-		print("魂印使用次数耗尽，永久消失：", item.soul_print.name)
-		inventory["items"].remove_at(item_index)
-		_update_grid_occupation(username)
-	
+		print("魂印使用次数耗尽（保留在背包中）：", item.soul_print.name)
+
 	_save_inventory(username)
 	return true
 
