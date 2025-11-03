@@ -12,7 +12,7 @@ var animation_layer: CanvasLayer
 func _ready():
 	# 创建动画层（最顶层显示）
 	animation_layer = CanvasLayer.new()
-	animation_layer.layer = 100  # 确保在最上层
+	animation_layer.layer = 100 # 确保在最上层
 	add_child(animation_layer)
 
 # ========== 积分结算动画 ==========
@@ -52,7 +52,7 @@ func play_score_calculation(
 
 	# 显示魂印效果，每个魂印都会更新最终伤害
 	await _show_soul_effects(calculation_panel, soul_effects, base_damage)
-	await get_tree().create_timer(2.0).timeout  # 显示时间2秒，让玩家看清魂印明细
+	await get_tree().create_timer(2.0).timeout # 显示时间2秒，让玩家看清魂印明细
 
 	# 清理
 	await _hide_calculation_panel(calculation_panel)
@@ -77,8 +77,8 @@ func _create_calculation_panel(pos: Vector2) -> Control:
 	# 根据视口大小自适应面板尺寸
 	var viewport = animation_layer.get_viewport()
 	var viewport_size = viewport.get_visible_rect().size
-	var panel_width = min(500, viewport_size.x * 0.8)  # 最大500px或屏幕宽度的80%
-	var panel_height = min(450, viewport_size.y * 0.7)  # 最大450px或屏幕高度的70%
+	var panel_width = min(500, viewport_size.x * 0.8) # 最大500px或屏幕宽度的80%
+	var panel_height = min(450, viewport_size.y * 0.7) # 最大450px或屏幕高度的70%
 
 	# 面板居中显示
 	var panel_x = (viewport_size.x - panel_width) / 2
@@ -86,16 +86,16 @@ func _create_calculation_panel(pos: Vector2) -> Control:
 
 	panel.position = Vector2(panel_x, panel_y)
 	panel.custom_minimum_size = Vector2(panel_width, panel_height)
-	panel.modulate.a = 0  # 初始透明
+	panel.modulate.a = 0 # 初始透明
 
 	# 根据面板宽度计算合适的字体大小
-	var title_font_size = int(panel_width * 0.05)  # 标题为面板宽度的5%
-	var content_font_size = int(panel_width * 0.04)  # 内容为面板宽度的4%
-	var separation = int(panel_height * 0.02)  # 间距为面板高度的2%
+	var title_font_size = int(panel_width * 0.05) # 标题为面板宽度的5%
+	var content_font_size = int(panel_width * 0.04) # 内容为面板宽度的4%
+	var separation = int(panel_height * 0.02) # 间距为面板高度的2%
 
 	# 添加边距容器，使内容在面板中更加居中
 	var margin = MarginContainer.new()
-	var side_margin = int(panel_width * 0.08)  # 左右边距为面板宽度的8%
+	var side_margin = int(panel_width * 0.08) # 左右边距为面板宽度的8%
 	margin.add_theme_constant_override("margin_left", side_margin)
 	margin.add_theme_constant_override("margin_right", side_margin)
 	margin.add_theme_constant_override("margin_top", 15)
@@ -142,9 +142,9 @@ func _create_calculation_panel(pos: Vector2) -> Control:
 	final_label.name = "FinalLabel"
 	final_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	# 使用响应式字体大小
-	var final_font_size = int(panel_width * 0.06)  # 最终伤害为面板宽度的6%
+	var final_font_size = int(panel_width * 0.06) # 最终伤害为面板宽度的6%
 	final_label.add_theme_font_size_override("font_size", final_font_size)
-	final_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0))  # 默认白色
+	final_label.add_theme_color_override("font_color", Color(1.0, 1.0, 1.0)) # 默认白色
 	final_label.visible = false
 	vbox.add_child(final_label)
 
@@ -228,32 +228,32 @@ func _show_soul_effects(panel: Control, soul_effects: Array, base_damage: int) -
 
 		# 魂印效果行
 		var quality_colors = [
-			Color(0.5, 0.5, 0.5),    # 普通
-			Color(0.2, 0.7, 0.2),    # 非凡
-			Color(0.2, 0.5, 0.9),    # 稀有
-			Color(0.6, 0.2, 0.8),    # 史诗
-			Color(0.9, 0.6, 0.2),    # 传说
-			Color(0.9, 0.3, 0.3)     # 神话
+			Color(0.5, 0.5, 0.5), # 普通
+			Color(0.2, 0.7, 0.2), # 非凡
+			Color(0.2, 0.5, 0.9), # 稀有
+			Color(0.6, 0.2, 0.8), # 史诗
+			Color(0.9, 0.6, 0.2), # 传说
+			Color(0.9, 0.3, 0.3) # 神话
 		]
 		var quality = soul_effect.get("quality", 0)
 		var color = quality_colors[quality]
 
 		var soul_line = _create_calculation_line(soul_name, "+ " + str(power), color, font_size)
 		calc_container.add_child(soul_line)
-		await _animate_line_in(soul_line, true)  # 带特效
+		await _animate_line_in(soul_line, true) # 带特效
 
 		# 根据品质决定动画强度和延迟
 		var delay = 0.15
 		var shake_intensity = 0.0
 
 		match quality:
-			0, 1:  # 普通、非凡 - 快速
+			0, 1: # 普通、非凡 - 快速
 				delay = 0.08
-			2, 3:  # 稀有、史诗 - 中等
+			2, 3: # 稀有、史诗 - 中等
 				delay = 0.12
-			4, 5:  # 传说、神话 - 慢速 + 屏幕震动
+			4, 5: # 传说、神话 - 慢速 + 屏幕震动
 				delay = 0.2
-				shake_intensity = 3.0 if quality == 4 else 5.0  # 传说3, 神话5
+				shake_intensity = 3.0 if quality == 4 else 5.0 # 传说3, 神话5
 
 		# 每添加一个魂印，立即更新最终伤害并跳动（带品质颜色）
 		await _update_final_damage(panel, current_damage, color, quality)
@@ -276,9 +276,9 @@ func _show_final_result(panel: Control, final_damage: int) -> void:
 
 	# 获取面板宽度，计算最终结果的字体大小
 	var panel_width = panel.custom_minimum_size.x
-	var final_font_size = int(panel_width * 0.06)  # 最终伤害为面板宽度的6%
+	var final_font_size = int(panel_width * 0.06) # 最终伤害为面板宽度的6%
 
-	final_label.text = "最终伤害: " + str(final_damage)
+	final_label.text = str(final_damage)
 	final_label.add_theme_font_size_override("font_size", final_font_size)
 	final_label.visible = true
 	final_label.modulate.a = 0
@@ -319,11 +319,11 @@ func _update_final_damage(panel: Control, new_damage: int, soul_color: Color = C
 		return
 
 	# 更新文本
-	final_label.text = "最终伤害: " + str(new_damage)
+	final_label.text = str(new_damage)
 
 	# 根据伤害值决定跳动强度和动画速度
-	var scale_factor = 1.15  # 默认缩放
-	var animation_time = 0.1  # 默认动画时间
+	var scale_factor = 1.15 # 默认缩放
+	var animation_time = 0.1 # 默认动画时间
 
 	if new_damage < 50:
 		scale_factor = 1.1
@@ -340,7 +340,7 @@ func _update_final_damage(panel: Control, new_damage: int, soul_color: Color = C
 	elif new_damage < 300:
 		scale_factor = 1.45
 		animation_time = 0.16
-	else:  # 300+
+	else: # 300+
 		scale_factor = 1.6
 		animation_time = 0.18
 
@@ -371,17 +371,17 @@ func _update_final_damage(panel: Control, new_damage: int, soul_color: Color = C
 func _get_damage_color(damage: int) -> Color:
 	"""根据伤害值返回对应的颜色"""
 	if damage < 50:
-		return Color(0.2, 1.0, 0.2)  # 低伤害 - 绿色
+		return Color(0.2, 1.0, 0.2) # 低伤害 - 绿色
 	elif damage < 100:
-		return Color(0.2, 1.0, 0.8)  # 中低伤害 - 青色
+		return Color(0.2, 1.0, 0.8) # 中低伤害 - 青色
 	elif damage < 150:
-		return Color(1.0, 1.0, 0.2)  # 中等伤害 - 黄色
+		return Color(1.0, 1.0, 0.2) # 中等伤害 - 黄色
 	elif damage < 200:
-		return Color(1.0, 0.6, 0.2)  # 中高伤害 - 橙色
+		return Color(1.0, 0.6, 0.2) # 中高伤害 - 橙色
 	elif damage < 300:
-		return Color(1.0, 0.2, 0.2)  # 高伤害 - 红色
+		return Color(1.0, 0.2, 0.2) # 高伤害 - 红色
 	else:
-		return Color(1.0, 0.2, 0.8)  # 超高伤害 - 紫红色
+		return Color(1.0, 0.2, 0.8) # 超高伤害 - 紫红色
 
 func _hide_calculation_panel(panel: Control) -> void:
 	"""隐藏结算面板"""
@@ -393,7 +393,7 @@ func _hide_calculation_panel(panel: Control) -> void:
 func _create_calculation_line(label_text: String, value_text: String, color: Color, font_size: int = 16) -> HBoxContainer:
 	"""创建计算行"""
 	var hbox = HBoxContainer.new()
-	hbox.modulate.a = 0  # 初始透明
+	hbox.modulate.a = 0 # 初始透明
 
 	# 设置标签和数值之间的间距
 	hbox.add_theme_constant_override("separation", 10)
@@ -550,8 +550,8 @@ func _animate_dice_roll(dice_panel: Control) -> int:
 		return 1
 
 	# 快速切换数字模拟滚动
-	var roll_duration = 1.5  # 滚动时间
-	var roll_speed = 0.05     # 切换速度
+	var roll_duration = 1.5 # 滚动时间
+	var roll_speed = 0.05 # 切换速度
 	var elapsed = 0.0
 
 	while elapsed < roll_duration:
@@ -593,12 +593,12 @@ func play_soul_activation(soul_name: String, pos: Vector2, quality: int) -> void
 	- quality: 品质等级 (0-5)
 	"""
 	var quality_colors = [
-		Color(0.5, 0.5, 0.5),    # 普通
-		Color(0.2, 0.7, 0.2),    # 非凡
-		Color(0.2, 0.5, 0.9),    # 稀有
-		Color(0.6, 0.2, 0.8),    # 史诗
-		Color(0.9, 0.6, 0.2),    # 传说
-		Color(0.9, 0.3, 0.3)     # 神话
+		Color(0.5, 0.5, 0.5), # 普通
+		Color(0.2, 0.7, 0.2), # 非凡
+		Color(0.2, 0.5, 0.9), # 稀有
+		Color(0.6, 0.2, 0.8), # 史诗
+		Color(0.9, 0.6, 0.2), # 传说
+		Color(0.9, 0.3, 0.3) # 神话
 	]
 	var color = quality_colors[quality]
 

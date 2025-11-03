@@ -148,7 +148,19 @@ func _create_soul_card(item) -> Panel:
 	add_button.custom_minimum_size = Vector2(100, 35)
 	add_button.add_theme_font_size_override("font_size", 14)
 	add_button.pressed.connect(_on_add_soul.bind(item))
-	
+	add_button.set_meta("soul_item", item)  # 保存引用以便更新状态
+
+	# 检查是否已经在配置中
+	var already_added = false
+	for existing_item in loadout:
+		if existing_item.soul_print.id == item.soul_print.id:
+			already_added = true
+			break
+
+	if already_added:
+		add_button.disabled = true
+		add_button.text = "已添加"
+
 	var button_center = CenterContainer.new()
 	button_center.add_child(add_button)
 	vbox.add_child(button_center)
@@ -212,17 +224,27 @@ func _create_empty_slot(index: int) -> Panel:
 func _on_add_soul(item):
 	if loadout.size() >= MAX_LOADOUT_SIZE:
 		return
-	
+
+	# 检查是否已经在配置中（避免重复添加同一个魂印）
+	for existing_item in loadout:
+		if existing_item.soul_print.id == item.soul_print.id:
+			# 可以选择显示提示消息
+			print("魂印 ", item.soul_print.name, " 已经在配置中")
+			return
+
 	# 添加到配置
 	loadout.append(item)
-	
+
 	# 更新槽位显示
 	var slot_index = loadout.size() - 1
 	var slot = slots_container.get_child(slot_index)
 	_update_slot_display(slot, item)
-	
+
 	# 更新统计
 	_update_stats()
+
+	# 刷新所有卡片的按钮状态
+	_refresh_card_buttons()
 
 func _update_slot_display(slot: Panel, item):
 	# 清空槽位
@@ -294,34 +316,89 @@ func _update_slot_display(slot: Panel, item):
 func _on_remove_soul(slot_index: int):
 	if slot_index < 0 or slot_index >= loadout.size():
 		return
-	
+
 	# 从配置中移除指定索引的魂印
 	loadout.remove_at(slot_index)
-	
+
 	# 等待一帧确保队列中的节点被清理
 	await get_tree().process_frame
-	
+
 	# 重新创建所有槽位
 	for child in slots_container.get_children():
 		child.queue_free()
-	
+
 	await get_tree().process_frame
-	
+
 	_create_loadout_slots()
-	
+
 	# 重新显示已配置的魂印
 	for i in range(loadout.size()):
 		var slot = slots_container.get_child(i)
 		_update_slot_display(slot, loadout[i])
-	
+
 	# 更新统计
 	_update_stats()
+
+	# 刷新所有卡片的按钮状态
+	_refresh_card_buttons()
+
+func _refresh_card_buttons():
+	# 刷新所有魂印卡片的按钮状态
+	for card in inventory_grid.get_children():
+		if not card is Panel:
+			continue
+
+		# 查找按钮
+		var button = _find_button_in_card(card)
+		if not button:
+			continue
+
+		var item = button.get_meta("soul_item")
+		if not item:
+			continue
+
+		# 检查是否已经在配置中
+		var already_added = false
+		for existing_item in loadout:
+			if existing_item.soul_print.id == item.soul_print.id:
+				already_added = true
+				break
+
+		# 更新按钮状态
+		if already_added:
+			button.disabled = true
+			button.text = "已添加"
+		else:
+			button.disabled = false
+			button.text = "添加"
+
+func _find_button_in_card(card: Panel) -> Button:
+	# 递归查找卡片中的按钮
+	for child in card.get_children():
+		if child is Button:
+			return child
+		elif child.get_child_count() > 0:
+			var found = _find_button_in_container(child)
+			if found:
+				return found
+	return null
+
+func _find_button_in_container(container: Node) -> Button:
+	# 递归查找容器中的按钮
+	for child in container.get_children():
+		if child is Button:
+			return child
+		elif child.get_child_count() > 0:
+			var found = _find_button_in_container(child)
+			if found:
+				return found
+	return null
 
 func _update_stats():
 	var total_power = 0
 	for item in loadout:
 		total_power += item.soul_print.power
-	
+
 	total_power_label.text = "总力量: " + str(total_power)
 	count_label.text = "已配置: " + str(loadout.size()) + "/" + str(MAX_LOADOUT_SIZE)
 
@@ -340,4 +417,3 @@ func _on_start_button_pressed():
 
 func _on_back_button_pressed():
 	get_tree().change_scene_to_file("res://scenes/MapSelection.tscn")
-

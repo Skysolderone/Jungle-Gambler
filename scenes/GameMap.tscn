@@ -161,6 +161,17 @@ layout_mode = 2
 horizontal_alignment = 1
 vertical_alignment = 1
 
+[node name="VSeparator5" type="ColorRect" parent="TopBar/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(2, 0)
+layout_mode = 2
+color = Color(0.3, 0.3, 0.35, 0.5)
+
+[node name="CollapseTimerLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
+custom_minimum_size = Vector2(150, 0)
+layout_mode = 2
+text = "下次坍塌: 30秒"
+horizontal_alignment = 1
+
 [node name="MainContent" type="MarginContainer" parent="."]
 layout_mode = 1
 anchors_preset = 15

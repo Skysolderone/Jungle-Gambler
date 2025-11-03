@@ -5,6 +5,7 @@ extends Control
 @onready var power_label = $TopBar/MarginContainer/HBoxContainer/PowerLabel
 @onready var exploration_label = $TopBar/MarginContainer/HBoxContainer/ExplorationLabel
 @onready var evacuation_label = $TopBar/MarginContainer/HBoxContainer/EvacuationLabel
+@onready var collapse_timer_label = $TopBar/MarginContainer/HBoxContainer/CollapseTimerLabel
 @onready var grid_container = $MainContent/GridPanel/GridContainer
 @onready var grid_panel = $MainContent/GridPanel
 @onready var brightness_overlay = $BrightnessOverlay
@@ -51,6 +52,7 @@ var collected_souls: Array[String] = []  # 本局收集到的魂印ID列表
 
 # 坍塌状态
 var collapse_ring_index: int = -1  # 已坍塌到第几圈（-1 表示未开始）
+var collapse_time_remaining: float = COLLAPSE_INTERVAL  # 距离下次坍塌剩余时间
 
 # 输入锁定（防止对话框关闭时误触发点击）
 var input_locked: bool = false
@@ -89,6 +91,8 @@ func _ready():
 			collapse_ring_index = session.get_meta("map_collapse_ring_index")
 		if session.has_meta("map_collected_souls"):
 			collected_souls = session.get_meta("map_collected_souls")
+		if session.has_meta("map_collapse_time_remaining"):
+			collapse_time_remaining = session.get_meta("map_collapse_time_remaining")
 		
 		# 恢复网格数据（如果有保存的话）
 		if session.has_meta("map_grid_data"):
@@ -117,6 +121,7 @@ func _ready():
 		session.remove_meta("map_show_evacuation")
 		session.remove_meta("map_collapse_ring_index")
 		session.remove_meta("map_collected_souls")
+		session.remove_meta("map_collapse_time_remaining")
 	else:
 		_initialize_grid()
 		_generate_map_content()
@@ -134,6 +139,9 @@ func _ready():
 
 	# 启动撤离点动画循环
 	_start_evacuation_animation()
+
+	# 启动倒计时更新循环
+	_start_collapse_timer_update()
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):
@@ -199,12 +207,15 @@ func _start_collapse_loop():
 	# 调试模式：禁用地形坍塌
 	if DEBUG_MODE and DEBUG_NO_COLLAPSE:
 		print("调试模式：地形坍塌已禁用")
+		collapse_timer_label.text = "坍塌: 已禁用"
 		return
 
 	# 延迟首轮30秒开始，再每30秒坍塌一圈
 	await get_tree().create_timer(COLLAPSE_INTERVAL).timeout
 	while true:
 		if _collapse_next_ring():
+			# 重置倒计时
+			collapse_time_remaining = COLLAPSE_INTERVAL
 			grid_container.queue_redraw()
 			# 如果玩家当前位置已坍塌，判定失败
 			if grid_data[player_pos.y][player_pos.x].collapsed:
@@ -220,6 +231,53 @@ func _start_evacuation_animation():
 		if show_evacuation:
 			grid_container.queue_redraw()
 		await get_tree().create_timer(0.05).timeout  # 20fps动画
+
+func _start_collapse_timer_update():
+	# 倒计时更新循环
+	if DEBUG_MODE and DEBUG_NO_COLLAPSE:
+		return
+
+	while true:
+		# 更新剩余时间
+		collapse_time_remaining -= 0.1
+		if collapse_time_remaining < 0:
+			collapse_time_remaining = 0
+
+		# 更新UI显示
+		_update_collapse_timer_display()
+
+		await get_tree().create_timer(0.1).timeout  # 每0.1秒更新一次
+
+func _update_collapse_timer_display():
+	var seconds = int(ceil(collapse_time_remaining))
+
+	# 剩余10秒时的警告效果
+	if seconds <= 10 and seconds > 0:
+		# 红色闪烁效果
+		var time = Time.get_ticks_msec() / 1000.0
+		var pulse = (sin(time * 5.0) + 1.0) / 2.0  # 快速脉冲
+		var warning_color = Color(1.0, pulse * 0.3, pulse * 0.3)  # 红色到暗红色
+
+		collapse_timer_label.add_theme_color_override("font_color", warning_color)
+		collapse_timer_label.add_theme_font_size_override("font_size", 18)
+		collapse_timer_label.text = "⚠ 坍塌倒计时: " + str(seconds) + "秒 ⚠"
+
+		# 添加红色背景
+		var style_box = StyleBoxFlat.new()
+		style_box.bg_color = Color(0.5, 0.0, 0.0, 0.6 + pulse * 0.2)
+		style_box.set_corner_radius_all(5)
+		collapse_timer_label.add_theme_stylebox_override("normal", style_box)
+	elif seconds == 0:
+		# 坍塌中
+		collapse_timer_label.text = "地形坍塌中..."
+		collapse_timer_label.add_theme_color_override("font_color", Color(1.0, 0.2, 0.2))
+		collapse_timer_label.add_theme_font_size_override("font_size", 16)
+	else:
+		# 正常倒计时
+		collapse_timer_label.text = "下次坍塌: " + str(seconds) + "秒"
+		collapse_timer_label.add_theme_color_override("font_color", Color(0.9, 0.9, 0.9))
+		collapse_timer_label.add_theme_font_size_override("font_size", 14)
+		collapse_timer_label.remove_theme_stylebox_override("normal")
 
 func _apply_brightness_from_settings():
 	var settings = {"brightness": 100.0}
@@ -860,6 +918,7 @@ func _start_battle(enemy_data: Dictionary):
 	session.set_meta("map_show_evacuation", show_evacuation)
 	session.set_meta("map_collapse_ring_index", collapse_ring_index)
 	session.set_meta("map_collected_souls", collected_souls)
+	session.set_meta("map_collapse_time_remaining", collapse_time_remaining)
 	# 保存网格数据（探索状态、资源等）
 	session.set_meta("map_grid_data", _serialize_grid_data())
 

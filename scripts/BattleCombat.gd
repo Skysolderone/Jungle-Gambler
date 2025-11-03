@@ -24,8 +24,8 @@ var player_base_power: int = 50
 var enemy_base_power: int = 30
 
 # 魂印相关
-var player_selected_souls: Array = []  # 玩家选中的魂印
-var enemy_souls: Array = []  # 敌人的魂印
+var player_selected_souls: Array = [] # 玩家选中的魂印
+var enemy_souls: Array = [] # 敌人的魂印
 
 # 战斗状态
 var battle_over: bool = false
@@ -127,9 +127,9 @@ func _execute_combat_round():
 	# 分类魂印
 	for soul_item in player_selected_souls:
 		var soul = soul_item.soul_print
-		if soul.soul_type == 0:  # ACTIVE
+		if soul.soul_type == 0: # ACTIVE
 			player_active_souls.append(soul)
-		else:  # PASSIVE
+		else: # PASSIVE
 			player_passive_souls.append(soul)
 
 	# 应用主动魂印
@@ -163,7 +163,7 @@ func _execute_combat_round():
 
 	# 最终伤害
 	var player_final = int(player_damage_after_active) + player_passive_bonus
-	player_final_power_label.text = "最终力量: " + str(player_final)
+	player_final_power_label.text = str(player_final)
 
 	# 4. 播放玩家积分计算动画
 	var player_calc_pos = Vector2(viewport_size.x * 0.25, viewport_size.y * 0.3)
@@ -198,9 +198,9 @@ func _execute_combat_round():
 
 	# 分类魂印
 	for soul in enemy_souls:
-		if soul.soul_type == 0:  # ACTIVE
+		if soul.soul_type == 0: # ACTIVE
 			enemy_active_souls.append(soul)
-		else:  # PASSIVE
+		else: # PASSIVE
 			enemy_passive_souls.append(soul)
 
 		enemy_soul_effects.append({
@@ -227,7 +227,7 @@ func _execute_combat_round():
 
 	# 最终伤害
 	var enemy_final = int(enemy_damage_after_active) + enemy_passive_bonus
-	enemy_final_power_label.text = "最终力量: " + str(enemy_final)
+	enemy_final_power_label.text = str(enemy_final)
 
 	# 6. 播放敌人积分计算动画
 	var enemy_calc_pos = Vector2(viewport_size.x * 0.75, viewport_size.y * 0.3)
