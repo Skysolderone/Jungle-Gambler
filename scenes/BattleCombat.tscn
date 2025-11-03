@@ -67,3 +67,26 @@ layout_mode = 2
 custom_minimum_size = Vector2(0, 300)
 layout_mode = 2
 bbcode_enabled = true
+
+[node name="SoulSelectionPanel" type="PanelContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
+visible = false
+layout_mode = 2
+
+[node name="SoulVBox" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel"]
+layout_mode = 2
+
+[node name="SelectionHint" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel/SoulVBox"]
+layout_mode = 2
+horizontal_alignment = 1
+
+[node name="SoulGrid" type="GridContainer" parent="BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel/SoulVBox"]
+layout_mode = 2
+columns = 2
+
+[node name="ConfirmButton" type="Button" parent="BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel/SoulVBox"]
+custom_minimum_size = Vector2(200, 50)
+layout_mode = 2
+size_flags_horizontal = 4
+
+[node name="ButtonMargin" type="MarginContainer" parent="BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel/SoulVBox"]
+layout_mode = 2

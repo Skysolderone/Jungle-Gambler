@@ -36,7 +36,7 @@
 ━━━ 力量计算 ━━━
 基础力量               50
 骰子点数              × 5
-                    = 250
+					= 250
 
 ━━━ 魂印加成 ━━━
 火焰之魂             + 20
@@ -135,25 +135,25 @@ intensity = min(damage / 10.0, 15.0)
 var battle_animator: BattleAnimator
 
 func _ready():
-    battle_animator = BattleAnimator.new()
-    add_child(battle_animator)
+	battle_animator = BattleAnimator.new()
+	add_child(battle_animator)
 ```
 
 ### 积分结算动画
 
 ```gdscript
 await battle_animator.play_score_calculation(
-    base_power: int,           # 基础力量
-    dice: int,                 # 骰子点数
-    soul_effects: Array,       # 魂印效果列表
-    final_damage: int,         # 最终伤害
-    position: Vector2          # 显示位置
+	base_power: int,           # 基础力量
+	dice: int,                 # 骰子点数
+	soul_effects: Array,       # 魂印效果列表
+	final_damage: int,         # 最终伤害
+	position: Vector2          # 显示位置
 )
 
 # soul_effects 格式：
 [
-    {"name": "火焰之魂", "power": 20, "quality": 2},
-    {"name": "雷霆之魂", "power": 15, "quality": 3}
+	{"name": "火焰之魂", "power": 20, "quality": 2},
+	{"name": "雷霆之魂", "power": 15, "quality": 3}
 ]
 
 # 等待动画完成
@@ -171,9 +171,9 @@ print("骰子结果: ", dice_result)  # 1-6
 
 ```gdscript
 battle_animator.play_soul_activation(
-    soul_name: String,         # 魂印名称
-    position: Vector2,         # 显示位置
-    quality: int               # 品质等级 0-5
+	soul_name: String,         # 魂印名称
+	position: Vector2,         # 显示位置
+	quality: int               # 品质等级 0-5
 )
 
 # 注意：此方法不等待完成，可连续调用
@@ -183,9 +183,9 @@ battle_animator.play_soul_activation(
 
 ```gdscript
 battle_animator.play_damage_number(
-    damage: int,               # 伤害数值
-    position: Vector2,         # 起始位置
-    is_critical: bool          # 是否暴击
+	damage: int,               # 伤害数值
+	position: Vector2,         # 起始位置
+	is_critical: bool          # 是否暴击
 )
 
 # 示例
@@ -196,8 +196,8 @@ battle_animator.play_damage_number(285, enemy_pos, true)
 
 ```gdscript
 battle_animator.play_screen_shake(
-    intensity: float = 10.0,   # 震动强度（像素）
-    duration: float = 0.3      # 持续时间（秒）
+	intensity: float = 10.0,   # 震动强度（像素）
+	duration: float = 0.3      # 持续时间（秒）
 )
 
 # 示例：根据伤害动态调整
@@ -221,46 +221,46 @@ await battle_animator.play_defeat_animation(position)
 
 ```gdscript
 func _execute_combat_round():
-    var viewport_size = get_viewport_rect().size
+	var viewport_size = get_viewport_rect().size
 
-    # 1. 骰子滚动
-    var dice = await battle_animator.play_dice_roll(viewport_size / 2.0)
+	# 1. 骰子滚动
+	var dice = await battle_animator.play_dice_roll(viewport_size / 2.0)
 
-    # 2. 魂印激活特效（玩家）
-    for soul in player_souls:
-        var pos = Vector2(viewport_size.x * 0.3, viewport_size.y * 0.5)
-        battle_animator.play_soul_activation(soul.name, pos, soul.quality)
-        await get_tree().create_timer(0.3).timeout
+	# 2. 魂印激活特效（玩家）
+	for soul in player_souls:
+		var pos = Vector2(viewport_size.x * 0.3, viewport_size.y * 0.5)
+		battle_animator.play_soul_activation(soul.name, pos, soul.quality)
+		await get_tree().create_timer(0.3).timeout
 
-    # 3. 玩家积分计算
-    var player_pos = Vector2(viewport_size.x * 0.25, viewport_size.y * 0.3)
-    battle_animator.play_score_calculation(
-        player_base_power, dice, player_soul_effects,
-        player_final, player_pos
-    )
-    await battle_animator.animation_completed
+	# 3. 玩家积分计算
+	var player_pos = Vector2(viewport_size.x * 0.25, viewport_size.y * 0.3)
+	battle_animator.play_score_calculation(
+		player_base_power, dice, player_soul_effects,
+		player_final, player_pos
+	)
+	await battle_animator.animation_completed
 
-    # 4. 敌人积分计算
-    var enemy_pos = Vector2(viewport_size.x * 0.75, viewport_size.y * 0.3)
-    battle_animator.play_score_calculation(
-        enemy_base_power, dice, enemy_soul_effects,
-        enemy_final, enemy_pos
-    )
-    await battle_animator.animation_completed
+	# 4. 敌人积分计算
+	var enemy_pos = Vector2(viewport_size.x * 0.75, viewport_size.y * 0.3)
+	battle_animator.play_score_calculation(
+		enemy_base_power, dice, enemy_soul_effects,
+		enemy_final, enemy_pos
+	)
+	await battle_animator.animation_completed
 
-    # 5. 伤害判定和动画
-    var damage = abs(player_final - enemy_final)
-    if player_final > enemy_final:
-        # 敌人受伤
-        var target_pos = Vector2(viewport_size.x * 0.75, viewport_size.y * 0.5)
-        battle_animator.play_damage_number(damage, target_pos, damage > 100)
-        battle_animator.play_screen_shake(min(damage / 10.0, 15.0), 0.3)
+	# 5. 伤害判定和动画
+	var damage = abs(player_final - enemy_final)
+	if player_final > enemy_final:
+		# 敌人受伤
+		var target_pos = Vector2(viewport_size.x * 0.75, viewport_size.y * 0.5)
+		battle_animator.play_damage_number(damage, target_pos, damage > 100)
+		battle_animator.play_screen_shake(min(damage / 10.0, 15.0), 0.3)
 
-    # 6. 检查胜负
-    if enemy_hp <= 0:
-        await battle_animator.play_victory_animation(viewport_size / 2.0)
-    elif player_hp <= 0:
-        await battle_animator.play_defeat_animation(viewport_size / 2.0)
+	# 6. 检查胜负
+	if enemy_hp <= 0:
+		await battle_animator.play_victory_animation(viewport_size / 2.0)
+	elif player_hp <= 0:
+		await battle_animator.play_defeat_animation(viewport_size / 2.0)
 ```
 
 ---
@@ -311,16 +311,16 @@ await get_tree().create_timer(0.3).timeout
 
 ```gdscript
 func play_custom_effect(position: Vector2) -> void:
-    var label = Label.new()
-    label.text = "自定义效果"
-    label.position = position
-    animation_layer.add_child(label)
+	var label = Label.new()
+	label.text = "自定义效果"
+	label.position = position
+	animation_layer.add_child(label)
 
-    var tween = create_tween()
-    tween.tween_property(label, "modulate:a", 0.0, 1.0)
-    await tween.finished
+	var tween = create_tween()
+	tween.tween_property(label, "modulate:a", 0.0, 1.0)
+	await tween.finished
 
-    label.queue_free()
+	label.queue_free()
 ```
 
 ---
@@ -343,7 +343,7 @@ func play_custom_effect(position: Vector2) -> void:
 # 检查摄像机
 var camera = get_viewport().get_camera_2d()
 if not camera:
-    print("警告：未找到摄像机，屏幕震动无效")
+	print("警告：未找到摄像机，屏幕震动无效")
 ```
 
 ### 问题：动画卡顿

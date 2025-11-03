@@ -12,6 +12,10 @@ extends Control
 @onready var enemy_dice_label: Label = $BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo/EnemyDice
 @onready var enemy_final_power_label: Label = $BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo/EnemyFinalPower
 @onready var battle_log: RichTextLabel = $BattlePanel/MarginContainer/VBoxContainer/BattleLog
+@onready var soul_selection_panel: PanelContainer = $BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel
+@onready var soul_grid: GridContainer = $BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel/SoulVBox/SoulGrid
+@onready var selection_hint: Label = $BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel/SoulVBox/SelectionHint
+@onready var confirm_button: Button = $BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel/SoulVBox/ConfirmButton
 
 # 动画管理器
 var battle_animator: BattleAnimator
@@ -24,12 +28,14 @@ var player_base_power: int = 50
 var enemy_base_power: int = 30
 
 # 魂印相关
-var player_selected_souls: Array = [] # 玩家选中的魂印
+var player_all_souls: Array = [] # 准备阶段选中的所有魂印
+var player_round_selected_souls: Array = [] # 本回合激活的魂印
 var enemy_souls: Array = [] # 敌人的魂印
 
 # 战斗状态
 var battle_over: bool = false
 var initial_player_hp: int = 100
+var waiting_for_soul_selection: bool = false
 
 func _ready():
 	# 初始化动画管理器
@@ -48,28 +54,35 @@ func _ready():
 		player_hp = session.get_meta("battle_player_hp")
 		initial_player_hp = player_hp
 	if session.has_meta("battle_selected_souls"):
-		player_selected_souls = session.get_meta("battle_selected_souls")
+		player_all_souls = session.get_meta("battle_selected_souls")
 	if session.has_meta("battle_enemy_souls"):
 		enemy_souls = session.get_meta("battle_enemy_souls")
 
 	enemy_hp = enemy_data.get("hp", 100)
 	enemy_base_power = enemy_data.get("power", 30)
 
+	# 连接确认按钮信号
+	confirm_button.text = "确认并出手"
+	confirm_button.custom_minimum_size = Vector2(300, 80)
+	var button_font_size = 24
+	confirm_button.add_theme_font_size_override("font_size", button_font_size)
+	confirm_button.pressed.connect(_on_confirm_soul_selection)
+
 	_update_display()
 	_add_log("[color=#FFFF00]━━━ 战斗开始 ━━━[/color]")
 	_add_log("[color=#00FF00]遭遇敌人：" + enemy_data.get("name", "未知敌人") + "！[/color]")
 
 	# 显示玩家配置的魂印信息
-	if player_selected_souls.size() > 0:
+	if player_all_souls.size() > 0:
 		_add_log("[color=#FFFF00]━━━ 你的魂印配置 ━━━[/color]")
 		var total_soul_power = 0
-		for soul_item in player_selected_souls:
+		for soul_item in player_all_souls:
 			var soul = soul_item.soul_print
 			total_soul_power += soul.power
 			var quality_names = ["普通", "非凡", "稀有", "史诗", "传说", "神话"]
 			var quality_name = quality_names[soul.quality]
 			_add_log("[color=#FFD700]" + soul.name + "[/color] (" + quality_name + ") - 力量加成: [color=#FF6600]+" + str(soul.power) + "[/color]")
-		_add_log("[color=#00FFFF]总魂印加成: +" + str(total_soul_power) + " 点力量！[/color]")
+		_add_log("[color=#00FFFF]总魂印力量: +" + str(total_soul_power) + " 点[/color]")
 	else:
 		_add_log("[color=#888888]未配置任何魂印，仅依靠基础力量战斗[/color]")
 
@@ -89,7 +102,13 @@ func _execute_combat_round():
 
 	_add_log("[color=#FFFF00]━━━ 新回合 ━━━[/color]")
 
-	# 1. 骰子滚动动画
+	# 1. 显示魂印选择面板，等待玩家选择
+	if player_all_souls.size() > 0:
+		await _show_soul_selection()
+	else:
+		player_round_selected_souls = []
+
+	# 2. 骰子滚动动画
 	var viewport_size = get_viewport_rect().size
 	var dice_pos = viewport_size / 2.0
 	var dice = await battle_animator.play_dice_roll(dice_pos)
@@ -100,9 +119,9 @@ func _execute_combat_round():
 
 	await get_tree().create_timer(0.5).timeout
 
-	# 2. 玩家魂印激活动画
+	# 3. 玩家魂印激活动画
 	var player_soul_effects = []
-	for soul_item in player_selected_souls:
+	for soul_item in player_round_selected_souls:
 		var soul = soul_item.soul_print
 		player_soul_effects.append({
 			"name": soul.name,
@@ -115,7 +134,7 @@ func _execute_combat_round():
 		battle_animator.play_soul_activation(soul.name, soul_pos, soul.quality)
 		await get_tree().create_timer(0.3).timeout
 
-	# 3. 计算玩家力量（新公式）
+	# 4. 计算玩家力量（新公式）
 	# 基础伤害 = 基础力量 × 骰子
 	var player_base_damage = player_base_power * dice
 
@@ -125,7 +144,7 @@ func _execute_combat_round():
 	var player_passive_souls = []
 
 	# 分类魂印
-	for soul_item in player_selected_souls:
+	for soul_item in player_round_selected_souls:
 		var soul = soul_item.soul_print
 		if soul.soul_type == 0: # ACTIVE
 			player_active_souls.append(soul)
@@ -345,12 +364,130 @@ func _update_display():
 
 	# 更新选中魂印的总加成
 	var total_bonus = 0
-	for soul_item in player_selected_souls:
+	for soul_item in player_round_selected_souls:
 		total_bonus += soul_item.soul_print.power
 
-	player_final_power_label.text = "魂印加成: +" + str(total_bonus)
+	player_final_power_label.text = "本回合魂印: +" + str(total_bonus)
 
 func _add_log(text: String):
 	battle_log.text += "\n" + text
 	await get_tree().process_frame
 	battle_log.scroll_to_line(battle_log.get_line_count())
+
+func _show_soul_selection():
+	"""显示魂印选择面板"""
+	player_round_selected_souls = []
+
+	# 清空网格
+	for child in soul_grid.get_children():
+		child.queue_free()
+
+	# 创建魂印卡片
+	for i in range(player_all_souls.size()):
+		var soul_item = player_all_souls[i]
+		var card = _create_soul_card(soul_item, i)
+		soul_grid.add_child(card)
+
+	# 更新提示文本
+	selection_hint.text = "选择本回合要激活的魂印（可以不选）"
+	selection_hint.add_theme_font_size_override("font_size", 20)
+
+	# 显示面板
+	soul_selection_panel.visible = true
+	waiting_for_soul_selection = true
+
+	# 等待玩家确认
+	while waiting_for_soul_selection:
+		await get_tree().process_frame
+
+func _create_soul_card(soul_item, index: int) -> Button:
+	"""创建魂印卡片按钮"""
+	var button = Button.new()
+	button.custom_minimum_size = Vector2(180, 120)
+
+	var soul = soul_item.soul_print
+	var uses_text = str(soul_item.uses_remaining) + "/" + str(soul_item.max_uses)
+	var is_depleted = soul_item.uses_remaining <= 0
+
+	# 品质颜色
+	var quality_colors = [
+		Color(0.5, 0.5, 0.5), Color(0.2, 0.7, 0.2), Color(0.2, 0.5, 0.9),
+		Color(0.6, 0.2, 0.8), Color(0.9, 0.6, 0.2), Color(0.9, 0.3, 0.3)
+	]
+	var color = quality_colors[soul.quality]
+
+	# 如果使用次数为0，变灰并禁用
+	if is_depleted:
+		color = Color(0.3, 0.3, 0.3)
+		button.disabled = true
+
+	# 设置按钮样式
+	var style_normal = StyleBoxFlat.new()
+	style_normal.bg_color = Color(color.r * 0.3, color.g * 0.3, color.b * 0.3, 0.8)
+	style_normal.border_color = color
+	style_normal.set_border_width_all(2)
+	style_normal.set_corner_radius_all(5)
+	button.add_theme_stylebox_override("normal", style_normal)
+
+	# 设置按钮文本
+	var status_text = " [已耗尽]" if is_depleted else ""
+	button.text = soul.name + status_text + "\n力量+" + str(soul.power) + "\n" + uses_text
+
+	# 增大字体
+	button.add_theme_font_size_override("font_size", 18)
+
+	# 连接点击信号（只在未耗尽时）
+	if not is_depleted:
+		button.pressed.connect(_on_soul_card_clicked.bind(index, button))
+
+	return button
+
+func _on_soul_card_clicked(index: int, button: Button):
+	"""魂印卡片被点击"""
+	var soul_item = player_all_souls[index]
+
+	if player_round_selected_souls.has(soul_item):
+		# 取消选中
+		player_round_selected_souls.erase(soul_item)
+		_update_card_style(button, soul_item.soul_print, false)
+	else:
+		# 选中
+		player_round_selected_souls.append(soul_item)
+		_update_card_style(button, soul_item.soul_print, true)
+
+func _update_card_style(button: Button, soul, selected: bool):
+	"""更新卡片样式"""
+	var quality_colors = [
+		Color(0.5, 0.5, 0.5), Color(0.2, 0.7, 0.2), Color(0.2, 0.5, 0.9),
+		Color(0.6, 0.2, 0.8), Color(0.9, 0.6, 0.2), Color(0.9, 0.3, 0.3)
+	]
+	var color = quality_colors[soul.quality]
+
+	var style = StyleBoxFlat.new()
+	if selected:
+		# 选中状态 - 更亮的背景和黄色边框
+		style.bg_color = Color(color.r * 0.7, color.g * 0.7, color.b * 0.7, 1.0)
+		style.border_color = Color(1, 1, 0, 1)
+		style.set_border_width_all(4)
+	else:
+		# 未选中状态
+		style.bg_color = Color(color.r * 0.3, color.g * 0.3, color.b * 0.3, 0.8)
+		style.border_color = color
+		style.set_border_width_all(2)
+	style.set_corner_radius_all(5)
+	button.add_theme_stylebox_override("normal", style)
+
+func _on_confirm_soul_selection():
+	"""确认魂印选择"""
+	# 隐藏面板
+	soul_selection_panel.visible = false
+	waiting_for_soul_selection = false
+
+	# 记录选择
+	if player_round_selected_souls.size() > 0:
+		_add_log("[color=#FFFF00]本回合激活魂印：[/color]")
+		for soul_item in player_round_selected_souls:
+			var soul = soul_item.soul_print
+			_add_log("  [color=#FFD700]" + soul.name + "[/color] (力量+" + str(soul.power) + ")")
+	else:
+		_add_log("[color=#AAAAAA]本回合未激活任何魂印[/color]")

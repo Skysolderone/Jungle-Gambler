@@ -22,13 +22,13 @@
 ```
 当前流程：
 准备阶段 (10秒) → 选择魂印
-    ↓
+	↓
 战斗阶段 → 自动回合制
-    - 掷骰子（共用）
-    - 计算力量 = 基础力量 × 骰子 + 魂印加成
-    - 伤害 = abs(玩家力量 - 敌人力量)
-    - 重复直到一方 HP 归零
-    ↓
+	- 掷骰子（共用）
+	- 计算力量 = 基础力量 × 骰子 + 魂印加成
+	- 伤害 = abs(玩家力量 - 敌人力量)
+	- 重复直到一方 HP 归零
+	↓
 战利品阶段 → 背包满时选择丢弃
 ```
 
@@ -59,11 +59,11 @@ Balatro 使用清晰的状态机管理战斗流程：
 ```
 状态机模式：
 SELECTING_HAND (选牌)
-    ↓ 玩家选择卡牌
+	↓ 玩家选择卡牌
 HAND_PLAYED (出牌)
-    ↓ 动画和计算
+	↓ 动画和计算
 ROUND_EVAL (评估)
-    ↓ 检查胜利条件
+	↓ 检查胜利条件
 回到 SELECTING_HAND 或 结束
 ```
 
@@ -110,10 +110,10 @@ Base → Enhancement → Card Effects → Hand Type → Joker → Blind → Fina
 ```gdscript
 # 卡牌区域管理
 CardArea:
-    - cards: Array[Card]          # 卡牌列表
-    - highlighted: Array[Card]    # 选中的卡牌
-    - highlighted_limit: int      # 最多选择数量
-    - align_cards()               # 自动布局
+	- cards: Array[Card]          # 卡牌列表
+	- highlighted: Array[Card]    # 选中的卡牌
+	- highlighted_limit: int      # 最多选择数量
+	- align_cards()               # 自动布局
 ```
 
 **可借鉴点**：
@@ -163,13 +163,13 @@ Event:condition(check_func, callback)
 【玩家回合】(PLAYER_TURN)
   - 可用次数：4 次出手（hands）
   - 每次出手：
-    1. 选择要使用的魂印（1-3 个）
-    2. 掷骰子
-    3. 计算伤害 = (基础力量 + 魂印力量总和) × 骰子
-    4. 对敌人造成伤害
+	1. 选择要使用的魂印（1-3 个）
+	2. 掷骰子
+	3. 计算伤害 = (基础力量 + 魂印力量总和) × 骰子
+	4. 对敌人造成伤害
   - 弃牌选项：2 次机会（discards）
-    * 可以弃掉不想用的魂印
-    * 弃掉的魂印不消耗使用次数
+	* 可以弃掉不想用的魂印
+	* 弃掉的魂印不消耗使用次数
   ↓
 【敌人回合】(ENEMY_TURN)
   - 敌人自动使用魂印
@@ -193,17 +193,17 @@ Event:condition(check_func, callback)
 
 ```gdscript
 enum BattleState {
-    PREPARATION,        # 准备阶段
-    PLAYER_TURN,        # 玩家回合
-    PLAYER_SELECTING,   # 玩家选择魂印
-    PLAYER_ROLLING,     # 玩家掷骰子
-    PLAYER_ATTACKING,   # 玩家攻击动画
-    ENEMY_TURN,         # 敌人回合
-    ENEMY_ATTACKING,    # 敌人攻击动画
-    ROUND_END,          # 回合结束
-    VICTORY,            # 战斗胜利
-    DEFEAT,             # 战斗失败
-    LOOT                # 战利品
+	PREPARATION,        # 准备阶段
+	PLAYER_TURN,        # 玩家回合
+	PLAYER_SELECTING,   # 玩家选择魂印
+	PLAYER_ROLLING,     # 玩家掷骰子
+	PLAYER_ATTACKING,   # 玩家攻击动画
+	ENEMY_TURN,         # 敌人回合
+	ENEMY_ATTACKING,    # 敌人攻击动画
+	ROUND_END,          # 回合结束
+	VICTORY,            # 战斗胜利
+	DEFEAT,             # 战斗失败
+	LOOT                # 战利品
 }
 ```
 
@@ -214,33 +214,33 @@ enum BattleState {
 ```gdscript
 # 魂印效果类型
 enum SoulEffectType {
-    POWER_FLAT,      # 固定力量加成 +10
-    POWER_MULT,      # 力量倍数 ×1.5
-    DICE_BONUS,      # 骰子加成 +2
-    DICE_REROLL,     # 重掷骰子
-    SHIELD,          # 格挡伤害
-    LIFE_STEAL,      # 生命偷取
-    COMBO_BONUS,     # 连击加成
-    CRIT_CHANCE      # 暴击几率
+	POWER_FLAT,      # 固定力量加成 +10
+	POWER_MULT,      # 力量倍数 ×1.5
+	DICE_BONUS,      # 骰子加成 +2
+	DICE_REROLL,     # 重掷骰子
+	SHIELD,          # 格挡伤害
+	LIFE_STEAL,      # 生命偷取
+	COMBO_BONUS,     # 连击加成
+	CRIT_CHANCE      # 暴击几率
 }
 
 # 魂印定义示例
 {
-    "id": "soul_thunder",
-    "name": "雷霆之魂",
-    "quality": 2,
-    "power": 15,
-    "effects": [
-        {
-            "type": POWER_FLAT,
-            "value": 15
-        },
-        {
-            "type": DICE_BONUS,
-            "value": 1,
-            "condition": "dice >= 4"  # 骰子≥4时生效
-        }
-    ]
+	"id": "soul_thunder",
+	"name": "雷霆之魂",
+	"quality": 2,
+	"power": 15,
+	"effects": [
+		{
+			"type": POWER_FLAT,
+			"value": 15
+		},
+		{
+			"type": DICE_BONUS,
+			"value": 1,
+			"condition": "dice >= 4"  # 骰子≥4时生效
+		}
+	]
 }
 ```
 
@@ -380,25 +380,25 @@ var current_state: BattleState
 var states: Dictionary = {}
 
 func _ready():
-    # 注册所有状态
-    register_state("preparation", PreparationState.new())
-    register_state("player_turn", PlayerTurnState.new())
-    register_state("enemy_turn", EnemyTurnState.new())
-    register_state("loot", LootState.new())
+	# 注册所有状态
+	register_state("preparation", PreparationState.new())
+	register_state("player_turn", PlayerTurnState.new())
+	register_state("enemy_turn", EnemyTurnState.new())
+	register_state("loot", LootState.new())
 
 func register_state(name: String, state: BattleState):
-    states[name] = state
-    state.state_machine = self
+	states[name] = state
+	state.state_machine = self
 
 func change_state(state_name: String):
-    if current_state:
-        current_state.exit()
+	if current_state:
+		current_state.exit()
 
-    var old_state = current_state
-    current_state = states[state_name]
-    current_state.enter()
+	var old_state = current_state
+	current_state = states[state_name]
+	current_state.enter()
 
-    state_changed.emit(old_state, current_state)
+	state_changed.emit(old_state, current_state)
 ```
 
 #### BattleState.gd (抽象基类)
@@ -411,20 +411,20 @@ var state_machine: BattleStateMachine
 var battle_scene: Node  # 主战斗场景引用
 
 func enter():
-    # 进入状态时调用
-    pass
+	# 进入状态时调用
+	pass
 
 func exit():
-    # 退出状态时调用
-    pass
+	# 退出状态时调用
+	pass
 
 func update(delta: float):
-    # 每帧更新
-    pass
+	# 每帧更新
+	pass
 
 func handle_input(event: InputEvent):
-    # 处理输入
-    pass
+	# 处理输入
+	pass
 ```
 
 #### SoulEffect.gd
@@ -434,14 +434,14 @@ extends Resource
 class_name SoulEffect
 
 enum EffectType {
-    POWER_FLAT,      # 固定力量 +X
-    POWER_MULT,      # 力量倍数 ×X
-    DICE_BONUS,      # 骰子加成 +X
-    DICE_REROLL,     # 重掷骰子
-    SHIELD,          # 格挡伤害
-    LIFE_STEAL,      # 生命偷取 X%
-    COMBO_BONUS,     # 连击加成
-    CRIT_CHANCE      # 暴击几率 X%
+	POWER_FLAT,      # 固定力量 +X
+	POWER_MULT,      # 力量倍数 ×X
+	DICE_BONUS,      # 骰子加成 +X
+	DICE_REROLL,     # 重掷骰子
+	SHIELD,          # 格挡伤害
+	LIFE_STEAL,      # 生命偷取 X%
+	COMBO_BONUS,     # 连击加成
+	CRIT_CHANCE      # 暴击几率 X%
 }
 
 @export var type: EffectType
@@ -449,31 +449,31 @@ enum EffectType {
 @export var condition: String = ""  # 触发条件（可选）
 
 func can_apply(context: Dictionary) -> bool:
-    """检查效果是否可以应用"""
-    if condition.is_empty():
-        return true
+	"""检查效果是否可以应用"""
+	if condition.is_empty():
+		return true
 
-    # 简单条件解析
-    # 例如: "dice >= 4", "hp < 50", "combo >= 3"
-    return _evaluate_condition(condition, context)
+	# 简单条件解析
+	# 例如: "dice >= 4", "hp < 50", "combo >= 3"
+	return _evaluate_condition(condition, context)
 
 func apply(context: Dictionary) -> Dictionary:
-    """应用效果并返回修改后的上下文"""
-    match type:
-        EffectType.POWER_FLAT:
-            context["power"] += value
-        EffectType.POWER_MULT:
-            context["power"] *= value
-        EffectType.DICE_BONUS:
-            context["dice"] += value
-        # ... 其他效果
+	"""应用效果并返回修改后的上下文"""
+	match type:
+		EffectType.POWER_FLAT:
+			context["power"] += value
+		EffectType.POWER_MULT:
+			context["power"] *= value
+		EffectType.DICE_BONUS:
+			context["dice"] += value
+		# ... 其他效果
 
-    return context
+	return context
 
 func _evaluate_condition(condition_str: String, context: Dictionary) -> bool:
-    # 条件解析逻辑
-    # 可以使用简单的字符串解析或表达式求值
-    pass
+	# 条件解析逻辑
+	# 可以使用简单的字符串解析或表达式求值
+	pass
 ```
 
 #### DamageCalculator.gd
@@ -484,51 +484,51 @@ class_name DamageCalculator
 
 # 借鉴 Balatro 的分层计算
 func calculate_damage(base_power: int, dice: int, souls: Array, context: Dictionary) -> int:
-    """
+	"""
     分层计算伤害：
     1. 基础层：基础力量 × 骰子
     2. 魂印平值层：所有 POWER_FLAT 效果
     3. 魂印倍数层：所有 POWER_MULT 效果
     4. 特殊效果层：暴击、连击等
-    """
+	"""
 
-    var result = {
-        "base_power": base_power,
-        "dice": dice,
-        "power": base_power,
-        "multiplier": 1.0,
-        "bonus": 0,
-        "context": context
-    }
+	var result = {
+		"base_power": base_power,
+		"dice": dice,
+		"power": base_power,
+		"multiplier": 1.0,
+		"bonus": 0,
+		"context": context
+	}
 
-    # 阶段 1: 应用骰子加成效果
-    for soul in souls:
-        for effect in soul.effects:
-            if effect.type == SoulEffect.EffectType.DICE_BONUS:
-                if effect.can_apply(result):
-                    result = effect.apply(result)
+	# 阶段 1: 应用骰子加成效果
+	for soul in souls:
+		for effect in soul.effects:
+			if effect.type == SoulEffect.EffectType.DICE_BONUS:
+				if effect.can_apply(result):
+					result = effect.apply(result)
 
-    # 阶段 2: 基础计算
-    result["power"] = result["base_power"] * result["dice"]
+	# 阶段 2: 基础计算
+	result["power"] = result["base_power"] * result["dice"]
 
-    # 阶段 3: 应用固定加成
-    for soul in souls:
-        for effect in soul.effects:
-            if effect.type == SoulEffect.EffectType.POWER_FLAT:
-                if effect.can_apply(result):
-                    result = effect.apply(result)
+	# 阶段 3: 应用固定加成
+	for soul in souls:
+		for effect in soul.effects:
+			if effect.type == SoulEffect.EffectType.POWER_FLAT:
+				if effect.can_apply(result):
+					result = effect.apply(result)
 
-    # 阶段 4: 应用倍数
-    for soul in souls:
-        for effect in soul.effects:
-            if effect.type == SoulEffect.EffectType.POWER_MULT:
-                if effect.can_apply(result):
-                    result = effect.apply(result)
+	# 阶段 4: 应用倍数
+	for soul in souls:
+		for effect in soul.effects:
+			if effect.type == SoulEffect.EffectType.POWER_MULT:
+				if effect.can_apply(result):
+					result = effect.apply(result)
 
-    # 阶段 5: 特殊效果（暴击等）
-    # ... 更多特殊效果
+	# 阶段 5: 特殊效果（暴击等）
+	# ... 更多特殊效果
 
-    return int(result["power"])
+	return int(result["power"])
 ```
 
 #### PlayerTurnState.gd
@@ -542,73 +542,73 @@ var hands_left: int = 4
 var discards_left: int = 2
 
 func enter():
-    battle_scene.show_message("你的回合！")
-    battle_scene.update_resources_display(hands_left, discards_left)
-    battle_scene.enable_soul_selection(true)
-    battle_scene.enable_action_buttons(true)
+	battle_scene.show_message("你的回合！")
+	battle_scene.update_resources_display(hands_left, discards_left)
+	battle_scene.enable_soul_selection(true)
+	battle_scene.enable_action_buttons(true)
 
 func exit():
-    battle_scene.enable_soul_selection(false)
-    battle_scene.enable_action_buttons(false)
+	battle_scene.enable_soul_selection(false)
+	battle_scene.enable_action_buttons(false)
 
 func on_soul_selected(soul):
-    if selected_souls.size() < 3:
-        selected_souls.append(soul)
-        battle_scene.highlight_soul(soul, true)
+	if selected_souls.size() < 3:
+		selected_souls.append(soul)
+		battle_scene.highlight_soul(soul, true)
 
 func on_soul_deselected(soul):
-    selected_souls.erase(soul)
-    battle_scene.highlight_soul(soul, false)
+	selected_souls.erase(soul)
+	battle_scene.highlight_soul(soul, false)
 
 func on_play_button_pressed():
-    if selected_souls.is_empty():
-        battle_scene.show_message("请至少选择一个魂印！")
-        return
+	if selected_souls.is_empty():
+		battle_scene.show_message("请至少选择一个魂印！")
+		return
 
-    if hands_left <= 0:
-        battle_scene.show_message("出手次数已用尽！")
-        return
+	if hands_left <= 0:
+		battle_scene.show_message("出手次数已用尽！")
+		return
 
-    hands_left -= 1
-    _execute_attack()
+	hands_left -= 1
+	_execute_attack()
 
 func on_discard_button_pressed():
-    if selected_souls.is_empty():
-        battle_scene.show_message("请选择要弃掉的魂印！")
-        return
+	if selected_souls.is_empty():
+		battle_scene.show_message("请选择要弃掉的魂印！")
+		return
 
-    if discards_left <= 0:
-        battle_scene.show_message("弃牌次数已用尽！")
-        return
+	if discards_left <= 0:
+		battle_scene.show_message("弃牌次数已用尽！")
+		return
 
-    discards_left -= 1
-    # 弃掉选中的魂印（不消耗使用次数）
-    selected_souls.clear()
-    battle_scene.show_message("已弃牌")
+	discards_left -= 1
+	# 弃掉选中的魂印（不消耗使用次数）
+	selected_souls.clear()
+	battle_scene.show_message("已弃牌")
 
 func _execute_attack():
-    # 播放攻击动画序列
-    await battle_scene.play_dice_animation()
-    var dice = randi() % 6 + 1
+	# 播放攻击动画序列
+	await battle_scene.play_dice_animation()
+	var dice = randi() % 6 + 1
 
-    var damage = battle_scene.damage_calculator.calculate_damage(
-        battle_scene.player_base_power,
-        dice,
-        selected_souls,
-        {"attacker": "player"}
-    )
+	var damage = battle_scene.damage_calculator.calculate_damage(
+		battle_scene.player_base_power,
+		dice,
+		selected_souls,
+		{"attacker": "player"}
+	)
 
-    await battle_scene.play_attack_animation(damage)
-    battle_scene.enemy_hp -= damage
+	await battle_scene.play_attack_animation(damage)
+	battle_scene.enemy_hp -= damage
 
-    selected_souls.clear()
-    battle_scene.update_display()
+	selected_souls.clear()
+	battle_scene.update_display()
 
-    # 检查战斗是否结束
-    if battle_scene.enemy_hp <= 0:
-        state_machine.change_state("victory")
-    elif hands_left <= 0:
-        state_machine.change_state("enemy_turn")
+	# 检查战斗是否结束
+	if battle_scene.enemy_hp <= 0:
+		state_machine.change_state("victory")
+	elif hands_left <= 0:
+		state_machine.change_state("enemy_turn")
 ```
 
 ---
@@ -683,27 +683,27 @@ var player_base_power: int = 50
 var enemy_base_power: int = 30
 
 func _ready():
-    # 初始化子系统
-    state_machine = BattleStateMachine.new()
-    damage_calculator = DamageCalculator.new()
-    battle_animator = BattleAnimator.new()
+	# 初始化子系统
+	state_machine = BattleStateMachine.new()
+	damage_calculator = DamageCalculator.new()
+	battle_animator = BattleAnimator.new()
 
-    add_child(state_machine)
-    add_child(damage_calculator)
-    add_child(battle_animator)
+	add_child(state_machine)
+	add_child(damage_calculator)
+	add_child(battle_animator)
 
-    # 设置状态机
-    state_machine.battle_scene = self
+	# 设置状态机
+	state_machine.battle_scene = self
 
-    # 加载战斗数据
-    _load_battle_data()
+	# 加载战斗数据
+	_load_battle_data()
 
-    # 开始准备阶段
-    state_machine.change_state("preparation")
+	# 开始准备阶段
+	state_machine.change_state("preparation")
 
 func _process(delta):
-    if state_machine.current_state:
-        state_machine.current_state.update(delta)
+	if state_machine.current_state:
+		state_machine.current_state.update(delta)
 ```
 
 ---

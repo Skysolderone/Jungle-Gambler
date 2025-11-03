@@ -19,17 +19,17 @@ var screen_scale: float = 1.0
 var is_mobile: bool = false
 
 # 响应式配置
-var mobile_ui_scale: float = 1.2
+var mobile_ui_scale: float = 1.6
 var tablet_ui_scale: float = 1.1
 var desktop_ui_scale: float = 1.0
 
 # 字体缩放配置
-var font_scale_mobile: float = 1.3
+var font_scale_mobile: float = 1.8
 var font_scale_tablet: float = 1.15
 var font_scale_desktop: float = 1.0
 
 # 间距缩放配置
-var margin_scale_mobile: float = 1.5
+var margin_scale_mobile: float = 2.0
 var margin_scale_tablet: float = 1.25
 var margin_scale_desktop: float = 1.0
 
@@ -120,7 +120,7 @@ func get_margin_scale() -> float:
 func get_min_button_size() -> Vector2:
 	match current_screen_type:
 		ScreenType.MOBILE_PORTRAIT, ScreenType.MOBILE_LANDSCAPE:
-			return Vector2(120, 60)  # 移动端按钮更大，便于触摸
+			return Vector2(200, 80)  # 移动端按钮更大，便于触摸
 		ScreenType.TABLET_PORTRAIT, ScreenType.TABLET_LANDSCAPE:
 			return Vector2(100, 50)
 		_:
@@ -230,9 +230,9 @@ func get_grid_columns_for_screen() -> int:
 func get_game_grid_cell_size() -> int:
 	match current_screen_type:
 		ScreenType.MOBILE_PORTRAIT:
-			return 60  # 移动端较小
+			return 80  # 移动端加大
 		ScreenType.MOBILE_LANDSCAPE:
-			return 70
+			return 90
 		ScreenType.TABLET_PORTRAIT, ScreenType.TABLET_LANDSCAPE:
 			return 75
 		_:
@@ -270,17 +270,17 @@ func get_screen_type_name() -> String:
 func optimize_for_touch(control: Control):
 	if not is_mobile_device():
 		return
-	
-	# 增加按钮的触摸区域
+
+	# 增加按钮的触摸区域（仅移动端）
 	for child in control.get_children():
 		if child is Button:
 			var button = child as Button
 			# 确保按钮有足够的触摸区域
-			if button.custom_minimum_size.x < 80:
-				button.custom_minimum_size.x = 80
-			if button.custom_minimum_size.y < 50:
-				button.custom_minimum_size.y = 50
-		
+			if button.custom_minimum_size.x < 140:
+				button.custom_minimum_size.x = 140
+			if button.custom_minimum_size.y < 70:
+				button.custom_minimum_size.y = 70
+
 		# 递归处理子节点
 		if child is Control:
 			optimize_for_touch(child)

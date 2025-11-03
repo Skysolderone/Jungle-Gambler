@@ -71,21 +71,25 @@ func _load_inventory():
 	var soul_system = _get_soul_system()
 	if soul_system == null:
 		return
-	
+
 	var items = soul_system.get_user_inventory(current_username)
-	
+
 	# 清空网格
 	for child in inventory_grid.get_children():
 		child.queue_free()
-	
-	# 创建魂印卡片
+
+	# 创建魂印卡片（过滤掉使用次数为0的魂印）
 	for item in items:
+		# 跳过使用次数为0的魂印
+		if item.uses_remaining <= 0:
+			continue
+
 		var card = _create_soul_card(item)
 		inventory_grid.add_child(card)
 
 func _create_soul_card(item) -> Panel:
 	var card = Panel.new()
-	card.custom_minimum_size = Vector2(140, 160)
+	card.custom_minimum_size = Vector2(200, 230)
 	
 	var soul = item.soul_print
 	var base_color = quality_colors.get(soul.quality, Color.WHITE)
@@ -118,25 +122,34 @@ func _create_soul_card(item) -> Panel:
 	name_label.text = soul.name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	name_label.add_theme_color_override("font_color", base_color)
-	name_label.add_theme_font_size_override("font_size", 16)
+	name_label.add_theme_font_size_override("font_size", 22)
 	vbox.add_child(name_label)
-	
+
 	# 品质
 	var quality_label = Label.new()
 	quality_label.text = quality_names.get(soul.quality, "未知")
 	quality_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	quality_label.add_theme_color_override("font_color", base_color)
-	quality_label.add_theme_font_size_override("font_size", 12)
+	quality_label.add_theme_font_size_override("font_size", 18)
 	vbox.add_child(quality_label)
-	
+
 	# 力量
 	var power_label = Label.new()
 	power_label.text = "力量: " + str(soul.power)
 	power_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	power_label.add_theme_color_override("font_color", Color(1, 0.85, 0.4))
-	power_label.add_theme_font_size_override("font_size", 14)
+	power_label.add_theme_font_size_override("font_size", 20)
 	vbox.add_child(power_label)
-	
+
+	# 使用次数
+	var uses_label = Label.new()
+	uses_label.text = "次数: " + str(item.uses_remaining) + "/" + str(item.max_uses)
+	uses_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
+	var uses_color = Color(0.5, 0.8, 0.5) if item.uses_remaining > 0 else Color(0.8, 0.3, 0.3)
+	uses_label.add_theme_color_override("font_color", uses_color)
+	uses_label.add_theme_font_size_override("font_size", 16)
+	vbox.add_child(uses_label)
+
 	# 间距
 	var spacer = Control.new()
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
@@ -145,8 +158,8 @@ func _create_soul_card(item) -> Panel:
 	# 添加按钮
 	var add_button = Button.new()
 	add_button.text = "添加"
-	add_button.custom_minimum_size = Vector2(100, 35)
-	add_button.add_theme_font_size_override("font_size", 14)
+	add_button.custom_minimum_size = Vector2(150, 50)
+	add_button.add_theme_font_size_override("font_size", 20)
 	add_button.pressed.connect(_on_add_soul.bind(item))
 	add_button.set_meta("soul_item", item)  # 保存引用以便更新状态
 

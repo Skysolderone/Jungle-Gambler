@@ -19,7 +19,7 @@ var player_selected_souls: Array = []  # 玩家选中的魂印
 var enemy_souls: Array = []
 
 # 倒计时
-var countdown: float = 10.0
+var countdown: float = 30.0
 
 func _ready():
 	# 应用响应式布局
@@ -44,7 +44,7 @@ func _ready():
 	_initialize_soul_selection()
 
 	# 显示提示
-	hint_label.text = "点击魂印选择/取消，倒计时结束后自动开始战斗"
+	hint_label.text = "点击魂印选择/取消（未选择任何魂印时将使用全部），或直接点击按钮开始战斗"
 
 	# 设置并连接开始战斗按钮
 	start_battle_button.text = "直接开始战斗"
@@ -76,16 +76,21 @@ func _initialize_soul_selection():
 	for child in soul_grid.get_children():
 		child.queue_free()
 
-	# 创建魂印选择卡片
+	# 创建魂印选择卡片（跳过使用次数为0的魂印）
 	for i in range(player_all_souls.size()):
 		var soul_item = player_all_souls[i]
+
+		# 跳过使用次数为0的魂印
+		if soul_item.uses_remaining <= 0:
+			continue
+
 		var soul = soul_item.soul_print
 		var card = _create_soul_card(soul, i)
 		soul_grid.add_child(card)
 
 func _create_soul_card(soul, index: int) -> Button:
 	var button = Button.new()
-	button.custom_minimum_size = Vector2(120, 80)
+	button.custom_minimum_size = Vector2(180, 120)
 
 	# 获取魂印使用次数信息
 	var soul_item = player_all_souls[index]
@@ -136,6 +141,7 @@ func _create_soul_card(soul, index: int) -> Button:
 	# 设置按钮文本
 	var status_text = "[已耗尽]" if is_depleted else ""
 	button.text = soul.name + " " + status_text + "\n力量+" + str(soul.power) + "\n次数:" + uses_text
+	button.add_theme_font_size_override("font_size", 18)
 
 	if not is_depleted:
 		button.pressed.connect(_on_soul_card_pressed.bind(index))
@@ -197,6 +203,10 @@ func _on_start_battle_pressed():
 	_start_combat()
 
 func _start_combat():
+	# 如果没有选择任何魂印，默认使用所有可用魂印
+	if player_selected_souls.is_empty():
+		player_selected_souls = player_all_souls.duplicate()
+
 	# 保存选中的魂印到 UserSession
 	var session = get_node("/root/UserSession")
 	session.set_meta("battle_selected_souls", player_selected_souls)
