@@ -61,10 +61,21 @@ func _ready():
 	enemy_hp = enemy_data.get("hp", 100)
 	enemy_base_power = enemy_data.get("power", 30)
 
-	# 连接确认按钮信号
+	# 连接确认按钮信号（响应式适配）
 	confirm_button.text = "确认并出手"
-	confirm_button.custom_minimum_size = Vector2(300, 80)
+	var button_size = Vector2(300, 80)
 	var button_font_size = 24
+
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		if responsive_manager.is_mobile_device():
+			button_size = Vector2(400, 120)
+			button_font_size = 36
+		elif responsive_manager.is_tablet_device():
+			button_size = Vector2(350, 100)
+			button_font_size = 28
+
+	confirm_button.custom_minimum_size = button_size
 	confirm_button.add_theme_font_size_override("font_size", button_font_size)
 	confirm_button.pressed.connect(_on_confirm_soul_selection)
 
@@ -382,15 +393,33 @@ func _show_soul_selection():
 	for child in soul_grid.get_children():
 		child.queue_free()
 
+	# 响应式网格列数
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		if responsive_manager.is_mobile_device():
+			soul_grid.columns = 2  # 移动端：2列
+		elif responsive_manager.is_tablet_device():
+			soul_grid.columns = 3  # 平板：3列
+		else:
+			soul_grid.columns = 4  # 桌面端：4列
+
 	# 创建魂印卡片
 	for i in range(player_all_souls.size()):
 		var soul_item = player_all_souls[i]
 		var card = _create_soul_card(soul_item, i)
 		soul_grid.add_child(card)
 
-	# 更新提示文本
+	# 更新提示文本（响应式字体）
+	var hint_font_size = 20
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		if responsive_manager.is_mobile_device():
+			hint_font_size = 32
+		elif responsive_manager.is_tablet_device():
+			hint_font_size = 26
+
 	selection_hint.text = "选择本回合要激活的魂印（可以不选）"
-	selection_hint.add_theme_font_size_override("font_size", 20)
+	selection_hint.add_theme_font_size_override("font_size", hint_font_size)
 
 	# 显示面板
 	soul_selection_panel.visible = true
@@ -403,7 +432,26 @@ func _show_soul_selection():
 func _create_soul_card(soul_item, index: int) -> Button:
 	"""创建魂印卡片按钮"""
 	var button = Button.new()
-	button.custom_minimum_size = Vector2(180, 120)
+
+	# 响应式尺寸适配
+	var card_size = Vector2(180, 120)
+	var font_size = 18
+	var border_width = 2
+
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		if responsive_manager.is_mobile_device():
+			# 移动端：更大的卡片和字体，便于触摸
+			card_size = Vector2(280, 180)
+			font_size = 28
+			border_width = 3
+		elif responsive_manager.is_tablet_device():
+			# 平板：中等大小
+			card_size = Vector2(220, 150)
+			font_size = 22
+			border_width = 3
+
+	button.custom_minimum_size = card_size
 
 	var soul = soul_item.soul_print
 	var uses_text = str(soul_item.uses_remaining) + "/" + str(soul_item.max_uses)
@@ -425,7 +473,7 @@ func _create_soul_card(soul_item, index: int) -> Button:
 	var style_normal = StyleBoxFlat.new()
 	style_normal.bg_color = Color(color.r * 0.3, color.g * 0.3, color.b * 0.3, 0.8)
 	style_normal.border_color = color
-	style_normal.set_border_width_all(2)
+	style_normal.set_border_width_all(border_width)
 	style_normal.set_corner_radius_all(5)
 	button.add_theme_stylebox_override("normal", style_normal)
 
@@ -433,8 +481,8 @@ func _create_soul_card(soul_item, index: int) -> Button:
 	var status_text = " [已耗尽]" if is_depleted else ""
 	button.text = soul.name + status_text + "\n力量+" + str(soul.power) + "\n" + uses_text
 
-	# 增大字体
-	button.add_theme_font_size_override("font_size", 18)
+	# 应用响应式字体大小
+	button.add_theme_font_size_override("font_size", font_size)
 
 	# 连接点击信号（只在未耗尽时）
 	if not is_depleted:
@@ -463,17 +511,27 @@ func _update_card_style(button: Button, soul, selected: bool):
 	]
 	var color = quality_colors[soul.quality]
 
+	# 响应式边框宽度
+	var border_width_normal = 2
+	var border_width_selected = 4
+
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		if responsive_manager.is_mobile_device() or responsive_manager.is_tablet_device():
+			border_width_normal = 3
+			border_width_selected = 5
+
 	var style = StyleBoxFlat.new()
 	if selected:
 		# 选中状态 - 更亮的背景和黄色边框
 		style.bg_color = Color(color.r * 0.7, color.g * 0.7, color.b * 0.7, 1.0)
 		style.border_color = Color(1, 1, 0, 1)
-		style.set_border_width_all(4)
+		style.set_border_width_all(border_width_selected)
 	else:
 		# 未选中状态
 		style.bg_color = Color(color.r * 0.3, color.g * 0.3, color.b * 0.3, 0.8)
 		style.border_color = color
-		style.set_border_width_all(2)
+		style.set_border_width_all(border_width_normal)
 	style.set_corner_radius_all(5)
 	button.add_theme_stylebox_override("normal", style)
 
