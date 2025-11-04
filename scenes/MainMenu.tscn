@@ -1,8 +1,6 @@
+[gd_scene load_steps=6 format=3 uid="uid://byfvb3hgje0yh"]
 
-
-[gd_scene load_steps=8 format=3 uid="uid://byfvb3hgje0yh"]
-
-[ext_resource type="Script" path="res://scripts/MainMenu.gd" id="1_main"]
+[ext_resource type="Script" uid="uid://bt8t80kl604bo" path="res://scripts/MainMenu.gd" id="1_main"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
 bg_color = Color(0.25, 0.25, 0.3, 1)
@@ -11,14 +9,14 @@ corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
 bg_color = Color(0.35, 0.35, 0.4, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
 corner_radius_bottom_left = 8
 
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_pressed"]
+[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_hover"]
 bg_color = Color(0.35, 0.35, 0.4, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
@@ -32,13 +30,6 @@ border_width_top = 2
 border_width_right = 2
 border_width_bottom = 2
 border_color = Color(1, 0.85, 0.3, 1)
-corner_radius_top_left = 8
-corner_radius_top_right = 8
-corner_radius_bottom_right = 8
-corner_radius_bottom_left = 8
-
-[sub_resource type="StyleBoxFlat" id="StyleBoxFlat_disabled"]
-bg_color = Color(0.2, 0.2, 0.25, 1)
 corner_radius_top_left = 8
 corner_radius_top_right = 8
 corner_radius_bottom_right = 8
@@ -89,12 +80,12 @@ layout_mode = 2
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 0.85, 0.3, 1)
 theme_override_colors/font_pressed_color = Color(1, 0.85, 0.3, 1)
+theme_override_colors/font_hover_color = Color(1, 0.85, 0.3, 1)
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
 text = "登录"
 
@@ -102,12 +93,12 @@ text = "登录"
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 0.85, 0.3, 1)
 theme_override_colors/font_pressed_color = Color(1, 0.85, 0.3, 1)
+theme_override_colors/font_hover_color = Color(1, 0.85, 0.3, 1)
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
 text = "注册"
 
@@ -115,12 +106,12 @@ text = "注册"
 custom_minimum_size = Vector2(300, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
-theme_override_colors/font_hover_color = Color(1, 0.85, 0.3, 1)
 theme_override_colors/font_pressed_color = Color(1, 0.85, 0.3, 1)
+theme_override_colors/font_hover_color = Color(1, 0.85, 0.3, 1)
 theme_override_font_sizes/font_size = 24
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
 text = "设置"
 
@@ -135,8 +126,8 @@ theme_override_colors/font_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_colors/font_pressed_color = Color(0.8, 0.8, 0.8, 1)
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
 text = "退出游戏"
 
@@ -152,6 +143,7 @@ offset_right = -100.0
 offset_bottom = -100.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="LoginPanel"]
 layout_mode = 1
@@ -211,14 +203,14 @@ custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
 [node name="ConfirmButton" type="Button" parent="LoginPanel/VBoxContainer/FormMargin/Form"]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
 text = "确认登录"
 
@@ -227,8 +219,8 @@ custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
 text = "取消"
 
@@ -244,6 +236,7 @@ offset_right = -100.0
 offset_bottom = -100.0
 grow_horizontal = 2
 grow_vertical = 2
+mouse_filter = 2
 
 [node name="VBoxContainer" type="VBoxContainer" parent="RegisterPanel"]
 layout_mode = 1
@@ -314,14 +307,14 @@ custom_minimum_size = Vector2(0, 10)
 layout_mode = 2
 
 [node name="ConfirmButton" type="Button" parent="RegisterPanel/VBoxContainer/FormMargin/Form"]
-custom_minimum_size = Vector2(0, 50)
+custom_minimum_size = Vector2(0, 60)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 1, 1, 1)
 theme_override_colors/font_pressed_color = Color(1, 1, 1, 1)
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
 text = "确认注册"
 
@@ -330,8 +323,8 @@ custom_minimum_size = Vector2(0, 40)
 layout_mode = 2
 theme_override_font_sizes/font_size = 18
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
 text = "取消"
 
@@ -397,7 +390,6 @@ horizontal_alignment = 1
 
 [node name="MusicSlider" type="HSlider" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/MusicControl"]
 layout_mode = 2
-max_value = 100.0
 value = 80.0
 
 [node name="SoundControl" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings"]
@@ -411,7 +403,6 @@ horizontal_alignment = 1
 
 [node name="SoundSlider" type="HSlider" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/SoundControl"]
 layout_mode = 2
-max_value = 100.0
 value = 80.0
 
 [node name="BrightnessControl" type="VBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings"]
@@ -426,7 +417,6 @@ horizontal_alignment = 1
 [node name="BrightnessSlider" type="HSlider" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/BrightnessControl"]
 layout_mode = 2
 min_value = 30.0
-max_value = 100.0
 value = 100.0
 
 [node name="FullscreenControl" type="HBoxContainer" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings"]
@@ -458,8 +448,8 @@ layout_mode = 2
 
 [node name="ThemeOptionButton" type="OptionButton" parent="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/ThemeControl"]
 layout_mode = 2
-item_count = 2
 selected = 0
+item_count = 2
 popup/item_0/text = "黑暗模式"
 popup/item_0/id = 0
 popup/item_1/text = "明亮模式"
@@ -475,8 +465,8 @@ custom_minimum_size = Vector2(0, 50)
 layout_mode = 2
 theme_override_font_sizes/font_size = 20
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
-theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
+theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 theme_override_styles/focus = SubResource("StyleBoxFlat_focus")
 text = "关闭"
 
@@ -510,4 +500,3 @@ ok_button_text = "确定"
 [connection signal="toggled" from="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/FullscreenControl/FullscreenCheckbox" to="." method="_on_fullscreen_toggled"]
 [connection signal="item_selected" from="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/ThemeControl/ThemeOptionButton" to="." method="_on_theme_option_selected"]
 [connection signal="pressed" from="SettingsPanel/VBoxContainer/SettingsMargin/ScrollContainer/Settings/CloseButton" to="." method="_on_settings_close_pressed"]
-

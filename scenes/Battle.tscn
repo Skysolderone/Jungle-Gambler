@@ -151,9 +151,7 @@ text = "最终力量: ?"
 layout_mode = 2
 
 [node name="LoadoutContainer" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 200)
 layout_mode = 2
-size_flags_vertical = 3
 
 [node name="LoadoutLabel" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/LoadoutContainer"]
 layout_mode = 2
@@ -161,7 +159,9 @@ text = "配置你的魂印（点击选择/取消）："
 
 [node name="LoadoutScroll" type="ScrollContainer" parent="BattlePanel/MarginContainer/VBoxContainer/LoadoutContainer"]
 layout_mode = 2
-size_flags_vertical = 3
+follow_focus = true
+horizontal_scroll_mode = 0
+vertical_scroll_mode = 2
 
 [node name="LoadoutGrid" type="GridContainer" parent="BattlePanel/MarginContainer/VBoxContainer/LoadoutContainer/LoadoutScroll"]
 layout_mode = 2

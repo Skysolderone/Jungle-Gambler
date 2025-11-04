@@ -9,6 +9,7 @@ var current_nickname: String = ""
 var inventory_instance = null
 var settings_instance = null
 var shop_instance = null
+var refine_instance = null
 
 const SETTINGS_PATH = "user://settings.json"
 
@@ -155,3 +156,22 @@ func _on_shop_closed():
 	if shop_instance != null:
 		shop_instance.queue_free()
 		shop_instance = null
+
+func _on_refine_button_pressed():
+	if refine_instance != null:
+		return  # 已经打开了
+
+	# 加载精炼场景
+	var refine_scene = load("res://scenes/SoulRefine.tscn")
+	refine_instance = refine_scene.instantiate()
+
+	# 连接关闭信号
+	refine_instance.refine_closed.connect(_on_refine_closed)
+
+	# 添加到当前场景作为覆盖层
+	add_child(refine_instance)
+
+func _on_refine_closed():
+	if refine_instance != null:
+		refine_instance.queue_free()
+		refine_instance = null

@@ -419,6 +419,179 @@ func _initialize_soul_database():
 	soul_god.description = "神明的祝福，至高无上的力量。"
 	_register_soul(soul_god)
 
+	# ========== 新增魂印（更多种类） ==========
+
+	# 普通品质 - 更多主动
+	var soul_spark = SoulPrint.new("soul_spark", "星火之力", Quality.COMMON, ShapeType.RECT_2X1)
+	soul_spark.power = 6
+	soul_spark.soul_type = SoulType.ACTIVE
+	soul_spark.active_bonus_percent = 0.12  # +12% 伤害
+	soul_spark.description = "微小的星火，也能燎原。"
+	_register_soul(soul_spark)
+
+	var soul_guard = SoulPrint.new("soul_guard", "守护之印", Quality.COMMON, ShapeType.TRIANGLE)
+	soul_guard.power = 7
+	soul_guard.soul_type = SoulType.ACTIVE
+	soul_guard.active_bonus_percent = 0.08  # +8% 伤害
+	soul_guard.description = "提供基础的防护力量。"
+	_register_soul(soul_guard)
+
+	# 普通品质 - 被动
+	var soul_echo = SoulPrint.new("soul_echo", "回响之魂", Quality.COMMON, ShapeType.RECT_1X2)
+	soul_echo.power = 5
+	soul_echo.soul_type = SoulType.PASSIVE
+	soul_echo.passive_trigger_chance = 0.20  # 20% 触发概率
+	soul_echo.passive_bonus_flat = 30  # +30 伤害
+	soul_echo.description = "有概率产生回响效果，造成额外伤害。"
+	_register_soul(soul_echo)
+
+	# 非凡品质 - 更多主动
+	var soul_forest = SoulPrint.new("soul_forest", "森林之魂", Quality.UNCOMMON, ShapeType.TRIANGLE)
+	soul_forest.power = 13
+	soul_forest.soul_type = SoulType.ACTIVE
+	soul_forest.active_bonus_percent = 0.25  # +25% 伤害
+	soul_forest.description = "来自森林的生命力量。"
+	_register_soul(soul_forest)
+
+	var soul_wind = SoulPrint.new("soul_wind", "疾风魂印", Quality.UNCOMMON, ShapeType.RECT_3X1)
+	soul_wind.power = 14
+	soul_wind.soul_type = SoulType.ACTIVE
+	soul_wind.active_multiplier = 1.4  # 1.4x 伤害倍率
+	soul_wind.description = "疾风般的速度，提升攻击效率。"
+	_register_soul(soul_wind)
+
+	# 非凡品质 - 更多被动
+	var soul_moon = SoulPrint.new("soul_moon", "月光祝福", Quality.UNCOMMON, ShapeType.RECT_1X2)
+	soul_moon.power = 11
+	soul_moon.soul_type = SoulType.PASSIVE
+	soul_moon.passive_trigger_chance = 0.22  # 22% 触发概率
+	soul_moon.passive_bonus_flat = 40  # +40 伤害
+	soul_moon.description = "月光下获得的神秘力量。"
+	_register_soul(soul_moon)
+
+	var soul_thorn = SoulPrint.new("soul_thorn", "荆棘反击", Quality.UNCOMMON, ShapeType.L_SHAPE)
+	soul_thorn.power = 12
+	soul_thorn.soul_type = SoulType.PASSIVE
+	soul_thorn.passive_trigger_chance = 0.18  # 18% 触发概率
+	soul_thorn.passive_bonus_multiplier = 1.3  # 1.3x 暴击
+	soul_thorn.description = "如荆棘般反击敌人。"
+	_register_soul(soul_thorn)
+
+	# 稀有品质 - 更多主动
+	var soul_ocean = SoulPrint.new("soul_ocean", "深海之力", Quality.RARE, ShapeType.SQUARE_2X2)
+	soul_ocean.power = 26
+	soul_ocean.soul_type = SoulType.ACTIVE
+	soul_ocean.active_bonus_percent = 0.45  # +45% 伤害
+	soul_ocean.description = "深海的无尽力量。"
+	_register_soul(soul_ocean)
+
+	var soul_quake = SoulPrint.new("soul_quake", "地震之怒", Quality.RARE, ShapeType.RECT_3X1)
+	soul_quake.power = 27
+	soul_quake.soul_type = SoulType.ACTIVE
+	soul_quake.active_multiplier = 1.7  # 1.7x 伤害倍率
+	soul_quake.description = "大地的震怒，毁灭性的打击。"
+	_register_soul(soul_quake)
+
+	# 稀有品质 - 更多被动
+	var soul_ice = SoulPrint.new("soul_ice", "冰霜之心", Quality.RARE, ShapeType.RECT_2X1)
+	soul_ice.power = 23
+	soul_ice.soul_type = SoulType.PASSIVE
+	soul_ice.passive_trigger_chance = 0.28  # 28% 触发概率
+	soul_ice.passive_bonus_flat = 80  # +80 伤害
+	soul_ice.description = "冰冷的力量，冻结敌人的意志。"
+	_register_soul(soul_ice)
+
+	var soul_void = SoulPrint.new("soul_void", "虚空之眼", Quality.RARE, ShapeType.TRIANGLE)
+	soul_void.power = 24
+	soul_void.soul_type = SoulType.PASSIVE
+	soul_void.passive_trigger_chance = 0.25  # 25% 触发概率
+	soul_void.passive_bonus_multiplier = 1.6  # 1.6x 暴击
+	soul_void.description = "虚空的凝视，洞察一切弱点。"
+	_register_soul(soul_void)
+
+	# 史诗品质 - 更多主动
+	var soul_inferno = SoulPrint.new("soul_inferno", "炼狱之焰", Quality.EPIC, ShapeType.T_SHAPE)
+	soul_inferno.power = 42
+	soul_inferno.soul_type = SoulType.ACTIVE
+	soul_inferno.active_multiplier = 2.2  # 2.2x 伤害倍率
+	soul_inferno.description = "地狱烈焰，焚烧一切。"
+	_register_soul(soul_inferno)
+
+	var soul_holy = SoulPrint.new("soul_holy", "圣光审判", Quality.EPIC, ShapeType.L_SHAPE)
+	soul_holy.power = 38
+	soul_holy.soul_type = SoulType.ACTIVE
+	soul_holy.active_bonus_percent = 0.80  # +80% 伤害
+	soul_holy.description = "圣光的审判，净化邪恶。"
+	_register_soul(soul_holy)
+
+	# 史诗品质 - 更多被动
+	var soul_venom = SoulPrint.new("soul_venom", "剧毒之牙", Quality.EPIC, ShapeType.RECT_1X3)
+	soul_venom.power = 36
+	soul_venom.soul_type = SoulType.PASSIVE
+	soul_venom.passive_trigger_chance = 0.20  # 20% 触发概率
+	soul_venom.passive_bonus_flat = 150  # +150 伤害
+	soul_venom.description = "致命的毒素，侵蚀敌人。"
+	_register_soul(soul_venom)
+
+	var soul_chaos = SoulPrint.new("soul_chaos", "混沌之力", Quality.EPIC, ShapeType.RECT_3X1)
+	soul_chaos.power = 37
+	soul_chaos.soul_type = SoulType.PASSIVE
+	soul_chaos.passive_trigger_chance = 0.18  # 18% 触发概率
+	soul_chaos.passive_bonus_flat = 120  # +120 伤害
+	soul_chaos.passive_bonus_multiplier = 1.8  # 1.8x 暴击
+	soul_chaos.description = "混沌的力量，不可预测但强大。"
+	_register_soul(soul_chaos)
+
+	# 传说品质 - 更多主动
+	var soul_supernova = SoulPrint.new("soul_supernova", "超新星", Quality.LEGENDARY, ShapeType.SQUARE_2X2)
+	soul_supernova.power = 65
+	soul_supernova.soul_type = SoulType.ACTIVE
+	soul_supernova.active_multiplier = 2.8  # 2.8x 伤害倍率
+	soul_supernova.description = "星辰爆炸的力量，毁天灭地。"
+	_register_soul(soul_supernova)
+
+	var soul_apocalypse = SoulPrint.new("soul_apocalypse", "末日降临", Quality.LEGENDARY, ShapeType.T_SHAPE)
+	soul_apocalypse.power = 68
+	soul_apocalypse.soul_type = SoulType.ACTIVE
+	soul_apocalypse.active_bonus_percent = 1.20  # +120% 伤害
+	soul_apocalypse.description = "末日的降临，带来绝对的毁灭。"
+	_register_soul(soul_apocalypse)
+
+	# 传说品质 - 更多被动
+	var soul_destiny = SoulPrint.new("soul_destiny", "命运之轮", Quality.LEGENDARY, ShapeType.L_SHAPE)
+	soul_destiny.power = 55
+	soul_destiny.soul_type = SoulType.PASSIVE
+	soul_destiny.passive_trigger_chance = 0.30  # 30% 触发概率
+	soul_destiny.passive_bonus_flat = 180  # +180 伤害
+	soul_destiny.passive_bonus_multiplier = 1.8  # 1.8x 暴击
+	soul_destiny.description = "命运的轮盘，掌控胜负。"
+	_register_soul(soul_destiny)
+
+	# 神话品质 - 更多主动
+	var soul_universe = SoulPrint.new("soul_universe", "宇宙之心", Quality.MYTHIC, ShapeType.SQUARE_2X2)
+	soul_universe.power = 120
+	soul_universe.soul_type = SoulType.ACTIVE
+	soul_universe.active_multiplier = 3.5  # 3.5x 伤害倍率
+	soul_universe.description = "宇宙的核心力量，至高无上的破坏力。"
+	_register_soul(soul_universe)
+
+	var soul_eternal = SoulPrint.new("soul_eternal", "永恒之光", Quality.MYTHIC, ShapeType.T_SHAPE)
+	soul_eternal.power = 110
+	soul_eternal.soul_type = SoulType.ACTIVE
+	soul_eternal.active_bonus_percent = 1.50  # +150% 伤害
+	soul_eternal.description = "永恒的光芒，永不熄灭。"
+	_register_soul(soul_eternal)
+
+	# 神话品质 - 更多被动
+	var soul_genesis = SoulPrint.new("soul_genesis", "创世纪元", Quality.MYTHIC, ShapeType.RECT_3X1)
+	soul_genesis.power = 105
+	soul_genesis.soul_type = SoulType.PASSIVE
+	soul_genesis.passive_trigger_chance = 0.45  # 45% 触发概率
+	soul_genesis.passive_bonus_flat = 250  # +250 伤害
+	soul_genesis.passive_bonus_multiplier = 2.5  # 2.5x 暴击
+	soul_genesis.description = "创世的力量，诞生与毁灭并存。"
+	_register_soul(soul_genesis)
+
 # ========== 魂印使用次数管理 ==========
 
 # 使用魂印（战斗中调用）

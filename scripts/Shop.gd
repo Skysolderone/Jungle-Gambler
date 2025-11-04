@@ -15,6 +15,9 @@ signal shop_closed
 var current_username: String = ""
 var selected_soul = null
 var shop_items = []
+var filtered_items = []  # 筛选后的商品列表
+var current_filter = -1  # -1表示显示全部，0-5表示品质筛选
+var current_sort = 0  # 0=默认，1=品质升序，2=品质降序，3=名称
 
 # 品质颜色（暗黑风格）
 var quality_colors = {
@@ -40,10 +43,12 @@ var shape_names = {
 func _ready():
 	# 应用响应式布局
 	_setup_responsive_layout()
-	
+
 	current_username = UserSession.get_username()
 	_load_shop_items()
+	_apply_filter_and_sort()
 	_create_item_cards()
+	_create_filter_buttons()
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):
@@ -69,14 +74,25 @@ func _on_screen_type_changed(_new_type):
 
 func _adjust_layout_for_screen(screen_type):
 	var content_container = $MainPanel/VBoxContainer/ContentContainer
-	
-	# 根据屏幕类型调整网格列数
+
+	# 根据屏幕类型调整网格列数和间距
 	if has_node("/root/ResponsiveLayoutManager"):
 		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
-		items_container.columns = responsive_manager.get_grid_columns_for_screen()
-	
-	# 在移动端竖屏时将左右面板垂直排列
-	# 注意：HBoxContainer 没有 vertical 属性，需要通过其他方式处理布局
+		var columns = responsive_manager.get_grid_columns_for_screen()
+
+		# 商城卡片较大，移动端减少列数
+		if responsive_manager.is_mobile_device():
+			columns = max(2, columns - 1)
+
+		items_container.columns = columns
+
+		# 调整间距
+		if responsive_manager.is_mobile_device():
+			items_container.add_theme_constant_override("h_separation", 12)
+			items_container.add_theme_constant_override("v_separation", 12)
+		else:
+			items_container.add_theme_constant_override("h_separation", 15)
+			items_container.add_theme_constant_override("v_separation", 15)
 
 func _input(event):
 	if event is InputEventKey and event.pressed:
@@ -95,19 +111,54 @@ func _load_shop_items():
 	if soul_system == null:
 		return
 	
-	# 定义商城中要售卖的魂印ID列表
+	# 定义商城中要售卖的魂印ID列表（已扩展到30+种）
 	var shop_soul_ids = [
+		# 普通品质
 		"soul_basic_1",   # 初始魂印
 		"soul_basic_2",   # 双生魂印
+		"soul_spark",     # 星火之力
+		"soul_guard",     # 守护之印
+		"soul_echo",      # 回响之魂
+
+		# 非凡品质
+		"soul_force",     # 力量之源
+		"soul_rage",      # 狂暴打击
+		"soul_lucky",     # 幸运一击
 		"soul_forest",    # 森林之魂
 		"soul_wind",      # 疾风魂印
+		"soul_moon",      # 月光祝福
+		"soul_thorn",     # 荆棘反击
+
+		# 稀有品质
 		"soul_flame",     # 火焰之心
-		"soul_ocean",     # 深海之力
-		"soul_thunder",   # 雷霆之怒
+		"soul_storm",     # 风暴核心
+		"soul_thunder",   # 雷霆一击
 		"soul_shadow",    # 暗影追踪
-		"soul_phoenix",   # 不死鸟
+		"soul_ocean",     # 深海之力
+		"soul_quake",     # 地震之怒
+		"soul_ice",       # 冰霜之心
+		"soul_void",      # 虚空之眼
+
+		# 史诗品质
+		"soul_titan",     # 泰坦之力
+		"soul_crit",      # 致命暴击
+		"soul_inferno",   # 炼狱之焰
+		"soul_holy",      # 圣光审判
+		"soul_venom",     # 剧毒之牙
+		"soul_chaos",     # 混沌之力
+
+		# 传说品质
+		"soul_phoenix",   # 凤凰之羽
 		"soul_dragon",    # 龙之魂
-		"soul_god"        # 神之祝福
+		"soul_supernova", # 超新星
+		"soul_apocalypse",# 末日降临
+		"soul_destiny",   # 命运之轮
+
+		# 神话品质
+		"soul_god",       # 神之祝福
+		"soul_universe",  # 宇宙之心
+		"soul_eternal",   # 永恒之光
+		"soul_genesis"    # 创世纪元
 	]
 	
 	# 从数据库中获取完整的魂印数据（包含被动效果）
@@ -123,34 +174,73 @@ func _create_item_cards():
 	# 清空容器
 	for child in items_container.get_children():
 		child.queue_free()
-	
-	# 为每个魂印创建卡片
-	for i in range(shop_items.size()):
-		var soul = shop_items[i]
-		var card = _create_soul_card(soul, i)
+
+	# 使用筛选后的列表创建卡片
+	for i in range(filtered_items.size()):
+		var soul = filtered_items[i]
+		# 找到在 shop_items 中的原始索引
+		var original_index = shop_items.find(soul)
+		var card = _create_soul_card(soul, original_index)
 		items_container.add_child(card)
 
-func _create_soul_card(soul, index: int) -> Panel:
+func _create_soul_card(soul, index: int) -> Button:
 	var soul_system = _get_soul_system()
 	if soul_system == null:
-		return Panel.new()
+		return Button.new()
 
-	var card = Panel.new()
-	card.custom_minimum_size = Vector2(200, 220)  # 增加高度以容纳新内容
+	# 使用 Button 替代 Panel 以获得更好的触摸反馈
+	var card = Button.new()
+
+	# 根据屏幕类型调整卡片大小
+	var card_size = Vector2(200, 240)
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		var min_size = responsive_manager.get_min_button_size()
+		if responsive_manager.is_mobile_device():
+			card_size = Vector2(max(min_size.x, 160), 220)
+		else:
+			card_size = Vector2(200, 240)
+
+	card.custom_minimum_size = card_size
+	card.mouse_filter = Control.MOUSE_FILTER_STOP
 
 	# 设置卡片样式
-	var style = StyleBoxFlat.new()
-	style.bg_color = Color(0.15, 0.15, 0.18, 1)
-	style.border_width_left = 3
-	style.border_width_top = 3
-	style.border_width_right = 3
-	style.border_width_bottom = 3
-	style.border_color = quality_colors.get(soul.quality, Color.WHITE)
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_right = 8
-	style.corner_radius_bottom_left = 8
-	card.add_theme_stylebox_override("panel", style)
+	var quality_color = quality_colors.get(soul.quality, Color.WHITE)
+
+	var style_normal = StyleBoxFlat.new()
+	style_normal.bg_color = Color(0.15, 0.15, 0.18, 1)
+	style_normal.set_border_width_all(3)
+	style_normal.border_color = quality_color
+	style_normal.set_corner_radius_all(10)
+	style_normal.content_margin_left = 8
+	style_normal.content_margin_right = 8
+	style_normal.content_margin_top = 8
+	style_normal.content_margin_bottom = 8
+
+	var style_hover = StyleBoxFlat.new()
+	style_hover.bg_color = Color(0.2, 0.2, 0.23, 1)
+	style_hover.set_border_width_all(4)
+	style_hover.border_color = quality_color.lightened(0.3)
+	style_hover.set_corner_radius_all(10)
+	style_hover.content_margin_left = 8
+	style_hover.content_margin_right = 8
+	style_hover.content_margin_top = 8
+	style_hover.content_margin_bottom = 8
+
+	var style_pressed = StyleBoxFlat.new()
+	style_pressed.bg_color = Color(0.25, 0.25, 0.28, 1)
+	style_pressed.set_border_width_all(4)
+	style_pressed.border_color = Color(1, 0.9, 0.3, 1)  # 金色高亮
+	style_pressed.set_corner_radius_all(10)
+	style_pressed.content_margin_left = 8
+	style_pressed.content_margin_right = 8
+	style_pressed.content_margin_top = 8
+	style_pressed.content_margin_bottom = 8
+
+	card.add_theme_stylebox_override("normal", style_normal)
+	card.add_theme_stylebox_override("hover", style_hover)
+	card.add_theme_stylebox_override("pressed", style_pressed)
+	card.add_theme_stylebox_override("focus", style_hover)
 	
 	# 创建内容容器
 	var vbox = VBoxContainer.new()
@@ -219,46 +309,89 @@ func _create_soul_card(soul, index: int) -> Panel:
 	bottom_margin.custom_minimum_size = Vector2(0, 10)
 	vbox.add_child(bottom_margin)
 	
-	# 添加点击事件
-	card.gui_input.connect(func(event):
-		if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:
-			_on_soul_card_clicked(index)
-	)
-	
+	# 连接按钮点击事件
+	card.pressed.connect(func(): _on_soul_card_clicked(index))
+
+	# 添加移动端触摸反馈
+	if has_node("/root/MobileInteractionHelper"):
+		var mobile_helper = get_node("/root/MobileInteractionHelper")
+		mobile_helper.add_touch_feedback(card)
+
 	return card
 
 func _on_soul_card_clicked(index: int):
 	if index < 0 or index >= shop_items.size():
 		return
-	
+
 	selected_soul = shop_items[index]
 	_show_soul_details(selected_soul)
 	buy_button.disabled = false
 
+	# 优化购买按钮样式
+	var btn_style_normal = StyleBoxFlat.new()
+	btn_style_normal.bg_color = Color(0.2, 0.7, 0.2, 1)
+	btn_style_normal.set_corner_radius_all(8)
+	btn_style_normal.set_border_width_all(2)
+	btn_style_normal.border_color = Color(0.3, 0.9, 0.3, 1)
+	buy_button.add_theme_stylebox_override("normal", btn_style_normal)
+
+	var btn_style_hover = StyleBoxFlat.new()
+	btn_style_hover.bg_color = Color(0.3, 0.8, 0.3, 1)
+	btn_style_hover.set_corner_radius_all(8)
+	btn_style_hover.set_border_width_all(3)
+	btn_style_hover.border_color = Color(0.4, 1, 0.4, 1)
+	buy_button.add_theme_stylebox_override("hover", btn_style_hover)
+
+	buy_button.add_theme_font_size_override("font_size", 16)
+	buy_button.custom_minimum_size = Vector2(0, 45)
+
 func _show_soul_details(soul):
 	detail_title.text = soul.name
 	detail_title.add_theme_color_override("font_color", quality_colors.get(soul.quality, Color.WHITE))
-	
+	detail_title.add_theme_font_size_override("font_size", 24)
+
 	quality_label.text = "品质：" + quality_names.get(soul.quality, "未知")
 	quality_label.add_theme_color_override("font_color", quality_colors.get(soul.quality, Color.WHITE))
-	
-	shape_label.text = "形状：" + shape_names.get(soul.shape_type, "未知")
+	quality_label.add_theme_font_size_override("font_size", 16)
 
-	# 显示魂印类型
+	shape_label.text = "形状：" + shape_names.get(soul.shape_type, "未知")
+	shape_label.add_theme_font_size_override("font_size", 14)
+
+	# 显示魂印类型和效果（更详细）
 	var soul_system = _get_soul_system()
-	var type_text = ""
+	var power_text = ""
+
 	if soul_system:
 		if soul.soul_type == soul_system.SoulType.ACTIVE:
-			type_text = "[主动] "
+			power_text = "[主动技能]\n"
+			power_text += soul.get_effect_description() + "\n"
+			power_text += "基础力量: +" + str(soul.power) + "\n"
+			if soul.active_multiplier > 0:
+				power_text += "伤害倍率: %.1fx" % soul.active_multiplier + "\n"
+			if soul.active_bonus_percent > 0:
+				power_text += "伤害加成: +%d%%" % (soul.active_bonus_percent * 100)
 		else:
-			type_text = "[被动] "
-	power_label.text = type_text + "效果：" + soul.get_effect_description()
+			power_text = "[被动技能]\n"
+			power_text += soul.get_effect_description() + "\n"
+			power_text += "基础力量: +" + str(soul.power) + "\n"
+			if soul.passive_trigger_chance > 0:
+				power_text += "触发概率: %d%%" % (soul.passive_trigger_chance * 100) + "\n"
+			if soul.passive_bonus_flat > 0:
+				power_text += "额外伤害: +" + str(soul.passive_bonus_flat) + "\n"
+			if soul.passive_bonus_multiplier > 0:
+				power_text += "暴击倍率: %.1fx" % soul.passive_bonus_multiplier
+
+	power_label.text = power_text
+	power_label.add_theme_font_size_override("font_size", 14)
 
 	# 更新描述
-	var full_description = soul.description
+	desc_label.text = "描述：" + soul.description
+	desc_label.add_theme_font_size_override("font_size", 13)
+	desc_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 
-	desc_label.text = "描述：" + full_description
 	price_label.text = "价格：免费（调试）"
+	price_label.add_theme_font_size_override("font_size", 16)
+	price_label.add_theme_color_override("font_color", Color(0.3, 1, 0.3))
 
 func _on_buy_button_pressed():
 	if selected_soul == null:
@@ -283,3 +416,97 @@ func _show_message(text: String):
 
 func _on_close_button_pressed():
 	shop_closed.emit()
+
+func _apply_filter_and_sort():
+	# 应用品质筛选
+	if current_filter == -1:
+		filtered_items = shop_items.duplicate()
+	else:
+		filtered_items = []
+		for soul in shop_items:
+			if soul.quality == current_filter:
+				filtered_items.append(soul)
+
+	# 应用排序
+	if current_sort == 1:  # 品质升序
+		filtered_items.sort_custom(func(a, b): return a.quality < b.quality)
+	elif current_sort == 2:  # 品质降序
+		filtered_items.sort_custom(func(a, b): return a.quality > b.quality)
+	elif current_sort == 3:  # 名称排序
+		filtered_items.sort_custom(func(a, b): return a.name < b.name)
+
+func _create_filter_buttons():
+	# 在左侧面板顶部添加筛选按钮
+	var left_panel_container = $MainPanel/VBoxContainer/ContentContainer/LeftPanel/LeftPanelContainer
+	var top_margin = left_panel_container.get_node("TopMargin")
+
+	# 创建筛选容器
+	var filter_container = HBoxContainer.new()
+	filter_container.name = "FilterContainer"
+	filter_container.add_theme_constant_override("separation", 5)
+	left_panel_container.add_child(filter_container)
+	left_panel_container.move_child(filter_container, 1)  # 放在 TopMargin 后面
+
+	# 全部按钮
+	var all_btn = _create_filter_button("全部", -1)
+	filter_container.add_child(all_btn)
+
+	# 品质筛选按钮
+	for i in range(6):
+		var btn = _create_filter_button(quality_names[i], i)
+		btn.add_theme_color_override("font_color", quality_colors[i])
+		filter_container.add_child(btn)
+
+	# 添加排序按钮
+	var spacer = Control.new()
+	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
+	filter_container.add_child(spacer)
+
+	var sort_btn = Button.new()
+	sort_btn.text = "排序"
+	sort_btn.custom_minimum_size = Vector2(60, 30)
+	sort_btn.pressed.connect(_on_sort_button_pressed)
+	filter_container.add_child(sort_btn)
+
+func _create_filter_button(label: String, quality: int) -> Button:
+	var btn = Button.new()
+	btn.text = label
+	btn.custom_minimum_size = Vector2(50, 30)
+
+	var style_normal = StyleBoxFlat.new()
+	style_normal.bg_color = Color(0.2, 0.2, 0.23, 1)
+	style_normal.set_corner_radius_all(5)
+	btn.add_theme_stylebox_override("normal", style_normal)
+
+	var style_hover = StyleBoxFlat.new()
+	style_hover.bg_color = Color(0.25, 0.25, 0.28, 1)
+	style_hover.set_corner_radius_all(5)
+	btn.add_theme_stylebox_override("hover", style_hover)
+
+	btn.pressed.connect(func(): _on_filter_button_pressed(quality))
+
+	return btn
+
+func _on_filter_button_pressed(quality: int):
+	current_filter = quality
+	_apply_filter_and_sort()
+	_refresh_items()
+
+func _on_sort_button_pressed():
+	# 循环切换排序方式
+	current_sort = (current_sort + 1) % 4
+	_apply_filter_and_sort()
+	_refresh_items()
+
+func _refresh_items():
+	# 清空并重新创建卡片
+	for child in items_container.get_children():
+		child.queue_free()
+
+	# 使用筛选后的列表
+	for i in range(filtered_items.size()):
+		var soul = filtered_items[i]
+		# 找到原始索引
+		var original_index = shop_items.find(soul)
+		var card = _create_soul_card(soul, original_index)
+		items_container.add_child(card)

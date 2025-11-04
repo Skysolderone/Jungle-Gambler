@@ -87,8 +87,17 @@ func _ready():
 	phase_label.text = "战斗回合"
 	timer_label.visible = false
 
+	# 使用 call_deferred 延迟调用，避免在 _ready 中使用 await
+	call_deferred("_start_first_combat_round")
+
+func _start_first_combat_round():
 	# 延迟1秒后开始第一回合
 	await get_tree().create_timer(1.0).timeout
+
+	# 确保场景仍在树中
+	if not is_inside_tree() or battle_over:
+		return
+
 	_execute_combat_round()
 
 func _setup_responsive_layout():
@@ -165,10 +174,35 @@ func _adjust_battle_layout_for_screen(screen_type):
 		if vseparator:
 			vseparator.visible = true
 	
-	# 根据屏幕类型调整网格列数
+	# 根据屏幕类型调整网格列数和间距
 	if has_node("/root/ResponsiveLayoutManager"):
 		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
-		loadout_grid.columns = responsive_manager.get_grid_columns_for_screen()
+		var columns = responsive_manager.get_grid_columns_for_screen()
+
+		# 战斗场景魂印需要更大的显示空间，减少列数
+		if responsive_manager.is_mobile_device():
+			columns = 2  # 移动端固定2列
+			# 移动端设置固定高度，避免内容溢出
+			var loadout_scroll = $BattlePanel/MarginContainer/VBoxContainer/LoadoutContainer/LoadoutScroll
+			# 移动端：固定高度230px，足够显示2行卡片，更多内容可以滚动
+			loadout_scroll.custom_minimum_size.y = 230
+			loadout_scroll.custom_minimum_size.x = 0
+		else:
+			columns = max(4, columns)  # 桌面端至少4列
+			# 桌面端恢复默认设置
+			var loadout_scroll = $BattlePanel/MarginContainer/VBoxContainer/LoadoutContainer/LoadoutScroll
+			loadout_scroll.custom_minimum_size.y = 0
+			loadout_scroll.custom_minimum_size.x = 0
+
+		loadout_grid.columns = columns
+
+		# 增加间距，避免按钮互相覆盖
+		if responsive_manager.is_mobile_device():
+			loadout_grid.add_theme_constant_override("h_separation", 15)
+			loadout_grid.add_theme_constant_override("v_separation", 15)
+		else:
+			loadout_grid.add_theme_constant_override("h_separation", 10)
+			loadout_grid.add_theme_constant_override("v_separation", 10)
 
 func _process(delta):
 	if battle_over:
@@ -197,6 +231,13 @@ func _initialize_loadout():
 func _refresh_loadout_display():
 	# 刷新魂印卡片显示状态
 	var cards = loadout_grid.get_children()
+
+	# 检查是否是移动端
+	var is_mobile = false
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		is_mobile = responsive_manager.is_mobile_device()
+
 	for i in range(min(cards.size(), player_all_souls.size())):
 		var button = cards[i] as Button
 		if not button:
@@ -209,7 +250,12 @@ func _refresh_loadout_display():
 		var uses_text = str(soul_item.uses_remaining) + "/" + str(soul_item.max_uses)
 		var type_text = "[主动]" if soul.soul_type == 0 else "[被动]"
 		var effect_desc = soul.get_effect_description()
-		button.text = soul.name + " " + type_text + "\n力量+" + str(soul.power) + "\n" + effect_desc + "\n次数:" + uses_text
+
+		# 移动端使用简化文本
+		if is_mobile:
+			button.text = soul.name + " " + type_text + "\n+" + str(soul.power) + " | " + uses_text
+		else:
+			button.text = soul.name + " " + type_text + "\n力量+" + str(soul.power) + "\n" + effect_desc + "\n次数:" + uses_text
 
 		if current_phase == Phase.COMBAT:
 			# 战斗阶段：根据使用次数显示状态
@@ -220,6 +266,10 @@ func _refresh_loadout_display():
 				style_depleted.border_color = Color(0.4, 0.4, 0.4)
 				style_depleted.set_border_width_all(2)
 				style_depleted.set_corner_radius_all(5)
+				style_depleted.content_margin_left = 5
+				style_depleted.content_margin_right = 5
+				style_depleted.content_margin_top = 5
+				style_depleted.content_margin_bottom = 5
 				button.add_theme_stylebox_override("normal", style_depleted)
 				button.add_theme_stylebox_override("hover", style_depleted)
 				button.disabled = false  # 仍可点击查看
@@ -239,12 +289,36 @@ func _refresh_loadout_display():
 				style_active.border_color = Color(0, 1, 0, 1)  # 绿色边框
 				style_active.set_border_width_all(4)
 				style_active.set_corner_radius_all(5)
+				style_active.content_margin_left = 5
+				style_active.content_margin_right = 5
+				style_active.content_margin_top = 5
+				style_active.content_margin_bottom = 5
 				button.add_theme_stylebox_override("normal", style_active)
 
 func _create_soul_card(soul, index: int) -> Button:
 	var button = Button.new()
-	button.custom_minimum_size = Vector2(120, 60)
-	
+
+	# 根据屏幕类型调整按钮大小和文本显示
+	var min_size = Vector2(120, 60)  # 默认大小
+	var is_mobile = false
+	if has_node("/root/ResponsiveLayoutManager"):
+		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
+		is_mobile = responsive_manager.is_mobile_device()
+		min_size = responsive_manager.get_min_button_size()
+		# 战斗场景魂印按钮需要更大的触摸区域
+		if is_mobile:
+			min_size.y = max(min_size.y, 100)  # 移动端最小高度100，增加显示空间
+			min_size.x = max(min_size.x, 120)  # 移动端最小宽度120
+
+	button.custom_minimum_size = min_size
+	button.mouse_filter = Control.MOUSE_FILTER_STOP  # 确保接收鼠标/触摸事件
+	button.focus_mode = Control.FOCUS_ALL  # 允许获得焦点
+
+	# 移动端使用自动换行
+	if is_mobile:
+		button.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
+		button.clip_text = false
+
 	# 品质颜色
 	var quality_colors = [
 		Color(0.5, 0.5, 0.5),    # 普通
@@ -254,26 +328,34 @@ func _create_soul_card(soul, index: int) -> Button:
 		Color(0.9, 0.6, 0.2),    # 传说
 		Color(0.9, 0.3, 0.3)     # 神话
 	]
-	
+
 	var color = quality_colors[soul.quality]
-	
+
 	# 设置按钮样式
 	var style_normal = StyleBoxFlat.new()
 	style_normal.bg_color = Color(color.r * 0.3, color.g * 0.3, color.b * 0.3, 0.8)
 	style_normal.border_color = color
 	style_normal.set_border_width_all(2)
 	style_normal.set_corner_radius_all(5)
-	
+	style_normal.content_margin_left = 8
+	style_normal.content_margin_right = 8
+	style_normal.content_margin_top = 8
+	style_normal.content_margin_bottom = 8
+
 	var style_selected = StyleBoxFlat.new()
 	style_selected.bg_color = Color(color.r * 0.6, color.g * 0.6, color.b * 0.6, 1.0)
 	style_selected.border_color = Color(1, 1, 0, 1)
 	style_selected.set_border_width_all(3)
 	style_selected.set_corner_radius_all(5)
-	
+	style_selected.content_margin_left = 8
+	style_selected.content_margin_right = 8
+	style_selected.content_margin_top = 8
+	style_selected.content_margin_bottom = 8
+
 	button.add_theme_stylebox_override("normal", style_normal)
 	button.add_theme_stylebox_override("hover", style_selected)
 	button.add_theme_stylebox_override("pressed", style_selected)
-	
+
 	# 获取魂印使用次数信息
 	var soul_item = player_all_souls[index]
 	var uses_text = str(soul_item.uses_remaining) + "/" + str(soul_item.max_uses)
@@ -282,9 +364,22 @@ func _create_soul_card(soul, index: int) -> Button:
 	var type_text = "[主动]" if soul.soul_type == 0 else "[被动]"
 	var effect_desc = soul.get_effect_description()
 
-	button.text = soul.name + " " + type_text + "\n力量+" + str(soul.power) + "\n" + effect_desc + "\n次数:" + uses_text
+	# 移动端使用更简洁的文本显示
+	if is_mobile:
+		# 简化效果描述
+		var short_desc = effect_desc
+		if effect_desc.length() > 20:
+			short_desc = effect_desc.substr(0, 18) + ".."
+		button.text = soul.name + " " + type_text + "\n+" + str(soul.power) + " | " + uses_text
+	else:
+		button.text = soul.name + " " + type_text + "\n力量+" + str(soul.power) + "\n" + effect_desc + "\n次数:" + uses_text
 	button.pressed.connect(_on_soul_card_pressed.bind(index))
-	
+
+	# 添加移动端触摸反馈
+	if has_node("/root/MobileInteractionHelper"):
+		var mobile_helper = get_node("/root/MobileInteractionHelper")
+		mobile_helper.add_touch_feedback(button)
+
 	return button
 
 func _on_soul_card_pressed(index: int):
@@ -736,19 +831,31 @@ func _create_loot_card(soul, is_loot: bool, inventory_index: int = -1) -> Button
 	style_normal.border_color = color
 	style_normal.set_border_width_all(2)
 	style_normal.set_corner_radius_all(8)
-	
+	style_normal.content_margin_left = 5
+	style_normal.content_margin_right = 5
+	style_normal.content_margin_top = 5
+	style_normal.content_margin_bottom = 5
+
 	var style_hover = StyleBoxFlat.new()
 	style_hover.bg_color = Color(color.r * 0.5, color.g * 0.5, color.b * 0.5, 1.0)
 	style_hover.border_color = color.lightened(0.3)
 	style_hover.set_border_width_all(3)
 	style_hover.set_corner_radius_all(8)
-	
+	style_hover.content_margin_left = 5
+	style_hover.content_margin_right = 5
+	style_hover.content_margin_top = 5
+	style_hover.content_margin_bottom = 5
+
 	var style_pressed = StyleBoxFlat.new()
 	style_pressed.bg_color = Color(color.r * 0.7, color.g * 0.7, color.b * 0.7, 1.0)
 	style_pressed.border_color = Color.WHITE
 	style_pressed.set_border_width_all(3)
 	style_pressed.set_corner_radius_all(8)
-	
+	style_pressed.content_margin_left = 5
+	style_pressed.content_margin_right = 5
+	style_pressed.content_margin_top = 5
+	style_pressed.content_margin_bottom = 5
+
 	button.add_theme_stylebox_override("normal", style_normal)
 	button.add_theme_stylebox_override("hover", style_hover)
 	button.add_theme_stylebox_override("pressed", style_pressed)
@@ -930,6 +1037,10 @@ func _update_soul_card_states():
 			style_selected.border_color = Color(1, 1, 0, 1)
 			style_selected.set_border_width_all(4)
 			style_selected.set_corner_radius_all(5)
+			style_selected.content_margin_left = 5
+			style_selected.content_margin_right = 5
+			style_selected.content_margin_top = 5
+			style_selected.content_margin_bottom = 5
 			button.add_theme_stylebox_override("normal", style_selected)
 		else:
 			# 未选中状态 - 正常样式
@@ -938,6 +1049,10 @@ func _update_soul_card_states():
 			style_normal.border_color = color
 			style_normal.set_border_width_all(2)
 			style_normal.set_corner_radius_all(5)
+			style_normal.content_margin_left = 5
+			style_normal.content_margin_right = 5
+			style_normal.content_margin_top = 5
+			style_normal.content_margin_bottom = 5
 			button.add_theme_stylebox_override("normal", style_normal)
 
 func _add_log(text: String):

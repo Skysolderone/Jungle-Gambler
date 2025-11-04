@@ -203,27 +203,68 @@ func _draw_soul_item(item, is_selected: bool, is_hover: bool):
 			var inner_rect = Rect2(x * CELL_SIZE + 4, y * CELL_SIZE + 4, CELL_SIZE - 8, CELL_SIZE - 8)
 			grid_container.draw_rect(inner_rect, base_color * 0.2, false, 1.0)
 	
-	# 在中心位置绘制名称
+	# 在中心位置绘制名称（自适应字体大小和换行）
 	if cells.size() > 0:
-		var center_x = 0
-		var center_y = 0
+		# 计算魂印占据的区域大小
+		var min_x = 999
+		var max_x = -999
+		var min_y = 999
+		var max_y = -999
 		for cell in cells:
-			center_x += cell[0]
-			center_y += cell[1]
-		center_x = center_x / cells.size()
-		center_y = center_y / cells.size()
-		
-		var text_pos = Vector2(center_x * CELL_SIZE + CELL_SIZE / 2.0, center_y * CELL_SIZE + CELL_SIZE / 2.0)
+			min_x = min(min_x, cell[0])
+			max_x = max(max_x, cell[0])
+			min_y = min(min_y, cell[1])
+			max_y = max(max_y, cell[1])
+
+		var width_cells = max_x - min_x + 1
+		var height_cells = max_y - min_y + 1
+		var available_width = width_cells * CELL_SIZE - 8  # 减去边距
+		var available_height = height_cells * CELL_SIZE - 8
+
+		# 计算中心点
+		var center_x = (min_x + max_x) / 2.0
+		var center_y = (min_y + max_y) / 2.0
+
 		var font = ThemeDB.fallback_font
 		var text = item.soul_print.name
-		var text_size = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14)
-		text_pos.x -= text_size.x / 2.0
-		text_pos.y += 7
-		
-		# 文字阴影
-		grid_container.draw_string(font, text_pos + Vector2(1, 1), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, Color.BLACK)
-		# 文字本体
-		grid_container.draw_string(font, text_pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 14, base_color.lightened(0.5))
+
+		# 根据可用空间自适应字体大小
+		var font_size = 14
+		if width_cells == 1 and height_cells == 1:
+			font_size = 10  # 1×1 格子用小字体
+		elif width_cells <= 2 and height_cells <= 2:
+			font_size = 12  # 2×2 或更小用中等字体
+
+		# 尝试分行显示长名称
+		var lines = []
+		var text_size = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+
+		if text_size.x > available_width and text.length() > 3:
+			# 文本太长，尝试分成两行
+			var mid = text.length() / 2
+			var line1 = text.substr(0, mid)
+			var line2 = text.substr(mid)
+			lines.append(line1)
+			lines.append(line2)
+		else:
+			# 单行显示
+			lines.append(text)
+
+		# 绘制文本（居中）
+		var line_height = font_size + 2
+		var total_height = lines.size() * line_height
+		var start_y = center_y * CELL_SIZE + CELL_SIZE / 2.0 - total_height / 2.0 + line_height / 2.0
+
+		for i in range(lines.size()):
+			var line = lines[i]
+			var line_size = font.get_string_size(line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size)
+			var text_pos = Vector2(center_x * CELL_SIZE + CELL_SIZE / 2.0, start_y + i * line_height)
+			text_pos.x -= line_size.x / 2.0
+
+			# 文字阴影
+			grid_container.draw_string(font, text_pos + Vector2(1, 1), line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, Color.BLACK)
+			# 文字本体
+			grid_container.draw_string(font, text_pos, line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, base_color.lightened(0.5))
 
 func _draw_dragging_item(item, mouse_pos: Vector2):
 	var shape = item.soul_print.get_rotated_shape(item.rotation)
