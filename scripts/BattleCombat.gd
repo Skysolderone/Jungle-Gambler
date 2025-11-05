@@ -62,7 +62,7 @@ func _ready():
 	enemy_base_power = enemy_data.get("power", 30)
 
 	# 连接确认按钮信号（响应式适配）
-	confirm_button.text = "确认并出手"
+	confirm_button.text = "确认"
 	var button_size = Vector2(300, 80)
 	var button_font_size = 24
 
@@ -397,11 +397,11 @@ func _show_soul_selection():
 	if has_node("/root/ResponsiveLayoutManager"):
 		var responsive_manager = get_node("/root/ResponsiveLayoutManager")
 		if responsive_manager.is_mobile_device():
-			soul_grid.columns = 2  # 移动端：2列
+			soul_grid.columns = 5 # 移动端：5列
 		elif responsive_manager.is_tablet_device():
-			soul_grid.columns = 3  # 平板：3列
+			soul_grid.columns = 3 # 平板：3列
 		else:
-			soul_grid.columns = 4  # 桌面端：4列
+			soul_grid.columns = 4 # 桌面端：4列
 
 	# 创建魂印卡片
 	for i in range(player_all_souls.size()):

@@ -11,6 +11,7 @@ extends Control
 @onready var brightness_overlay = $BrightnessOverlay
 @onready var message_dialog = $MessageDialog
 @onready var confirm_dialog = $ConfirmDialog
+@onready var evacuation_confirm_dialog = $EvacuationConfirmDialog
 
 const GRID_SIZE = 9
 var CELL_SIZE = 80  # 改为变量，支持响应式调整
@@ -847,10 +848,10 @@ func _show_cell_info(x: int, y: int):
 func _on_cell_clicked(x: int, y: int):
 	var clicked_pos = Vector2i(x, y)
 
-	# 点击自己 - 如果在撤离点上就撤离
+	# 点击自己 - 如果在撤离点上弹窗询问是否撤离
 	if clicked_pos == player_pos:
 		if show_evacuation and evacuation_points.has(player_pos):
-			_evacuate()
+			_show_evacuation_confirm()
 		return
 
 	# 只能移动到相邻格子
@@ -893,6 +894,11 @@ func _move_to_cell(target_pos: Vector2i):
 
 	_update_info()
 	grid_container.queue_redraw()
+
+	# 检查是否移动到撤离点，弹窗询问是否撤离
+	if show_evacuation and evacuation_points.has(target_pos):
+		_show_evacuation_confirm()
+		return
 
 	# 检查是否触发战斗
 	if cell.has_enemy:
@@ -1127,6 +1133,18 @@ func _start_evacuation_blink():
 	tween.tween_property(evacuation_label, "theme_override_colors/font_color", Color(1.0, 1.0, 1.0), 0.5)
 	tween.tween_property(evacuation_label, "theme_override_colors/font_color", Color(1.0, 1.0, 0.0), 0.5)
 
+func _show_evacuation_confirm():
+	# 显示撤离确认对话框
+	var message = "确定要撤离吗？\n\n"
+	if collected_souls.size() > 0:
+		message += "本次收集了 " + str(collected_souls.size()) + " 个魂印\n"
+		message += "撤离后将保留所有收集的魂印"
+	else:
+		message += "本次没有收集到魂印"
+
+	evacuation_confirm_dialog.dialog_text = message
+	evacuation_confirm_dialog.popup_centered()
+
 func _evacuate():
 	# 成功撤离，保留所有收集的魂印
 	var message = "成功撤离！\n"
@@ -1199,8 +1217,12 @@ func _on_exit_confirmed():
 					if items[i].soul_print.id == soul_id:
 						soul_system.remove_soul_print(username, i)
 						break
-	
+
 	get_tree().change_scene_to_file("res://scenes/Lobby.tscn")
+
+func _on_evacuation_confirmed():
+	# 确认撤离
+	_evacuate()
 
 # ========== 地图状态序列化 ==========
 

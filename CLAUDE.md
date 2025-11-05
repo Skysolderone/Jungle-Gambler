@@ -34,7 +34,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ### 全局单例系统（Autoload）
 
-项目核心依赖 4 个全局单例，通过 `get_node("/root/SingletonName")` 访问：
+项目核心依赖以下全局单例，通过 `get_node("/root/SingletonName")` 访问：
 
 #### 1. UserSession (`systems/UserSession.gd`)
 
@@ -81,6 +81,16 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 - **状态**: 已弃用，被 SoulPrintSystem 替代
 
+#### 5. ResponsiveLayoutManager (`systems/ResponsiveLayoutManager.gd`)
+
+- **职责**: 响应式布局管理，处理不同屏幕尺寸和方向
+- **用途**: 自动调整 UI 布局以适配桌面和移动设备
+
+#### 6. MobileInteractionHelper (`systems/MobileInteractionHelper.gd`)
+
+- **职责**: 移动设备交互辅助
+- **用途**: 处理触摸输入和移动设备特定的交互逻辑
+
 ### 场景流程架构
 
 游戏场景按以下流程组织：
@@ -88,7 +98,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 ```
 MainMenu (登录/注册)
     ↓
-Lobby (大厅)
+Lobby (大厅) ←→ Shop (商城) / Profile (个人信息) / Settings (设置)
     ↓
 MapSelection (地图选择)
     ↓
@@ -97,6 +107,10 @@ SoulLoadout (魂印配置)
 GameMap (9×9地图探索) ←→ Battle (战斗场景)
     ↓
 返回 Lobby
+
+其他场景:
+- Inventory / SoulInventoryV2 (背包管理，旧版/新版)
+- SoulRefine (魂印精炼)
 ```
 
 ### 核心场景说明
@@ -119,15 +133,22 @@ GameMap (9×9地图探索) ←→ Battle (战斗场景)
 
 #### Battle - 战斗系统
 
-- **三阶段流程**:
-  1. **PREPARATION (10 秒)**: 从所有魂印中选择要使用的
-  2. **COMBAT**: 回合制战斗，共用骰子机制
-  3. **LOOT (10 秒)**: 背包满时选择丢弃旧魂印获取新魂印
-- **战斗公式**:
-  - 玩家伤害 = `base_power × dice + sum(selected_souls.power)`
-  - 敌人伤害 = `base_power × dice + sum(enemy_souls.power)`
-  - 伤害 = abs(player_damage - enemy_damage)
-- **状态传递**: 通过 `UserSession.set_meta()` 传递战斗数据和结果
+战斗系统采用模块化设计，由以下独立场景组成：
+
+- **BattlePreparation.tscn** (`scripts/BattlePreparation.gd`): 准备阶段（10 秒），从所有魂印中选择要使用的
+- **BattleCombat.tscn** (`scripts/BattleCombat.gd`): 战斗阶段，回合制战斗，共用骰子机制
+- **LootPhase.tscn** (`scripts/LootPhase.gd`): 战利品阶段（10 秒），背包满时选择丢弃旧魂印获取新魂印
+- **BattleVictory.tscn** (`scripts/BattleVictory.gd`): 胜利结算界面
+- **Battle.tscn** (`scripts/Battle.gd`): 主战斗控制器，协调各阶段切换
+
+**战斗公式**:
+- 玩家伤害 = `base_power × dice + sum(selected_souls.power)`
+- 敌人伤害 = `base_power × dice + sum(enemy_souls.power)`
+- 伤害 = abs(player_damage - enemy_damage)
+
+**动画系统**: `BattleAnimator.gd` 负责战斗动画效果
+
+**状态传递**: 通过 `UserSession.set_meta()` 传递战斗数据和结果
 
 #### SoulLoadout - 魂印配置
 
@@ -244,6 +265,19 @@ soul_system.add_soul_print(username, "soul_thunder", 2, 3, 1)
 get_tree().change_scene_to_file("res://scenes/Lobby.tscn")
 ```
 
+## 平台支持
+
+项目支持桌面和移动设备双平台：
+
+- **窗口配置**: 默认 1280×720，全屏模式，canvas_items 拉伸
+- **移动优化**:
+  - 横屏锁定（orientation=4）
+  - 触摸输入模拟（emulate_touch_from_mouse/emulate_mouse_from_touch）
+  - 响应式布局系统（ResponsiveLayoutManager）
+  - 移动交互辅助（MobileInteractionHelper）
+- **渲染**: GL Compatibility 模式，兼容移动设备
+- **Android 构建**: 导出配置在 `export_presets.cfg`，APK 输出到 `android/` 目录
+
 ## 重要提示
 
 1. **音频总线**: 可能不存在 "Music" 总线，需回退到 "Master"
@@ -252,3 +286,4 @@ get_tree().change_scene_to_file("res://scenes/Lobby.tscn")
 4. **地图颜色**: 所有格子颜色在进入时就可见，未探索格子有半透明遮罩
 5. **撤离机制**: 只能通过撤离点或 HP 归零退出，直接退出会失去所有收集的魂印
 6. **战斗战利品**: 优先自动添加到背包，满时进入 LOOT 阶段让玩家选择丢弃
+7. **触摸输入**: 开发时鼠标输入会自动模拟触摸事件，便于桌面调试移动功能

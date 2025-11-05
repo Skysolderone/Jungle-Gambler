@@ -18,55 +18,76 @@ anchor_bottom = 1.0
 
 [node name="MarginContainer" type="MarginContainer" parent="BattlePanel"]
 layout_mode = 2
+theme_override_constants/margin_left = 30
+theme_override_constants/margin_top = 30
+theme_override_constants/margin_right = 30
+theme_override_constants/margin_bottom = 30
 
 [node name="VBoxContainer" type="VBoxContainer" parent="BattlePanel/MarginContainer"]
 layout_mode = 2
+theme_override_constants/separation = 20
 
 [node name="PhaseLabel" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 24
 text = "战斗回合"
 horizontal_alignment = 1
 
 [node name="InfoContainer" type="HBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
 layout_mode = 2
+theme_override_constants/separation = 40
 
 [node name="PlayerInfo" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
 
 [node name="PlayerHP" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 
 [node name="PlayerPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 
 [node name="PlayerDice" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 
 [node name="PlayerFinalPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/PlayerInfo"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 
 [node name="VSeparator" type="VSeparator" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer"]
 layout_mode = 2
 
 [node name="EnemyInfo" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer"]
 layout_mode = 2
+size_flags_horizontal = 3
+theme_override_constants/separation = 10
 
 [node name="EnemyHP" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 
 [node name="EnemyPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 
 [node name="EnemyDice" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 
 [node name="EnemyFinalPower" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/InfoContainer/EnemyInfo"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 18
 
 [node name="BattleLog" type="RichTextLabel" parent="BattlePanel/MarginContainer/VBoxContainer"]
-custom_minimum_size = Vector2(0, 300)
+custom_minimum_size = Vector2(0, 150)
 layout_mode = 2
+size_flags_vertical = 3
 bbcode_enabled = true
+scroll_following = true
 
 [node name="SoulSelectionPanel" type="PanelContainer" parent="BattlePanel/MarginContainer/VBoxContainer"]
 visible = false
@@ -74,19 +95,25 @@ layout_mode = 2
 
 [node name="SoulVBox" type="VBoxContainer" parent="BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel"]
 layout_mode = 2
+theme_override_constants/separation = 15
 
 [node name="SelectionHint" type="Label" parent="BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel/SoulVBox"]
 layout_mode = 2
+theme_override_font_sizes/font_size = 20
 horizontal_alignment = 1
 
 [node name="SoulGrid" type="GridContainer" parent="BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel/SoulVBox"]
 layout_mode = 2
+theme_override_constants/h_separation = 15
+theme_override_constants/v_separation = 15
 columns = 2
 
 [node name="ConfirmButton" type="Button" parent="BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel/SoulVBox"]
-custom_minimum_size = Vector2(200, 50)
+custom_minimum_size = Vector2(200, 60)
 layout_mode = 2
+theme_override_font_sizes/font_size = 20
 size_flags_horizontal = 4
 
 [node name="ButtonMargin" type="MarginContainer" parent="BattlePanel/MarginContainer/VBoxContainer/SoulSelectionPanel/SoulVBox"]
 layout_mode = 2
+theme_override_constants/margin_top = 10
