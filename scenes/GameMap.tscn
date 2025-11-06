@@ -77,20 +77,20 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-theme_override_constants/margin_left = 20
+theme_override_constants/margin_left = 10
 theme_override_constants/margin_top = 10
-theme_override_constants/margin_right = 20
+theme_override_constants/margin_right = 10
 theme_override_constants/margin_bottom = 10
 
 [node name="HBoxContainer" type="HBoxContainer" parent="TopBar/MarginContainer"]
 layout_mode = 2
-theme_override_constants/separation = 15
+theme_override_constants/separation = 5
 
 [node name="MapNameLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
-custom_minimum_size = Vector2(150, 0)
+custom_minimum_size = Vector2(80, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.3, 1)
-theme_override_font_sizes/font_size = 24
+theme_override_font_sizes/font_size = 16
 text = "地图名称"
 vertical_alignment = 1
 clip_text = true
@@ -101,11 +101,12 @@ layout_mode = 2
 color = Color(0.4, 0.4, 0.4, 0.5)
 
 [node name="PlayerInfoLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
-custom_minimum_size = Vector2(180, 0)
+custom_minimum_size = Vector2(130, 0)
 layout_mode = 2
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 14
 text = "位置: (0,0)"
 vertical_alignment = 1
+clip_text = true
 
 [node name="VSeparator2" type="ColorRect" parent="TopBar/MarginContainer/HBoxContainer"]
 custom_minimum_size = Vector2(2, 50)
@@ -113,12 +114,13 @@ layout_mode = 2
 color = Color(0.4, 0.4, 0.4, 0.5)
 
 [node name="PowerLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
-custom_minimum_size = Vector2(100, 0)
+custom_minimum_size = Vector2(70, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(1, 0.85, 0.4, 1)
-theme_override_font_sizes/font_size = 18
-text = "总力量: 0"
+theme_override_font_sizes/font_size = 14
+text = "力量: 0"
 vertical_alignment = 1
+clip_text = true
 
 [node name="VSeparator3" type="ColorRect" parent="TopBar/MarginContainer/HBoxContainer"]
 custom_minimum_size = Vector2(2, 50)
@@ -126,34 +128,35 @@ layout_mode = 2
 color = Color(0.4, 0.4, 0.4, 0.5)
 
 [node name="ExplorationLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
-custom_minimum_size = Vector2(150, 0)
+custom_minimum_size = Vector2(100, 0)
 layout_mode = 2
 theme_override_colors/font_color = Color(0.5, 0.9, 1, 1)
-theme_override_font_sizes/font_size = 18
+theme_override_font_sizes/font_size = 14
 text = "探索: 0%"
 vertical_alignment = 1
+clip_text = true
 
 [node name="Spacer" type="Control" parent="TopBar/MarginContainer/HBoxContainer"]
 layout_mode = 2
 size_flags_horizontal = 3
 
 [node name="InventoryButton" type="Button" parent="TopBar/MarginContainer/HBoxContainer"]
-custom_minimum_size = Vector2(120, 50)
+custom_minimum_size = Vector2(80, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 15
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
 text = "背包"
 
 [node name="ExitButton" type="Button" parent="TopBar/MarginContainer/HBoxContainer"]
-custom_minimum_size = Vector2(120, 50)
+custom_minimum_size = Vector2(80, 50)
 layout_mode = 2
-theme_override_font_sizes/font_size = 16
+theme_override_font_sizes/font_size = 14
 theme_override_styles/normal = SubResource("StyleBoxFlat_normal")
 theme_override_styles/pressed = SubResource("StyleBoxFlat_pressed")
 theme_override_styles/hover = SubResource("StyleBoxFlat_hover")
-text = "退出地图"
+text = "退出"
 
 [node name="VSeparator4" type="ColorRect" parent="TopBar/MarginContainer/HBoxContainer"]
 custom_minimum_size = Vector2(2, 0)
@@ -161,8 +164,9 @@ layout_mode = 2
 color = Color(0.5, 0.5, 0.5, 1)
 
 [node name="EvacuationLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
-custom_minimum_size = Vector2(150, 30)
+custom_minimum_size = Vector2(100, 30)
 layout_mode = 2
+theme_override_font_sizes/font_size = 13
 horizontal_alignment = 1
 vertical_alignment = 1
 clip_text = true
@@ -173,8 +177,9 @@ layout_mode = 2
 color = Color(0.3, 0.3, 0.35, 0.5)
 
 [node name="CollapseTimerLabel" type="Label" parent="TopBar/MarginContainer/HBoxContainer"]
-custom_minimum_size = Vector2(300, 0)
+custom_minimum_size = Vector2(120, 0)
 layout_mode = 2
+theme_override_font_sizes/font_size = 13
 text = "下次坍塌: 30秒"
 horizontal_alignment = 1
 clip_text = true
@@ -227,6 +232,13 @@ cancel_button_text = "取消"
 title = "撤离确认"
 ok_button_text = "确认撤离"
 cancel_button_text = "继续探索"
+
+[node name="GameCamera" type="Camera2D" parent="."]
+anchor_mode = 0
+
+[node name="CollapseSoundPlayer" type="AudioStreamPlayer" parent="."]
+
+[node name="FallSoundPlayer" type="AudioStreamPlayer" parent="."]
 
 [connection signal="pressed" from="TopBar/MarginContainer/HBoxContainer/InventoryButton" to="." method="_on_inventory_button_pressed"]
 [connection signal="pressed" from="TopBar/MarginContainer/HBoxContainer/ExitButton" to="." method="_on_exit_button_pressed"]

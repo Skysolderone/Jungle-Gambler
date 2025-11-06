@@ -287,3 +287,25 @@ get_tree().change_scene_to_file("res://scenes/Lobby.tscn")
 5. **撤离机制**: 只能通过撤离点或 HP 归零退出，直接退出会失去所有收集的魂印
 6. **战斗战利品**: 优先自动添加到背包，满时进入 LOOT 阶段让玩家选择丢弃
 7. **触摸输入**: 开发时鼠标输入会自动模拟触摸事件，便于桌面调试移动功能
+
+## 其他文档
+
+项目中包含以下补充文档，供深入了解特定系统时参考：
+
+- **BATTLE_SYSTEM_IMPROVEMENT.md** - 战斗系统重构方案（借鉴 Balatro 设计）
+- **BATTLE_ANIMATIONS_GUIDE.md** - 战斗动画系统使用指南
+- **.claude/agents/godot-expert.md** - Godot 专家代理配置（使用 godot-expert 搭配 MCP 工具进行开发）
+
+## MCP 工具使用
+
+项目配置了 Godot MCP 服务器，可通过以下 MCP 工具与 Godot 编辑器交互：
+
+- `mcp__godot-mcp__get_scene_tree` - 获取当前场景的节点树
+- `mcp__godot-mcp__get_godot_errors` - 获取 Godot 错误和日志输出
+- `mcp__godot-mcp__get_filesystem_tree` - 获取项目文件系统树
+- `mcp__godot-mcp__view_script` - 查看脚本内容
+- `mcp__godot-mcp__play_scene` - 运行场景进行测试
+- `mcp__godot-mcp__get_editor_screenshot` - 获取编辑器截图
+- `mcp__godot-mcp__get_running_scene_screenshot` - 获取运行中场景截图
+
+**使用建议**: 如果 MCP 工具返回的数据太大，使用分页读取或过滤参数

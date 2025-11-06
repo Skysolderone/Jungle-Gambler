@@ -1,6 +1,6 @@
-[gd_scene load_steps=7 format=3 uid="uid://dmpru4b1lpicu"]
+[gd_scene load_steps=7 format=3 uid="uid://c3v411t65hubq"]
 
-[ext_resource type="Script" uid="uid://fe73cj7klh15" path="res://scripts/SoulInventory.gd" id="1_soul_inv"]
+[ext_resource type="Script" path="res://scripts/SoulInventory.gd" id="1_soul_inv"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
 bg_color = Color(0.25, 0.25, 0.3, 1)
