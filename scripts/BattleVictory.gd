@@ -391,8 +391,8 @@ func _consume_selected_soul_uses():
 			var soul_item = current_inventory[i]
 			# 通过ID和位置匹配魂印实例
 			if (soul_item.soul_print.id == selected_soul_item.soul_print.id and
-				soul_item.grid_x == selected_soul_item.grid_x and
-				soul_item.grid_y == selected_soul_item.grid_y):
+				soul_item.grid_position.x == selected_soul_item.grid_position.x and
+				soul_item.grid_position.y == selected_soul_item.grid_position.y):
 				soul_system.use_soul_print(username, i)
 				break
 

@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg width="128" height="128" viewBox="0 0 128 128" xmlns="http://www.w3.org/2000/svg">
+
+  <path d="M 64 0 L 64 128 M 64 64 L 128 64" stroke="#3A3A3A" stroke-width="32" stroke-linejoin="miter"/>
+  <path d="M 64 0 L 64 128 M 64 64 L 128 64" stroke="#6A6A6A" stroke-width="36" stroke-linejoin="miter" opacity="0.5"/>
+  <path d="M 64 6 L 64 122 M 64 64 L 122 64" stroke="#1A1A1A" stroke-width="20" stroke-linejoin="miter"/>
+</svg>

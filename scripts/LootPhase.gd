@@ -349,9 +349,10 @@ func _on_inventory_discard_request(inventory_index: int):
 
 		confirm_dialog.dialog_text = "确定要丢弃 [" + quality_name + "] 品质的魂印吗？\n\n" + soul.name + "\n力量: +" + str(soul.power)
 
-		# 显示被动效果
-		if soul.passive_type > 0:
-			confirm_dialog.dialog_text += "\n被动: " + soul.get_passive_description()
+		# 显示魂印效果
+		var effect_desc = soul.get_effect_description()
+		if effect_desc != "":
+			confirm_dialog.dialog_text += "\n" + effect_desc
 
 		confirm_dialog.dialog_text += "\n\n此操作无法撤销！"
 		confirm_dialog.popup_centered()

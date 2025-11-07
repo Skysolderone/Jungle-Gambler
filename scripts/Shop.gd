@@ -34,10 +34,11 @@ var quality_names = {
 	3: "史诗", 4: "传说", 5: "神话"
 }
 
-var shape_names = {
-	0: "1×1 正方形", 1: "2×2 正方形", 2: "1×2 矩形", 
-	3: "2×1 矩形", 4: "1×3 矩形", 5: "3×1 矩形",
-	6: "L形状", 7: "T形状", 8: "三角形"
+var pipe_shape_names = {
+	0: "直管-横", 1: "直管-竖",
+	2: "弯管-左上", 3: "弯管-左下", 4: "弯管-右上", 5: "弯管-右下",
+	6: "T型-上开口", 7: "T型-下开口", 8: "T型-左开口", 9: "T型-右开口",
+	10: "十字型", 11: "起点", 12: "终点"
 }
 
 func _ready():
@@ -111,54 +112,55 @@ func _load_shop_items():
 	if soul_system == null:
 		return
 	
-	# 定义商城中要售卖的魂印ID列表（已扩展到30+种）
+	# 定义商城中要售卖的魂印ID列表（36个管道魂印）
 	var shop_soul_ids = [
-		# 普通品质
-		"soul_basic_1",   # 初始魂印
-		"soul_basic_2",   # 双生魂印
-		"soul_spark",     # 星火之力
-		"soul_guard",     # 守护之印
-		"soul_echo",      # 回响之魂
+		# 普通品质 (6个)
+		"common_01",      # 破损的剑刃
+		"common_02",      # 旧木盾
+		"common_03",      # 碎裂的宝石
+		"common_04",      # 生锈的匕首
+		"common_05",      # 褪色的护符
+		"common_06",      # 断裂的长矛
 
-		# 非凡品质
-		"soul_force",     # 力量之源
-		"soul_rage",      # 狂暴打击
-		"soul_lucky",     # 幸运一击
-		"soul_forest",    # 森林之魂
-		"soul_wind",      # 疾风魂印
-		"soul_moon",      # 月光祝福
-		"soul_thorn",     # 荆棘反击
+		# 非凡品质 (6个)
+		"uncommon_01",    # 精钢剑
+		"uncommon_02",    # 铁制盾牌
+		"uncommon_03",    # 绿宝石
+		"uncommon_04",    # 精制弓箭
+		"uncommon_05",    # 强化护符
+		"uncommon_06",    # 战斧
 
-		# 稀有品质
-		"soul_flame",     # 火焰之心
-		"soul_storm",     # 风暴核心
-		"soul_thunder",   # 雷霆一击
-		"soul_shadow",    # 暗影追踪
-		"soul_ocean",     # 深海之力
-		"soul_quake",     # 地震之怒
-		"soul_ice",       # 冰霜之心
-		"soul_void",      # 虚空之眼
+		# 稀有品质 (6个)
+		"rare_01",        # 秘银之刃
+		"rare_02",        # 符文盾
+		"rare_03",        # 蓝宝石
+		"rare_04",        # 精灵长弓
+		"rare_05",        # 魔法护符
+		"rare_06",        # 雷霆之锤
 
-		# 史诗品质
-		"soul_titan",     # 泰坦之力
-		"soul_crit",      # 致命暴击
-		"soul_inferno",   # 炼狱之焰
-		"soul_holy",      # 圣光审判
-		"soul_venom",     # 剧毒之牙
-		"soul_chaos",     # 混沌之力
+		# 史诗品质 (6个)
+		"epic_01",        # 龙骨剑
+		"epic_02",        # 泰坦之盾
+		"epic_03",        # 紫水晶
+		"epic_04",        # 凤凰之翼
+		"epic_05",        # 古神护符
+		"epic_06",        # 毁灭之镰
 
-		# 传说品质
-		"soul_phoenix",   # 凤凰之羽
-		"soul_dragon",    # 龙之魂
-		"soul_supernova", # 超新星
-		"soul_apocalypse",# 末日降临
-		"soul_destiny",   # 命运之轮
+		# 传说品质 (6个)
+		"legendary_01",   # 圣剑·誓约胜利之剑
+		"legendary_02",   # 神盾·埃吉斯
+		"legendary_03",   # 帝王宝石
+		"legendary_04",   # 神弓·甘地瓦
+		"legendary_05",   # 永恒护符
+		"legendary_06",   # 弑神之矛
 
-		# 神话品质
-		"soul_god",       # 神之祝福
-		"soul_universe",  # 宇宙之心
-		"soul_eternal",   # 永恒之光
-		"soul_genesis"    # 创世纪元
+		# 神话品质 (6个)
+		"mythic_01",      # 创世之刃
+		"mythic_02",      # 混沌之盾
+		"mythic_03",      # 宇宙之心
+		"mythic_04",      # 终末之箭
+		"mythic_05",      # 不朽圣物
+		"mythic_06"       # 真理之杖
 	]
 	
 	# 从数据库中获取完整的魂印数据（包含被动效果）
@@ -354,7 +356,7 @@ func _show_soul_details(soul):
 	quality_label.add_theme_color_override("font_color", quality_colors.get(soul.quality, Color.WHITE))
 	quality_label.add_theme_font_size_override("font_size", 16)
 
-	shape_label.text = "形状：" + shape_names.get(soul.shape_type, "未知")
+	shape_label.text = "管道：" + pipe_shape_names.get(soul.pipe_shape_type, "未知")
 	shape_label.add_theme_font_size_override("font_size", 14)
 
 	# 显示魂印类型和效果（更详细）

@@ -81,7 +81,7 @@ func _initialize_soul_selection():
 		var soul_item = player_all_souls[i]
 
 		# 跳过使用次数为0的魂印
-		if soul_item.uses_remaining <= 0:
+		if soul_item.uses == 0:
 			continue
 
 		var soul = soul_item.soul_print
@@ -94,8 +94,8 @@ func _create_soul_card(soul, index: int) -> Button:
 
 	# 获取魂印使用次数信息
 	var soul_item = player_all_souls[index]
-	var uses_text = str(soul_item.uses_remaining) + "/" + str(soul_item.max_uses)
-	var is_depleted = soul_item.uses_remaining <= 0
+	var uses_text = str(soul_item.uses) if soul_item.uses >= 0 else "∞"
+	var is_depleted = (soul_item.uses == 0)
 
 	# 品质颜色
 	var quality_colors = [
@@ -211,5 +211,8 @@ func _start_combat():
 	var session = get_node("/root/UserSession")
 	session.set_meta("battle_selected_souls", player_selected_souls)
 
-	# 跳转到战斗场景
-	get_tree().change_scene_to_file("res://scenes/BattleCombat.tscn")
+	# 跳转到管道连接场景（新增）
+	var pipe_scene = preload("res://scenes/PipeBattle.tscn").instantiate()
+	get_tree().root.add_child(pipe_scene)
+	pipe_scene.initialize(player_selected_souls, enemy_data)
+	queue_free()

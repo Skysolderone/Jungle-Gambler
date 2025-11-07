@@ -51,10 +51,11 @@ var quality_names = {
 	5: "神话"
 }
 
-var shape_names = {
-	0: "1×1 正方形", 1: "2×2 正方形", 2: "1×2 矩形", 
-	3: "2×1 矩形", 4: "1×3 矩形", 5: "3×1 矩形",
-	6: "L形状", 7: "T形状", 8: "三角形"
+var pipe_shape_names = {
+	0: "直管-横", 1: "直管-竖",
+	2: "弯管-左上", 3: "弯管-左下", 4: "弯管-右上", 5: "弯管-右下",
+	6: "T型-上开口", 7: "T型-下开口", 8: "T型-左开口", 9: "T型-右开口",
+	10: "十字型", 11: "起点", 12: "终点"
 }
 
 func _ready():
@@ -62,6 +63,11 @@ func _ready():
 	_setup_responsive_layout()
 	
 	current_username = UserSession.get_username()
+	
+	# 确保加载用户库存数据
+	var soul_system = _get_soul_system()
+	if soul_system:
+		soul_system.load_user_inventory(current_username)
 	
 	grid_container.draw.connect(_draw_grid)
 	grid_container.gui_input.connect(_on_grid_gui_input)
@@ -94,21 +100,16 @@ func _on_screen_type_changed(_new_type):
 	_setup_responsive_layout()
 
 func _adjust_layout_for_screen(screen_type):
-	var content_container = $MainPanel/ContentContainer
+	# ContentContainer是HBoxContainer，方向已固定为horizontal，只调整面板比例
+	var left_panel = $MainPanel/ContentContainer/LeftPanel
+	var right_panel = $MainPanel/ContentContainer/RightPanel
 	
-	# 在移动端竖屏时将左右面板垂直排列
+	# 在移动端竖屏时调整比例
 	if screen_type == 0:  # MOBILE_PORTRAIT
-		content_container.vertical = true
-		# 调整面板比例
-		var left_panel = $MainPanel/ContentContainer/LeftPanel
-		var right_panel = $MainPanel/ContentContainer/RightPanel
 		left_panel.size_flags_stretch_ratio = 1.5
 		right_panel.size_flags_stretch_ratio = 1.0
 	else:
-		# 其他情况水平排列
-		content_container.vertical = false
-		var left_panel = $MainPanel/ContentContainer/LeftPanel
-		var right_panel = $MainPanel/ContentContainer/RightPanel
+		# 其他情况保持常规比例
 		left_panel.size_flags_stretch_ratio = 2.0
 		right_panel.size_flags_stretch_ratio = 1.0
 
@@ -267,7 +268,7 @@ func _draw_soul_item(item, is_selected: bool, is_hover: bool):
 			grid_container.draw_string(font, text_pos, line, HORIZONTAL_ALIGNMENT_LEFT, -1, font_size, base_color.lightened(0.5))
 
 func _draw_dragging_item(item, mouse_pos: Vector2):
-	var shape = item.soul_print.get_rotated_shape(item.rotation)
+	var shape = [[0, 0]]  # 管道系统下每个魂印只占1个格子
 	var base_color = quality_colors.get(item.soul_print.quality, Color.WHITE)
 	var fill_color = base_color * 0.6  # 拖拽时更亮
 	
@@ -384,7 +385,7 @@ func _on_grid_click(mouse_pos: Vector2):
 			if cell[0] == grid_x and cell[1] == grid_y:
 				selected_item_index = i
 				dragging_item_index = i
-				drag_offset = mouse_pos - Vector2(item.grid_x * CELL_SIZE, item.grid_y * CELL_SIZE)
+				drag_offset = mouse_pos - Vector2(item.grid_position.x * CELL_SIZE, item.grid_position.y * CELL_SIZE)
 				tooltip_panel.visible = false
 				_show_soul_details(i)
 				rotate_button.disabled = false
@@ -468,13 +469,13 @@ func _show_tooltip(item, pos: Vector2):
 	text += "[center][color=#%s]%s[/color][/center]\n" % [quality_color.to_html(false), quality_name]
 	text += "[center]━━━━━━━━━━[/center]\n"
 	text += "[color=#FFD700]力量:[/color] [color=#FFFFFF]%d[/color]\n" % soul.power
-	text += "[color=#FFD700]形状:[/color] [color=#AAAAAA]%s[/color]\n" % shape_names.get(soul.shape_type, "未知")
+	text += "[color=#FFD700]管道:[/color] [color=#AAAAAA]%s[/color]\n" % pipe_shape_names.get(soul.pipe_shape_type, "未知")
 
-	# 显示被动效果
-	if soul.passive_type > 0:
-		var passive_desc = soul.get_passive_description()
-		var passive_color = "#90EE90"  # 浅绿色表示被动
-		text += "[color=#FFD700]被动:[/color] [color=%s]%s[/color]\n" % [passive_color, passive_desc]
+	# 显示魂印效果描述
+	var effect_desc = soul.get_effect_description()
+	if effect_desc != "":
+		var effect_color = "#90EE90" if soul.soul_type == 1 else "#FFD700"  # 被动绿色，主动金色
+		text += "[color=%s]%s[/color]\n" % [effect_color, effect_desc]
 
 	if soul.description != "":
 		text += "[center]━━━━━━━━━━[/center]\n"
@@ -514,7 +515,7 @@ func _show_soul_details(item_index: int):
 	quality_value.text = quality_names.get(soul.quality, "未知")
 	quality_value.add_theme_color_override("font_color", color)
 	
-	shape_value.text = shape_names.get(soul.shape_type, "未知")
+	shape_value.text = pipe_shape_names.get(soul.pipe_shape_type, "未知")
 	power_value.text = str(soul.power)
 	description_label.text = soul.description if soul.description != "" else "这个魂印蕴含着强大的力量..."
 
@@ -545,9 +546,9 @@ func _on_rotate_button_pressed():
 		return
 	
 	var item = items[selected_item_index]
-	var new_rotation = (item.rotation + 1) % 4
+	var new_rotation = (item.rotation_state + 1) % 4
 	
-	if soul_system.move_soul_print(current_username, selected_item_index, item.grid_x, item.grid_y, new_rotation):
+	if soul_system.move_soul_print(current_username, selected_item_index, item.grid_position.x, item.grid_position.y, new_rotation):
 		_refresh_inventory()
 
 func _on_delete_button_pressed():

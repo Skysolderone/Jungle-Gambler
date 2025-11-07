@@ -81,7 +81,7 @@ func _load_inventory():
 	# 创建魂印卡片（过滤掉使用次数为0的魂印）
 	for item in items:
 		# 跳过使用次数为0的魂印
-		if item.uses_remaining <= 0:
+		if item.uses == 0:
 			continue
 
 		var card = _create_soul_card(item)
@@ -143,10 +143,14 @@ func _create_soul_card(item) -> Panel:
 
 	# 使用次数
 	var uses_label = Label.new()
-	uses_label.text = "次数: " + str(item.uses_remaining) + "/" + str(item.max_uses)
+	if item.uses == -1:
+		uses_label.text = "次数: ∞"
+		uses_label.add_theme_color_override("font_color", Color(0.5, 0.8, 0.5))
+	else:
+		uses_label.text = "次数: " + str(item.uses)
+		var uses_color = Color(0.5, 0.8, 0.5) if item.uses > 0 else Color(0.8, 0.3, 0.3)
+		uses_label.add_theme_color_override("font_color", uses_color)
 	uses_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	var uses_color = Color(0.5, 0.8, 0.5) if item.uses_remaining > 0 else Color(0.8, 0.3, 0.3)
-	uses_label.add_theme_color_override("font_color", uses_color)
 	uses_label.add_theme_font_size_override("font_size", 16)
 	vbox.add_child(uses_label)
 

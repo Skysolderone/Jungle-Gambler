@@ -83,17 +83,25 @@ func _ready():
 	_add_log("[color=#FFFF00]━━━ 战斗开始 ━━━[/color]")
 	_add_log("[color=#00FF00]遭遇敌人：" + enemy_data.get("name", "未知敌人") + "！[/color]")
 
-	# 显示玩家配置的魂印信息
+	# 显示玩家配置的魂印信息（只显示连通的魂印）
 	if player_all_souls.size() > 0:
 		_add_log("[color=#FFFF00]━━━ 你的魂印配置 ━━━[/color]")
 		var total_soul_power = 0
+		var connected_count = 0
 		for soul_item in player_all_souls:
 			var soul = soul_item.soul_print
-			total_soul_power += soul.power
 			var quality_names = ["普通", "非凡", "稀有", "史诗", "传说", "神话"]
 			var quality_name = quality_names[soul.quality]
-			_add_log("[color=#FFD700]" + soul.name + "[/color] (" + quality_name + ") - 力量加成: [color=#FF6600]+" + str(soul.power) + "[/color]")
-		_add_log("[color=#00FFFF]总魂印力量: +" + str(total_soul_power) + " 点[/color]")
+			
+			# 检查魂印是否连通
+			if soul.is_connected:
+				total_soul_power += soul.power
+				connected_count += 1
+				_add_log("[color=#FFD700]✓ " + soul.name + "[/color] (" + quality_name + ") - 力量加成: [color=#FF6600]+" + str(soul.power) + "[/color] [color=#00FF00](已连通)[/color]")
+			else:
+				_add_log("[color=#666666]✗ " + soul.name + "[/color] (" + quality_name + ") - [color=#888888](未连通，本战斗无效)[/color]")
+		
+		_add_log("[color=#00FFFF]连通魂印：%d/%d，总力量加成: +%d 点[/color]" % [connected_count, player_all_souls.size(), total_soul_power])
 	else:
 		_add_log("[color=#888888]未配置任何魂印，仅依靠基础力量战斗[/color]")
 
@@ -403,12 +411,22 @@ func _show_soul_selection():
 		else:
 			soul_grid.columns = 4 # 桌面端：4列
 
-	# 创建魂印卡片
+	# 创建魂印卡片（只显示连通的魂印）
 	for i in range(player_all_souls.size()):
 		var soul_item = player_all_souls[i]
-		var card = _create_soul_card(soul_item, i)
-		soul_grid.add_child(card)
+		var soul = soul_item.soul_print
+		
+		# 只显示连通的魂印
+		if soul.is_connected:
+			var card = _create_soul_card(soul_item, i)
+			soul_grid.add_child(card)
 
+	# 计算连通的魂印数量
+	var connected_count = 0
+	for soul_item in player_all_souls:
+		if soul_item.soul_print.is_connected:
+			connected_count += 1
+	
 	# 更新提示文本（响应式字体）
 	var hint_font_size = 20
 	if has_node("/root/ResponsiveLayoutManager"):
@@ -418,7 +436,7 @@ func _show_soul_selection():
 		elif responsive_manager.is_tablet_device():
 			hint_font_size = 26
 
-	selection_hint.text = "选择本回合要激活的魂印（可以不选）"
+	selection_hint.text = "选择本回合要激活的魂印（连通魂印：%d/%d，可以不选）" % [connected_count, player_all_souls.size()]
 	selection_hint.add_theme_font_size_override("font_size", hint_font_size)
 
 	# 显示面板
@@ -454,8 +472,8 @@ func _create_soul_card(soul_item, index: int) -> Button:
 	button.custom_minimum_size = card_size
 
 	var soul = soul_item.soul_print
-	var uses_text = str(soul_item.uses_remaining) + "/" + str(soul_item.max_uses)
-	var is_depleted = soul_item.uses_remaining <= 0
+	var uses_text = str(soul_item.uses) if soul_item.uses >= 0 else "∞"
+	var is_depleted = (soul_item.uses == 0)
 
 	# 品质颜色
 	var quality_colors = [
