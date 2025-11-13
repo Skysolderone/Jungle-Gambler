@@ -531,7 +531,7 @@ func _draw_grid():
 		_draw_cell_v2(cell, current_cell_size, current_offset_x, current_offset_y)
 
 func _draw_cell_v2(cell: GridCell, cell_size: float, offset_x: float, offset_y: float):
-	"""绘制单个格子（重构版 - 使用visual_position）"""
+	"""绘制单个格子（重构版 - 使用visual_position）- 像素风格"""
 	# 使用视觉位置进行绘制（支持动画）
 	var visual_x = cell.visual_position.x
 	var visual_y = cell.visual_position.y
@@ -550,40 +550,52 @@ func _draw_cell_v2(cell: GridCell, cell_size: float, offset_x: float, offset_y: 
 
 	# 坍塌动画效果（优先绘制，不绘制底色）
 	if cell.collapsing:
-		_draw_collapsing_cell(rect, center, cell)
+		_draw_collapsing_cell_pixel(rect, center, cell)
 		return # 坍塌中的格子不绘制其他内容
 
-	# 先绘制格子底色（仅非坍塌格子）
+	# 先绘制格子底色（像素风格 - 纯色块）
 	var base_color = _get_cell_color(cell)
 	grid_container.draw_rect(rect, base_color, true)
 
-	# 添加渐变光效
-	var gradient_size = rect.size * 0.8
-	var gradient_rect = Rect2(rect.position + (rect.size - gradient_size) / 2, gradient_size)
-	var glow_color = Color(base_color.r, base_color.g, base_color.b, base_color.a * 0.4)
-	grid_container.draw_rect(gradient_rect, glow_color, true)
+	# 像素风格：添加内部像素化边框（深色）
+	var border_width = 3.0
+	_draw_pixel_border(rect, Color(0, 0, 0, 0.3), border_width)
 
-	# 绘制品质图标/符号（已探索或玩家位置）
+	# 像素风格：添加高光边框（右下角更暗，左上角更亮）
+	var highlight_color = Color(base_color.r * 1.3, base_color.g * 1.3, base_color.b * 1.3, base_color.a)
+	var shadow_color = Color(base_color.r * 0.6, base_color.g * 0.6, base_color.b * 0.6, base_color.a)
+
+	# 左上边亮边
+	grid_container.draw_line(rect.position, rect.position + Vector2(rect.size.x, 0), highlight_color, 2.0)
+	grid_container.draw_line(rect.position, rect.position + Vector2(0, rect.size.y), highlight_color, 2.0)
+
+	# 右下边暗边
+	grid_container.draw_line(rect.position + Vector2(rect.size.x, 0), rect.position + rect.size, shadow_color, 2.0)
+	grid_container.draw_line(rect.position + Vector2(0, rect.size.y), rect.position + rect.size, shadow_color, 2.0)
+
+	# 绘制品质图标/符号（已探索或玩家位置）- 像素风格
 	if cell.explored or player_pos == cell.logic_pos:
-		_draw_quality_indicator(center, cell.quality, cell.resource_count, cell_size * 0.3)
+		_draw_quality_indicator_pixel(center, cell.quality, cell.resource_count, cell_size * 0.3)
 
-	# 未探索的格子 - 添加半透明遮罩
+	# 未探索的格子 - 添加半透明遮罩和像素点阵图案
 	if not cell.explored and player_pos != cell.logic_pos:
-		grid_container.draw_rect(rect, Color(0.05, 0.05, 0.1, 0.7), true)
+		grid_container.draw_rect(rect, Color(0.05, 0.05, 0.1, 0.6), true)
+		# 像素点阵图案（问号效果）
+		_draw_pixel_pattern(rect, Color(0.2, 0.2, 0.25, 0.5))
 
 	# 玩家位置
 	if player_pos == cell.logic_pos:
-		_draw_player(center)
+		_draw_player_pixel(center, cell_size)
 		return
 
 	# 撤离点（只有达到探索度才显示）
 	if show_evacuation and evacuation_points.has(cell.logic_pos) and cell.explored:
-		_draw_evacuation_point(center, cell_size)
+		_draw_evacuation_point_pixel(center, cell_size)
 		return
 
-	# 悬停高亮（只有相邻格子才能移动）
+	# 悬停高亮（像素风格 - 使用虚线边框）
 	if is_hovered and _is_adjacent(player_pos, cell.logic_pos):
-		grid_container.draw_rect(rect, Color(1, 1, 1, 0.3), false, 2.0)
+		_draw_pixel_dashed_border(rect, Color(1, 1, 1, 0.8), 3.0)
 
 func _get_cell_color(cell: GridCell) -> Color:
 	# 品质对应的基础颜色 - 更鲜艳的配色方案
@@ -830,8 +842,346 @@ func _draw_text(center: Vector2, text: String, color: Color):
 	var text_pos = center - Vector2(text_size.x / 2.0, -5)
 	# 阴影
 	grid_container.draw_string(font, text_pos + Vector2(1, 1), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color.BLACK)
-	# 文字
-	grid_container.draw_string(font, text_pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, color)
+
+# ============================================
+# 像素风格绘制函数
+# ============================================
+
+func _draw_pixel_border(rect: Rect2, color: Color, width: float):
+	"""绘制像素风格边框"""
+	var top_left = rect.position
+	var top_right = rect.position + Vector2(rect.size.x, 0)
+	var bottom_left = rect.position + Vector2(0, rect.size.y)
+	var bottom_right = rect.position + rect.size
+
+	# 上边
+	grid_container.draw_line(top_left, top_right, color, width)
+	# 下边
+	grid_container.draw_line(bottom_left, bottom_right, color, width)
+	# 左边
+	grid_container.draw_line(top_left, bottom_left, color, width)
+	# 右边
+	grid_container.draw_line(top_right, bottom_right, color, width)
+
+func _draw_pixel_dashed_border(rect: Rect2, color: Color, width: float):
+	"""绘制像素风格虚线边框"""
+	var dash_length = 6.0
+	var gap_length = 4.0
+	var segment = dash_length + gap_length
+
+	# 上边
+	var x = rect.position.x
+	while x < rect.position.x + rect.size.x:
+		var end_x = min(x + dash_length, rect.position.x + rect.size.x)
+		grid_container.draw_line(Vector2(x, rect.position.y), Vector2(end_x, rect.position.y), color, width)
+		x += segment
+
+	# 下边
+	x = rect.position.x
+	while x < rect.position.x + rect.size.x:
+		var end_x = min(x + dash_length, rect.position.x + rect.size.x)
+		var y = rect.position.y + rect.size.y
+		grid_container.draw_line(Vector2(x, y), Vector2(end_x, y), color, width)
+		x += segment
+
+	# 左边
+	var y = rect.position.y
+	while y < rect.position.y + rect.size.y:
+		var end_y = min(y + dash_length, rect.position.y + rect.size.y)
+		grid_container.draw_line(Vector2(rect.position.x, y), Vector2(rect.position.x, end_y), color, width)
+		y += segment
+
+	# 右边
+	y = rect.position.y
+	while y < rect.position.y + rect.size.y:
+		var end_y = min(y + dash_length, rect.position.y + rect.size.y)
+		var x_pos = rect.position.x + rect.size.x
+		grid_container.draw_line(Vector2(x_pos, y), Vector2(x_pos, end_y), color, width)
+		y += segment
+
+func _draw_pixel_pattern(rect: Rect2, color: Color):
+	"""在未探索格子上绘制像素点阵图案"""
+	var pixel_size = 4.0
+	var spacing = 8.0
+
+	var start_x = rect.position.x + spacing
+	var start_y = rect.position.y + spacing
+
+	var y = start_y
+	while y < rect.position.y + rect.size.y - spacing:
+		var x = start_x
+		while x < rect.position.x + rect.size.x - spacing:
+			var pixel_rect = Rect2(x, y, pixel_size, pixel_size)
+			grid_container.draw_rect(pixel_rect, color, true)
+			x += spacing
+		y += spacing
+
+func _draw_quality_indicator_pixel(center: Vector2, quality: int, resource_count: int, size: float):
+	"""绘制品质指示器（像素风格）"""
+	var quality_colors = [
+		Color(0.8, 0.8, 0.85), # 0: 普通 - 亮灰
+		Color(0.4, 1.0, 0.5), # 1: 非凡 - 亮绿
+		Color(0.4, 0.8, 1.0), # 2: 稀有 - 亮蓝
+		Color(0.85, 0.5, 1.0), # 3: 史诗 - 亮紫
+		Color(1.0, 0.8, 0.4), # 4: 传说 - 亮金
+		Color(1.0, 0.4, 0.5) # 5: 神话 - 亮红
+	]
+
+	var color = quality_colors[quality]
+
+	# 根据品质绘制不同的像素化形状
+	match quality:
+		0: # 普通 - 小方块
+			var pixel_size = size * 0.4
+			var pixel_rect = Rect2(center - Vector2(pixel_size/2, pixel_size/2), Vector2(pixel_size, pixel_size))
+			grid_container.draw_rect(pixel_rect, color, true)
+			grid_container.draw_rect(pixel_rect, Color(1, 1, 1, 0.5), false, 2.0)
+		1: # 非凡 - 像素菱形
+			_draw_pixel_diamond(center, size * 0.6, color)
+		2: # 稀有 - 像素六边形
+			_draw_pixel_hexagon(center, size * 0.5, color)
+		3: # 史诗 - 像素五角星
+			_draw_pixel_star(center, size * 0.6, color, 5)
+		4: # 传说 - 像素八角星
+			_draw_pixel_star(center, size * 0.65, color, 8)
+		5: # 神话 - 像素十字星
+			_draw_pixel_cross_star(center, size * 0.7, color)
+
+	# 绘制资源数量指示器（像素方块）
+	if resource_count > 0:
+		var dot_size = 4.0
+		var dot_spacing = size * 0.3
+		var start_x = center.x - (resource_count - 1) * dot_spacing / 2
+		var dot_y = center.y + size * 0.8
+
+		for i in range(resource_count):
+			var dot_pos = Vector2(start_x + i * dot_spacing, dot_y)
+			var dot_rect = Rect2(dot_pos - Vector2(dot_size/2, dot_size/2), Vector2(dot_size, dot_size))
+			# 外边框（阴影）
+			grid_container.draw_rect(dot_rect.grow(1), Color(0, 0, 0, 0.6), true)
+			# 内部（亮色）
+			grid_container.draw_rect(dot_rect, Color(1, 1, 1, 0.9), true)
+
+func _draw_pixel_diamond(center: Vector2, size: float, color: Color):
+	"""绘制像素化菱形"""
+	var points = PackedVector2Array([
+		Vector2(center.x, center.y - size),
+		Vector2(center.x + size, center.y),
+		Vector2(center.x, center.y + size),
+		Vector2(center.x - size, center.y)
+	])
+	grid_container.draw_colored_polygon(points, color)
+	grid_container.draw_polyline(points + PackedVector2Array([points[0]]), Color(1, 1, 1, 0.6), 2.0)
+
+func _draw_pixel_hexagon(center: Vector2, radius: float, color: Color):
+	"""绘制像素化六边形"""
+	var points = PackedVector2Array()
+	for i in range(6):
+		var angle = deg_to_rad(60 * i - 30)
+		points.append(Vector2(
+			center.x + cos(angle) * radius,
+			center.y + sin(angle) * radius
+		))
+	grid_container.draw_colored_polygon(points, color)
+	grid_container.draw_polyline(points + PackedVector2Array([points[0]]), Color(1, 1, 1, 0.6), 2.0)
+
+func _draw_pixel_star(center: Vector2, radius: float, color: Color, points_count: int):
+	"""绘制像素化星形"""
+	var points = PackedVector2Array()
+	var inner_radius = radius * 0.4
+
+	for i in range(points_count * 2):
+		var angle = deg_to_rad(360.0 / (points_count * 2) * i - 90)
+		var r = radius if i % 2 == 0 else inner_radius
+		points.append(Vector2(
+			center.x + cos(angle) * r,
+			center.y + sin(angle) * r
+		))
+
+	grid_container.draw_colored_polygon(points, color)
+	# 添加白色像素边框
+	grid_container.draw_polyline(points + PackedVector2Array([points[0]]), Color(1, 1, 1, 0.5), 2.0)
+
+func _draw_pixel_cross_star(center: Vector2, radius: float, color: Color):
+	"""绘制像素化十字星（神话品质）"""
+	var beam_width = radius * 0.3
+
+	# 绘制四条光束（像素化）
+	for i in range(4):
+		var angle = deg_to_rad(90 * i)
+		var direction = Vector2(cos(angle), sin(angle))
+		var perpendicular = Vector2(-direction.y, direction.x)
+
+		var points = PackedVector2Array([
+			center + perpendicular * beam_width,
+			center + direction * radius + perpendicular * beam_width * 0.3,
+			center + direction * radius,
+			center + direction * radius - perpendicular * beam_width * 0.3,
+			center - perpendicular * beam_width
+		])
+
+		grid_container.draw_colored_polygon(points, color)
+		grid_container.draw_polyline(points + PackedVector2Array([points[0]]), Color(1, 1, 1, 0.4), 2.0)
+
+	# 中心方块
+	var core_size = radius * 0.4
+	var core_rect = Rect2(center - Vector2(core_size/2, core_size/2), Vector2(core_size, core_size))
+	grid_container.draw_rect(core_rect, color, true)
+	grid_container.draw_rect(core_rect.grow(-2), Color(1, 1, 1, 0.9), true)
+
+func _draw_player_pixel(center: Vector2, cell_size: float):
+	"""绘制像素风格玩家标记"""
+	var time = Time.get_ticks_msec() / 1000.0
+	var pulse = (sin(time * 2.5) + 1.0) / 2.0
+
+	# 外圈光晕（像素化）
+	var glow_size = 34.0 + pulse * 4.0
+	var glow_rect = Rect2(center - Vector2(glow_size/2, glow_size/2), Vector2(glow_size, glow_size))
+	grid_container.draw_rect(glow_rect, Color(0.3, 0.6, 1.0, 0.2 + pulse * 0.1), true)
+
+	# 主体方块（像素风格）
+	var main_size = 24.0
+	var main_rect = Rect2(center - Vector2(main_size/2, main_size/2), Vector2(main_size, main_size))
+
+	# 主体填充
+	grid_container.draw_rect(main_rect, Color(0.25, 0.55, 0.95, 0.9), true)
+
+	# 像素边框（高光效果）
+	_draw_pixel_border(main_rect, Color(0.4, 0.7, 1.0), 3.0)
+
+	# 内部高光方块
+	var highlight_size = 8.0
+	var highlight_rect = Rect2(
+		center - Vector2(main_size/4, main_size/4) - Vector2(highlight_size/2, highlight_size/2),
+		Vector2(highlight_size, highlight_size)
+	)
+	grid_container.draw_rect(highlight_rect, Color(0.7, 0.9, 1.0, 0.6), true)
+
+	# 文字（像素风格）
+	var font = ThemeDB.fallback_font
+	var text = "P" # 玩家标记使用P（Player）
+	var text_size = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16)
+	var text_pos = center - Vector2(text_size.x / 2.0, -text_size.y / 2.0 + 2)
+
+	# 文字阴影
+	grid_container.draw_string(font, text_pos + Vector2(2, 2), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(0, 0, 0, 0.7))
+	# 文字主体
+	grid_container.draw_string(font, text_pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 16, Color(1, 1, 1))
+
+func _draw_evacuation_point_pixel(center: Vector2, cell_size: float):
+	"""绘制像素风格撤离点"""
+	var time = Time.get_ticks_msec() / 1000.0
+	var pulse = (sin(time * 3.0) + 1.0) / 2.0
+
+	# 外圈光晕方块（脉冲效果）
+	var glow_size = 38.0 + pulse * 6.0
+	var glow_rect = Rect2(center - Vector2(glow_size/2, glow_size/2), Vector2(glow_size, glow_size))
+	grid_container.draw_rect(glow_rect, Color(0.3, 1.0, 0.5, 0.15 + pulse * 0.15), true)
+
+	# 主体方块
+	var main_size = 28.0
+	var main_rect = Rect2(center - Vector2(main_size/2, main_size/2), Vector2(main_size, main_size))
+	grid_container.draw_rect(main_rect, Color(0.2, 0.9, 0.3, 0.6), true)
+
+	# 像素边框
+	_draw_pixel_border(main_rect, Color(0.4, 1.0, 0.5), 3.0)
+
+	# 内部菱形（像素风格）
+	var diamond_size = 12.0
+	_draw_pixel_diamond(center, diamond_size, Color(0.3, 1.0, 0.4, 0.8))
+
+	# 四个角的像素点（闪烁）
+	var corner_offset = 20.0
+	var corner_positions = [
+		center + Vector2(-corner_offset, -corner_offset),
+		center + Vector2(corner_offset, -corner_offset),
+		center + Vector2(-corner_offset, corner_offset),
+		center + Vector2(corner_offset, corner_offset)
+	]
+
+	for corner_pos in corner_positions:
+		var corner_size = 3.0 + pulse * 2.0
+		var corner_rect = Rect2(corner_pos - Vector2(corner_size/2, corner_size/2), Vector2(corner_size, corner_size))
+		grid_container.draw_rect(corner_rect, Color(0.8, 1.0, 0.9), true)
+
+	# 文字（像素风格）
+	var font = ThemeDB.fallback_font
+	var text = "出口"
+	var text_size = font.get_string_size(text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12)
+	var text_pos = center - Vector2(text_size.x / 2.0, -main_size/2 - 12)
+
+	# 文字阴影
+	grid_container.draw_string(font, text_pos + Vector2(1, 1), text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0, 0, 0, 0.8))
+	# 文字主体（绿色）
+	grid_container.draw_string(font, text_pos, text, HORIZONTAL_ALIGNMENT_LEFT, -1, 12, Color(0.9, 1.0, 0.95))
+
+func _draw_collapsing_cell_pixel(rect: Rect2, center: Vector2, cell: GridCell):
+	"""绘制正在坍塌的格子（像素风格）"""
+	var base_color = _get_cell_color(cell)
+
+	# 预警阶段 - 闪烁效果（像素化）
+	if cell.collapse_progress == 0.0:
+		var time = Time.get_ticks_msec() / 1000.0
+		var flash = abs(sin(time * 10.0))
+		var warning_color = Color(1.0, 0.3, 0.0, 0.6 + flash * 0.4)
+		grid_container.draw_rect(rect, warning_color, true)
+
+		# 像素边框抖动
+		var shake_offset = Vector2(
+			floor(randf_range(-2, 3)),
+			floor(randf_range(-2, 3))
+		)
+		var shaky_rect = Rect2(rect.position + shake_offset, rect.size)
+		_draw_pixel_border(shaky_rect, Color(1.0, 0.5, 0.0), 3.0)
+		return
+
+	# 破碎阶段 - 显示像素裂纹
+	if cell.collapse_progress > 0.0 and cell.fall_progress == 0.0:
+		# 绘制基础格子
+		grid_container.draw_rect(rect, base_color, true)
+
+		# 绘制像素化裂纹（X形状）
+		var crack_color = Color(0.3, 0.0, 0.0, cell.collapse_progress * 0.8)
+		var crack_width = 4.0
+
+		# 左上到右下的裂纹
+		grid_container.draw_line(rect.position, rect.position + rect.size, crack_color, crack_width)
+
+		# 右上到左下的裂纹
+		grid_container.draw_line(
+			rect.position + Vector2(rect.size.x, 0),
+			rect.position + Vector2(0, rect.size.y),
+			crack_color,
+			crack_width
+		)
+
+		# 绘制像素块破碎效果
+		var num_fragments = int(cell.collapse_progress * 5)
+		for i in range(num_fragments):
+			var frag_x = rect.position.x + (rect.size.x / 5.0) * (i % 3)
+			var frag_y = rect.position.y + (rect.size.y / 5.0) * floor(i / 3.0)
+			var frag_size = 6.0
+			var frag_rect = Rect2(frag_x, frag_y, frag_size, frag_size)
+			grid_container.draw_rect(frag_rect, Color(0, 0, 0, cell.collapse_progress * 0.5), true)
+
+		return
+
+	# 下落阶段 - 像素化下落效果
+	if cell.fall_progress > 0.0:
+		var fall_offset = cell.fall_progress * 200.0
+		var fallen_rect = Rect2(rect.position + Vector2(0, fall_offset), rect.size)
+		var fall_alpha = 1.0 - cell.fall_progress
+		var fallen_color = Color(base_color.r, base_color.g, base_color.b, fall_alpha)
+
+		grid_container.draw_rect(fallen_rect, fallen_color, true)
+		_draw_pixel_border(fallen_rect, Color(0, 0, 0, fall_alpha * 0.5), 3.0)
+
+		# 添加像素化残影效果
+		for i in range(3):
+			var trail_offset = fall_offset * (1.0 - (i + 1) * 0.25)
+			var trail_rect = Rect2(rect.position + Vector2(0, trail_offset), rect.size)
+			var trail_alpha = fall_alpha * (1.0 - (i + 1) * 0.3)
+			grid_container.draw_rect(trail_rect, Color(base_color.r, base_color.g, base_color.b, trail_alpha * 0.3), true)
 
 func _on_grid_gui_input(event: InputEvent):
 	if event is InputEventMouseButton and event.pressed and event.button_index == MOUSE_BUTTON_LEFT:

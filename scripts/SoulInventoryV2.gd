@@ -27,6 +27,11 @@ var dragging_item_index: int = -1
 var drag_offset: Vector2 = Vector2.ZERO
 var hover_item_index: int = -1
 
+# 管道连接系统
+var pipe_connection_system = null
+var pipe_connections: Array = []
+var connection_animation_time: float = 0.0
+
 # 网格设置  
 const CELL_SIZE = 50
 const GRID_WIDTH = 10
@@ -59,21 +64,24 @@ var pipe_shape_names = {
 }
 
 func _ready():
+	# 初始化管道连接系统
+	_initialize_pipe_connection_system()
+
 	# 应用响应式布局
 	_setup_responsive_layout()
-	
+
 	current_username = UserSession.get_username()
-	
+
 	# 确保加载用户库存数据
 	var soul_system = _get_soul_system()
 	if soul_system:
 		soul_system.load_user_inventory(current_username)
-	
+
 	grid_container.draw.connect(_draw_grid)
 	grid_container.gui_input.connect(_on_grid_gui_input)
 	grid_container.mouse_entered.connect(_on_grid_mouse_entered)
 	grid_container.mouse_exited.connect(_on_grid_mouse_exited)
-	
+
 	_check_starter_eligibility()
 	_refresh_inventory()
 
@@ -118,6 +126,22 @@ func _get_soul_system():
 		return get_node("/root/SoulPrintSystem")
 	return null
 
+func _initialize_pipe_connection_system():
+	"""初始化管道连接系统"""
+	# 加载管道连接系统脚本
+	var script = load("res://systems/PipeConnectionSystem.gd")
+	if script:
+		pipe_connection_system = script.new()
+		print("管道连接系统已初始化")
+	else:
+		push_error("无法加载管道连接系统脚本")
+
+func _process(delta):
+	"""每帧更新连接动画"""
+	if pipe_connections.size() > 0:
+		connection_animation_time += delta
+		grid_container.queue_redraw()  # 触发重绘以显示动画
+
 func _check_starter_eligibility():
 	var soul_system = _get_soul_system()
 	if soul_system == null:
@@ -131,7 +155,31 @@ func _refresh_inventory():
 		return
 	var items = soul_system.get_user_inventory(current_username)
 	count_label.text = "魂印: " + str(items.size())
+
+	# 更新管道连接
+	_update_pipe_connections()
+
 	grid_container.queue_redraw()
+
+func _update_pipe_connections():
+	"""更新管道连接检测"""
+	if pipe_connection_system == null:
+		return
+
+	var soul_system = _get_soul_system()
+	if soul_system == null:
+		return
+
+	var items = soul_system.get_user_inventory(current_username)
+
+	# 检测所有连接
+	pipe_connections = pipe_connection_system.detect_all_connections(items, soul_system)
+
+	# 输出调试信息
+	if pipe_connections.size() > 0:
+		print("检测到 %d 个管道连接" % pipe_connections.size())
+	else:
+		print("未检测到管道连接")
 
 func _draw_grid():
 	var soul_system = _get_soul_system()
@@ -171,6 +219,9 @@ func _draw_grid():
 		var drag_item = items[dragging_item_index]
 		var mouse_pos = grid_container.get_local_mouse_position()
 		_draw_dragging_item(drag_item, mouse_pos)
+
+	# 绘制管道连接（在魂印上层）
+	_draw_pipe_connections()
 
 func _draw_soul_item(item, is_selected: bool, is_hover: bool):
 	var cells = item.get_occupied_cells()
@@ -403,17 +454,19 @@ func _on_grid_click(mouse_pos: Vector2):
 func _on_grid_release(mouse_pos: Vector2):
 	if dragging_item_index < 0:
 		return
-	
+
 	var soul_system = _get_soul_system()
 	if soul_system == null:
 		return
-	
+
 	var new_grid_x = int((mouse_pos.x - drag_offset.x + CELL_SIZE / 2.0) / CELL_SIZE)
 	var new_grid_y = int((mouse_pos.y - drag_offset.y + CELL_SIZE / 2.0) / CELL_SIZE)
-	
+
 	soul_system.move_soul_print(current_username, dragging_item_index, new_grid_x, new_grid_y)
-	
+
 	dragging_item_index = -1
+
+	# 更新连接
 	_refresh_inventory()
 
 func _on_mouse_move(mouse_pos: Vector2):
@@ -536,41 +589,58 @@ func _on_filter_all_pressed():
 func _on_rotate_button_pressed():
 	if selected_item_index < 0:
 		return
-	
+
 	var soul_system = _get_soul_system()
 	if soul_system == null:
 		return
-	
+
 	var items = soul_system.get_user_inventory(current_username)
 	if selected_item_index >= items.size():
 		return
-	
+
 	var item = items[selected_item_index]
 	var new_rotation = (item.rotation_state + 1) % 4
-	
+
 	if soul_system.move_soul_print(current_username, selected_item_index, item.grid_position.x, item.grid_position.y, new_rotation):
+		# 旋转后重新检测连接
 		_refresh_inventory()
+		print("魂印已旋转到 %d° (%d/4)" % [new_rotation * 90, new_rotation])
 
 func _on_delete_button_pressed():
 	if selected_item_index < 0:
 		return
-	
+
 	var soul_system = _get_soul_system()
 	if soul_system == null:
 		return
-	
+
 	if soul_system.remove_soul_print(current_username, selected_item_index):
 		selected_item_index = -1
 		_clear_soul_details()
 		rotate_button.disabled = true
 		delete_button.disabled = true
+
+		# 删除后重新检测连接
 		_refresh_inventory()
 
 func _on_starter_button_pressed():
 	var soul_system = _get_soul_system()
 	if soul_system == null:
 		return
-	
+
 	soul_system.give_starter_souls(current_username)
 	starter_button.visible = false
 	_refresh_inventory()
+
+func _draw_pipe_connections():
+	"""绘制所有管道连接"""
+	if pipe_connection_system == null or pipe_connections.size() == 0:
+		return
+
+	# 使用管道连接系统绘制所有连接
+	pipe_connection_system.draw_all_connections(
+		grid_container,
+		pipe_connections,
+		CELL_SIZE,
+		connection_animation_time
+	)
