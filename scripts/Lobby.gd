@@ -14,9 +14,12 @@ var refine_instance = null
 const SETTINGS_PATH = "user://settings.json"
 
 func _ready():
+	# 应用像素风格
+	_apply_pixel_style()
+
 	# 应用响应式布局
 	_setup_responsive_layout()
-	
+
 	# 获取当前登录的用户信息
 	if UserSession.is_logged_in():
 		current_username = UserSession.get_username()
@@ -26,9 +29,67 @@ func _ready():
 	else:
 		# 如果没有登录，返回主菜单
 		get_tree().change_scene_to_file("res://scenes/MainMenu.tscn")
-	
+
 	# 应用亮度设置
 	_apply_brightness_from_settings()
+
+# ========== 像素风格应用 ==========
+
+func _apply_pixel_style():
+	"""应用像素艺术风格到大厅场景"""
+	if not has_node("/root/PixelStyleManager"):
+		push_warning("PixelStyleManager 未加载，跳过像素风格应用")
+		return
+
+	var pixel_style = get_node("/root/PixelStyleManager")
+
+	# 应用背景颜色
+	var background = $Background
+	background.color = pixel_style.PIXEL_PALETTE["BLACK"]
+
+	# 顶部栏像素风格
+	var top_bar = $TopBar
+	pixel_style.apply_pixel_panel_style(top_bar, "DARK_GREY")
+
+	# 标题标签 - 使用大号字体
+	var game_title = $TopBar/MarginContainer/HBoxContainer/GameTitle
+	pixel_style.apply_pixel_label_style(game_title, "YELLOW", true, pixel_style.PIXEL_FONT_SIZE_HUGE)
+
+	# 用户信息标签
+	var welcome_label = $TopBar/MarginContainer/HBoxContainer/UserInfo/WelcomeLabel
+	var username_label = $TopBar/MarginContainer/HBoxContainer/UserInfo/UsernameLabel
+	pixel_style.apply_pixel_label_style(welcome_label, "LIGHT_GREY", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(username_label, "CYAN", true, pixel_style.PIXEL_FONT_SIZE_LARGE)
+
+	# 登出按钮
+	var logout_btn = $TopBar/MarginContainer/HBoxContainer/LogoutButton
+	pixel_style.apply_pixel_button_style(logout_btn, "RED", pixel_style.PIXEL_FONT_SIZE_NORMAL)
+
+	# 欢迎面板
+	var welcome_panel = $MainContent/VBoxContainer/WelcomePanel
+	pixel_style.apply_pixel_panel_style(welcome_panel, "DARK_GREY")
+
+	# 欢迎标题和消息 - 使用便捷函数
+	var welcome_title = $MainContent/VBoxContainer/WelcomePanel/MarginContainer/VBoxContainer/WelcomeTitle
+	var welcome_msg = $MainContent/VBoxContainer/WelcomePanel/MarginContainer/VBoxContainer/WelcomeMessage
+	pixel_style.apply_subtitle_style(welcome_title, "YELLOW")
+	pixel_style.apply_body_style(welcome_msg, "WHITE")
+
+	# 游戏功能按钮 - 使用不同颜色区分功能
+	var start_game_btn = $MainContent/VBoxContainer/GameButtons/StartGameButton
+	var profile_btn = $MainContent/VBoxContainer/GameButtons/ProfileButton
+	var settings_btn = $MainContent/VBoxContainer/GameButtons/SettingsButton
+	var inventory_btn = $MainContent/VBoxContainer/GameButtons/InventoryButton
+	var shop_btn = $MainContent/VBoxContainer/GameButtons/ShopButton
+	var refine_btn = $MainContent/VBoxContainer/GameButtons/RefineButton
+
+	# 游戏功能按钮 - 使用大号字体和不同颜色
+	pixel_style.apply_pixel_button_style(start_game_btn, "GREEN", pixel_style.PIXEL_FONT_SIZE_LARGE)    # 开始游戏 - 绿色
+	pixel_style.apply_pixel_button_style(profile_btn, "BLUE", pixel_style.PIXEL_FONT_SIZE_LARGE)        # 个人信息 - 蓝色
+	pixel_style.apply_pixel_button_style(settings_btn, "PURPLE", pixel_style.PIXEL_FONT_SIZE_LARGE)     # 设置 - 紫色
+	pixel_style.apply_pixel_button_style(inventory_btn, "ORANGE", pixel_style.PIXEL_FONT_SIZE_LARGE)    # 背包 - 橙色
+	pixel_style.apply_pixel_button_style(shop_btn, "YELLOW", pixel_style.PIXEL_FONT_SIZE_LARGE)         # 商城 - 黄色
+	pixel_style.apply_pixel_button_style(refine_btn, "CYAN", pixel_style.PIXEL_FONT_SIZE_LARGE)         # 精炼 - 青色
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):

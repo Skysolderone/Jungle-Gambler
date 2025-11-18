@@ -42,6 +42,9 @@ var pipe_shape_names = {
 }
 
 func _ready():
+	# 应用像素风格
+	_apply_pixel_style()
+
 	# 应用响应式布局
 	_setup_responsive_layout()
 
@@ -50,6 +53,41 @@ func _ready():
 	_apply_filter_and_sort()
 	_create_item_cards()
 	_create_filter_buttons()
+
+# ========== 像素风格应用 ==========
+
+func _apply_pixel_style():
+	"""应用像素艺术风格到商店场景"""
+	if not has_node("/root/PixelStyleManager"):
+		push_warning("PixelStyleManager 未加载，跳过像素风格应用")
+		return
+
+	var pixel_style = get_node("/root/PixelStyleManager")
+
+	# 更新品质颜色为像素风格
+	quality_colors = {
+		0: pixel_style.PIXEL_PALETTE["QUALITY_COMMON"],
+		1: pixel_style.PIXEL_PALETTE["QUALITY_UNCOMMON"],
+		2: pixel_style.PIXEL_PALETTE["QUALITY_RARE"],
+		3: pixel_style.PIXEL_PALETTE["QUALITY_EPIC"],
+		4: pixel_style.PIXEL_PALETTE["QUALITY_LEGENDARY"],
+		5: pixel_style.PIXEL_PALETTE["QUALITY_MYTHIC"]
+	}
+
+	# 应用主面板像素风格
+	var main_panel = $MainPanel
+	pixel_style.apply_pixel_panel_style(main_panel, "DARK_GREY")
+
+	# 应用详情面板标签像素风格
+	pixel_style.apply_pixel_label_style(detail_title, "YELLOW", true, 24)
+	pixel_style.apply_pixel_label_style(quality_label, "WHITE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(shape_label, "WHITE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(power_label, "CYAN", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(desc_label, "LIGHT_GREY", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(price_label, "YELLOW", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+
+	# 应用购买按钮像素风格
+	pixel_style.apply_pixel_button_style(buy_button, "GREEN", 18)
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):
@@ -209,11 +247,12 @@ func _create_soul_card(soul, index: int) -> Button:
 	# 设置卡片样式
 	var quality_color = quality_colors.get(soul.quality, Color.WHITE)
 
+	# 像素风格卡片样式（0圆角）
 	var style_normal = StyleBoxFlat.new()
 	style_normal.bg_color = Color(0.15, 0.15, 0.18, 1)
 	style_normal.set_border_width_all(3)
 	style_normal.border_color = quality_color
-	style_normal.set_corner_radius_all(10)
+	style_normal.set_corner_radius_all(0)  # 像素风格：0圆角
 	style_normal.content_margin_left = 8
 	style_normal.content_margin_right = 8
 	style_normal.content_margin_top = 8
@@ -223,7 +262,7 @@ func _create_soul_card(soul, index: int) -> Button:
 	style_hover.bg_color = Color(0.2, 0.2, 0.23, 1)
 	style_hover.set_border_width_all(4)
 	style_hover.border_color = quality_color.lightened(0.3)
-	style_hover.set_corner_radius_all(10)
+	style_hover.set_corner_radius_all(0)  # 像素风格：0圆角
 	style_hover.content_margin_left = 8
 	style_hover.content_margin_right = 8
 	style_hover.content_margin_top = 8
@@ -233,7 +272,7 @@ func _create_soul_card(soul, index: int) -> Button:
 	style_pressed.bg_color = Color(0.25, 0.25, 0.28, 1)
 	style_pressed.set_border_width_all(4)
 	style_pressed.border_color = Color(1, 0.9, 0.3, 1)  # 金色高亮
-	style_pressed.set_corner_radius_all(10)
+	style_pressed.set_corner_radius_all(0)  # 像素风格：0圆角
 	style_pressed.content_margin_left = 8
 	style_pressed.content_margin_right = 8
 	style_pressed.content_margin_top = 8
@@ -255,42 +294,71 @@ func _create_soul_card(soul, index: int) -> Button:
 	top_margin.custom_minimum_size = Vector2(0, 10)
 	vbox.add_child(top_margin)
 	
-	# 名称
+	# 获取像素风格管理器
+	var pixel_style = null
+	if has_node("/root/PixelStyleManager"):
+		pixel_style = get_node("/root/PixelStyleManager")
+
+	# 名称（应用像素风格）
 	var name_label = Label.new()
 	name_label.text = soul.name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_color_override("font_color", quality_colors.get(soul.quality, Color.WHITE))
 	name_label.add_theme_font_size_override("font_size", 18)
+	if pixel_style:
+		# 使用像素颜色并添加描边
+		name_label.add_theme_color_override("font_color", quality_colors.get(soul.quality, Color.WHITE))
+		name_label.add_theme_color_override("font_outline_color", pixel_style.PIXEL_PALETTE["BLACK"])
+		name_label.add_theme_constant_override("outline_size", 2)
+	else:
+		name_label.add_theme_color_override("font_color", quality_colors.get(soul.quality, Color.WHITE))
 	vbox.add_child(name_label)
-	
-	# 品质
+
+	# 品质（应用像素风格）
 	var quality_label_card = Label.new()
 	quality_label_card.text = quality_names.get(soul.quality, "未知")
 	quality_label_card.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	quality_label_card.add_theme_color_override("font_color", quality_colors.get(soul.quality, Color.WHITE))
 	quality_label_card.add_theme_font_size_override("font_size", 14)
-	vbox.add_child(quality_label_card)
-	
-	# 类型标签
-	var type_label = Label.new()
-	if soul.soul_type == soul_system.SoulType.ACTIVE:
-		type_label.text = "[主动]"
-		type_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.0))  # 橙色
+	if pixel_style:
+		quality_label_card.add_theme_color_override("font_color", quality_colors.get(soul.quality, Color.WHITE))
+		quality_label_card.add_theme_color_override("font_outline_color", pixel_style.PIXEL_PALETTE["BLACK"])
+		quality_label_card.add_theme_constant_override("outline_size", 2)
 	else:
-		type_label.text = "[被动]"
-		type_label.add_theme_color_override("font_color", Color(0.5, 0.5, 1.0))  # 蓝色
+		quality_label_card.add_theme_color_override("font_color", quality_colors.get(soul.quality, Color.WHITE))
+	vbox.add_child(quality_label_card)
+
+	# 类型标签（应用像素风格）
+	var type_label = Label.new()
 	type_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	type_label.add_theme_font_size_override("font_size", 14)
+	if soul.soul_type == soul_system.SoulType.ACTIVE:
+		type_label.text = "[主动]"
+		if pixel_style:
+			type_label.add_theme_color_override("font_color", pixel_style.PIXEL_PALETTE["ORANGE"])
+			type_label.add_theme_color_override("font_outline_color", pixel_style.PIXEL_PALETTE["BLACK"])
+			type_label.add_theme_constant_override("outline_size", 2)
+		else:
+			type_label.add_theme_color_override("font_color", Color(1.0, 0.5, 0.0))
+	else:
+		type_label.text = "[被动]"
+		if pixel_style:
+			type_label.add_theme_color_override("font_color", pixel_style.PIXEL_PALETTE["BLUE"])
+			type_label.add_theme_color_override("font_outline_color", pixel_style.PIXEL_PALETTE["BLACK"])
+			type_label.add_theme_constant_override("outline_size", 2)
+		else:
+			type_label.add_theme_color_override("font_color", Color(0.5, 0.5, 1.0))
 	vbox.add_child(type_label)
 
-	# 效果描述
+	# 效果描述（应用像素风格）
 	var effect_label = Label.new()
 	effect_label.text = soul.get_effect_description()
 	effect_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	effect_label.add_theme_color_override("font_color", Color(0.8, 0.8, 1.0))
-	effect_label.add_theme_font_size_override("font_size", 12)
 	effect_label.autowrap_mode = TextServer.AUTOWRAP_WORD
 	effect_label.custom_minimum_size = Vector2(180, 0)
+	if pixel_style:
+		pixel_style.apply_pixel_label_style(effect_label, "CYAN", true, 12)
+	else:
+		effect_label.add_theme_color_override("font_color", Color(0.8, 0.8, 1.0))
+		effect_label.add_theme_font_size_override("font_size", 12)
 	vbox.add_child(effect_label)
 
 	# 间距
@@ -298,12 +366,15 @@ func _create_soul_card(soul, index: int) -> Button:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(spacer)
 	
-	# 价格
+	# 价格（应用像素风格）
 	var price_label_card = Label.new()
 	price_label_card.text = "免费（调试）"
 	price_label_card.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	price_label_card.add_theme_color_override("font_color", Color(0.3, 1, 0.3, 1))
-	price_label_card.add_theme_font_size_override("font_size", 14)
+	if pixel_style:
+		pixel_style.apply_pixel_label_style(price_label_card, "GREEN", true, 14)
+	else:
+		price_label_card.add_theme_color_override("font_color", Color(0.3, 1, 0.3, 1))
+		price_label_card.add_theme_font_size_override("font_size", 14)
 	vbox.add_child(price_label_card)
 	
 	# 底部间距
@@ -475,14 +546,19 @@ func _create_filter_button(label: String, quality: int) -> Button:
 	btn.text = label
 	btn.custom_minimum_size = Vector2(50, 30)
 
+	# 像素风格按钮（0圆角）
 	var style_normal = StyleBoxFlat.new()
 	style_normal.bg_color = Color(0.2, 0.2, 0.23, 1)
-	style_normal.set_corner_radius_all(5)
+	style_normal.set_corner_radius_all(0)  # 像素风格：0圆角
+	style_normal.set_border_width_all(2)
+	style_normal.border_color = Color(0.5, 0.5, 0.5)
 	btn.add_theme_stylebox_override("normal", style_normal)
 
 	var style_hover = StyleBoxFlat.new()
 	style_hover.bg_color = Color(0.25, 0.25, 0.28, 1)
-	style_hover.set_corner_radius_all(5)
+	style_hover.set_corner_radius_all(0)  # 像素风格：0圆角
+	style_hover.set_border_width_all(2)
+	style_hover.border_color = Color(0.7, 0.7, 0.7)
 	btn.add_theme_stylebox_override("hover", style_hover)
 
 	btn.pressed.connect(func(): _on_filter_button_pressed(quality))

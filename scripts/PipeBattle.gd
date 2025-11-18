@@ -48,17 +48,42 @@ var timer_active: bool = false
 var energy_flow_time: float = 0.0 # 能量流动画时间
 
 func _ready():
+	# 应用像素风格
+	_apply_pixel_style()
+
 	# 初始化网格（如果还没有初始化）
 	if pipe_grid.is_empty():
 		_initialize_grid()
-	
+
 	# 创建能量流覆盖层（如果不存在）
 	_create_energy_overlay()
-	
+
 	# 初始化能量条
 	_initialize_power_bar()
-	
+
 	_update_ui()
+
+# ========== 像素风格应用 ==========
+
+func _apply_pixel_style():
+	"""应用像素艺术风格到管道战斗场景"""
+	if not has_node("/root/PixelStyleManager"):
+		push_warning("PixelStyleManager 未加载，跳过像素风格应用")
+		return
+
+	var pixel_style = get_node("/root/PixelStyleManager")
+
+	# 应用主面板像素风格
+	var main_panel = $CenterContainer/MainPanel
+	pixel_style.apply_pixel_panel_style(main_panel, "DARK_GREY")
+
+	# 应用标签像素风格
+	pixel_style.apply_pixel_label_style(timer_label, "RED", true, 20)
+	pixel_style.apply_pixel_label_style(power_label, "CYAN", true, 20)
+
+	# 应用按钮像素风格
+	pixel_style.apply_pixel_button_style(rotate_button, "PURPLE", 16)
+	pixel_style.apply_pixel_button_style(start_battle_button, "GREEN", 16)
 
 func _initialize_power_bar():
 	"""初始化能量条"""

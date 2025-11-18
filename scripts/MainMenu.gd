@@ -32,17 +32,100 @@ func _ready():
 	login_panel.visible = false
 	register_panel.visible = false
 	settings_panel.visible = false
-	
+
+	# 应用像素风格
+	_apply_pixel_style()
+
 	# 应用响应式布局
 	_setup_responsive_layout()
-	
+
 	# 连接主题变更信号（如果 ThemeManager 存在）
 	if has_node("/root/ThemeManager"):
 		get_node("/root/ThemeManager").theme_changed.connect(_on_theme_changed)
 		_apply_theme()
-	
+
 	# 初始化设置
 	_load_settings()
+
+# ========== 像素风格应用 ==========
+
+func _apply_pixel_style():
+	"""应用像素艺术风格到整个场景"""
+	if not has_node("/root/PixelStyleManager"):
+		push_warning("PixelStyleManager 未加载，跳过像素风格应用")
+		return
+
+	var pixel_style = get_node("/root/PixelStyleManager")
+
+	# 应用背景颜色
+	background.color = pixel_style.PIXEL_PALETTE["BLACK"]
+
+	# 主菜单按钮 - 使用不同颜色区分功能
+	var login_btn = $CenterContainer/VBoxContainer/LoginButton
+	var register_btn = $CenterContainer/VBoxContainer/RegisterButton
+	var settings_btn = $CenterContainer/VBoxContainer/SettingsButton
+	var exit_btn = $CenterContainer/VBoxContainer/ExitButton
+	var title_label = $CenterContainer/VBoxContainer/TitleLabel
+
+	# 主菜单按钮 - 使用大号字体
+	pixel_style.apply_pixel_button_style(login_btn, "GREEN", pixel_style.PIXEL_FONT_SIZE_LARGE)
+	pixel_style.apply_pixel_button_style(register_btn, "BLUE", pixel_style.PIXEL_FONT_SIZE_LARGE)
+	pixel_style.apply_pixel_button_style(settings_btn, "PURPLE", pixel_style.PIXEL_FONT_SIZE_LARGE)
+	pixel_style.apply_pixel_button_style(exit_btn, "RED", pixel_style.PIXEL_FONT_SIZE_LARGE)
+
+	# 标题标签 - 使用标题字体
+	pixel_style.apply_title_style(title_label, "YELLOW")
+
+	# 登录面板像素风格
+	pixel_style.apply_pixel_panel_style(login_panel, "DARK_GREY")
+	_apply_pixel_style_to_form(login_panel)
+
+	# 注册面板像素风格
+	pixel_style.apply_pixel_panel_style(register_panel, "DARK_GREY")
+	_apply_pixel_style_to_form(register_panel)
+
+	# 设置面板像素风格
+	pixel_style.apply_pixel_panel_style(settings_panel, "DARK_GREY")
+	_apply_pixel_style_to_settings()
+
+func _apply_pixel_style_to_form(panel: Panel):
+	"""应用像素风格到表单面板"""
+	if not has_node("/root/PixelStyleManager"):
+		return
+
+	var pixel_style = get_node("/root/PixelStyleManager")
+
+	# 递归应用到所有子节点
+	for child in panel.get_children():
+		_apply_pixel_style_recursive(child, pixel_style)
+
+func _apply_pixel_style_to_settings():
+	"""应用像素风格到设置面板"""
+	if not has_node("/root/PixelStyleManager"):
+		return
+
+	var pixel_style = get_node("/root/PixelStyleManager")
+
+	# 递归应用到所有子节点
+	for child in settings_panel.get_children():
+		_apply_pixel_style_recursive(child, pixel_style)
+
+func _apply_pixel_style_recursive(node: Node, pixel_style: Node):
+	"""递归应用像素风格"""
+	if node is Button:
+		pixel_style.apply_pixel_button_style(node, "CYAN", pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	elif node is Label:
+		pixel_style.apply_pixel_label_style(node, "WHITE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	elif node is LineEdit:
+		pixel_style.apply_pixel_input_style(node)
+	elif node is HSlider:
+		pixel_style.apply_pixel_slider_style(node)
+	elif node is CheckButton:
+		pixel_style.apply_pixel_checkbox_style(node)
+
+	# 递归处理子节点
+	for child in node.get_children():
+		_apply_pixel_style_recursive(child, pixel_style)
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):

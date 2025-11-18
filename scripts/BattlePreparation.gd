@@ -22,6 +22,9 @@ var enemy_souls: Array = []
 var countdown: float = 30.0
 
 func _ready():
+	# 应用像素风格
+	_apply_pixel_style()
+
 	# 应用响应式布局
 	_setup_responsive_layout()
 
@@ -49,6 +52,26 @@ func _ready():
 	# 设置并连接开始战斗按钮
 	start_battle_button.text = "直接开始战斗"
 	start_battle_button.pressed.connect(_on_start_battle_pressed)
+
+# ========== 像素风格应用 ==========
+
+func _apply_pixel_style():
+	"""应用像素艺术风格"""
+	if not has_node("/root/PixelStyleManager"):
+		return
+
+	var pixel_style = get_node("/root/PixelStyleManager")
+	var main_panel = $MainPanel
+	pixel_style.apply_pixel_panel_style(main_panel, "DARK_GREY")
+
+	pixel_style.apply_pixel_label_style(phase_label, "YELLOW", true, 24)
+	pixel_style.apply_pixel_label_style(timer_label, "RED", true, 20)
+	pixel_style.apply_pixel_label_style(enemy_name_label, "ORANGE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(enemy_hp_label, "CYAN", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(enemy_power_label, "GREEN", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(hint_label, "LIGHT_GREY", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+
+	pixel_style.apply_pixel_button_style(start_battle_button, "GREEN", 18)
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):

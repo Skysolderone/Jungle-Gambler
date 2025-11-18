@@ -12,10 +12,109 @@ signal brightness_changed(value: float)
 const SETTINGS_PATH = "user://settings.json"
 
 func _ready():
+	# 应用像素风格
+	_apply_pixel_style()
+
 	# 应用响应式布局
 	_setup_responsive_layout()
-	
+
 	_load_settings()
+
+func _apply_pixel_style():
+	"""应用像素艺术风格到设置场景"""
+	if not has_node("/root/PixelStyleManager"):
+		push_warning("PixelStyleManager 未加载，跳过像素风格应用")
+		return
+
+	var pixel_style = get_node("/root/PixelStyleManager")
+
+	# 应用主面板像素风格
+	var main_panel = $MainPanel
+	pixel_style.apply_pixel_panel_style(main_panel, "DARK_GREY")
+
+	# 应用标签像素风格
+	var title_label = $MainPanel/VBoxContainer/TitleMargin/Title
+	if title_label:
+		pixel_style.apply_pixel_label_style(title_label, "YELLOW", true, 32)
+
+	# 音乐音量标签
+	var music_label = $MainPanel/VBoxContainer/SettingsMargin/Settings/MusicControl/MusicLabel
+	if music_label:
+		pixel_style.apply_pixel_label_style(music_label, "WHITE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+
+	# 音效音量标签
+	var sound_label = $MainPanel/VBoxContainer/SettingsMargin/Settings/SoundControl/SoundLabel
+	if sound_label:
+		pixel_style.apply_pixel_label_style(sound_label, "WHITE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+
+	# 亮度标签
+	var brightness_label = $MainPanel/VBoxContainer/SettingsMargin/Settings/BrightnessControl/BrightnessLabel
+	if brightness_label:
+		pixel_style.apply_pixel_label_style(brightness_label, "WHITE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+
+	# 全屏标签
+	var fullscreen_label = $MainPanel/VBoxContainer/SettingsMargin/Settings/FullscreenControl/FullscreenLabel
+	if fullscreen_label:
+		pixel_style.apply_pixel_label_style(fullscreen_label, "WHITE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+
+	# 主题标签
+	var theme_label = $MainPanel/VBoxContainer/SettingsMargin/Settings/ThemeControl/ThemeLabel
+	if theme_label:
+		pixel_style.apply_pixel_label_style(theme_label, "WHITE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+
+	# 应用滑块像素风格
+	if music_slider:
+		pixel_style.apply_pixel_slider_style(music_slider)
+	if sound_slider:
+		pixel_style.apply_pixel_slider_style(sound_slider)
+	if brightness_slider:
+		pixel_style.apply_pixel_slider_style(brightness_slider)
+
+	# 应用关闭按钮像素风格
+	var close_button = $MainPanel/VBoxContainer/SettingsMargin/Settings/CloseButton
+	if close_button:
+		pixel_style.apply_pixel_button_style(close_button, "RED", pixel_style.PIXEL_FONT_SIZE_NORMAL)
+
+	# 应用复选框像素风格（如果有）
+	if fullscreen_checkbox:
+		_apply_checkbox_pixel_style(fullscreen_checkbox, pixel_style)
+
+	# 应用选项按钮像素风格（如果有）
+	if theme_option:
+		_apply_option_button_pixel_style(theme_option, pixel_style)
+
+func _apply_checkbox_pixel_style(checkbox: CheckButton, pixel_style):
+	"""为复选框应用像素风格"""
+	# 使用 PixelStyleManager 的内置函数
+	pixel_style.apply_pixel_checkbox_style(checkbox)
+
+func _apply_option_button_pixel_style(option_button: OptionButton, pixel_style):
+	"""为选项按钮应用像素风格"""
+	var style_normal = StyleBoxFlat.new()
+	style_normal.bg_color = pixel_style.PIXEL_PALETTE["DARK_GREY"]
+	style_normal.set_border_width_all(2)
+	style_normal.border_color = pixel_style.PIXEL_PALETTE["GREY"]
+	style_normal.set_corner_radius_all(0)
+	style_normal.content_margin_left = 8
+	style_normal.content_margin_right = 8
+	style_normal.content_margin_top = 6
+	style_normal.content_margin_bottom = 6
+	option_button.add_theme_stylebox_override("normal", style_normal)
+
+	var style_hover = StyleBoxFlat.new()
+	style_hover.bg_color = pixel_style.PIXEL_PALETTE["GREY"]
+	style_hover.set_border_width_all(2)
+	style_hover.border_color = pixel_style.PIXEL_PALETTE["WHITE"]
+	style_hover.set_corner_radius_all(0)
+	style_hover.content_margin_left = 8
+	style_hover.content_margin_right = 8
+	style_hover.content_margin_top = 6
+	style_hover.content_margin_bottom = 6
+	option_button.add_theme_stylebox_override("hover", style_hover)
+
+	# 文字颜色
+	option_button.add_theme_color_override("font_color", pixel_style.PIXEL_PALETTE["WHITE"])
+	option_button.add_theme_color_override("font_hover_color", pixel_style.PIXEL_PALETTE["YELLOW"])
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):

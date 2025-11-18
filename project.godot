@@ -23,6 +23,7 @@ SoulPrintSystem="*res://systems/SoulPrintSystem.gd"
 ThemeManager="*res://systems/ThemeManager.gd"
 ResponsiveLayoutManager="*res://systems/ResponsiveLayoutManager.gd"
 MobileInteractionHelper="*res://systems/MobileInteractionHelper.gd"
+PixelStyleManager="*res://systems/PixelStyleManager.gd"
 GDAIMCPRuntime="*res://addons/gdai-mcp-plugin-godot/gdai_mcp_runtime.gd"
 
 [display]
@@ -45,7 +46,7 @@ pointing/emulate_mouse_from_touch=true
 
 [rendering]
 
-textures/canvas_textures/default_texture_filter=2
+textures/canvas_textures/default_texture_filter=0
 renderer/rendering_method="gl_compatibility"
 renderer/rendering_method.mobile="gl_compatibility"
 textures/vram_compression/import_etc2_astc=true

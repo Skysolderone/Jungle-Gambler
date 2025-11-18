@@ -42,6 +42,9 @@ func _ready():
 	battle_animator = BattleAnimator.new()
 	add_child(battle_animator)
 
+	# 应用像素风格
+	_apply_pixel_style()
+
 	# 应用响应式布局
 	_setup_responsive_layout()
 
@@ -108,6 +111,31 @@ func _ready():
 	# 延迟开始第一回合
 	await get_tree().create_timer(1.0).timeout
 	_execute_combat_round()
+
+# ========== 像素风格应用 ==========
+
+func _apply_pixel_style():
+	"""应用像素艺术风格"""
+	if not has_node("/root/PixelStyleManager"):
+		return
+
+	var pixel_style = get_node("/root/PixelStyleManager")
+	var battle_panel = $BattlePanel
+	pixel_style.apply_pixel_panel_style(battle_panel, "DARK_GREY")
+
+	# 标签样式
+	pixel_style.apply_pixel_label_style(phase_label, "YELLOW", true, 24)
+	pixel_style.apply_pixel_label_style(player_hp_label, "CYAN", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(player_power_label, "GREEN", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(player_dice_label, "WHITE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(player_final_power_label, "ORANGE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(enemy_hp_label, "RED", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(enemy_power_label, "ORANGE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(enemy_dice_label, "WHITE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(enemy_final_power_label, "RED", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+
+	# 按钮样式
+	pixel_style.apply_pixel_button_style(confirm_button, "GREEN", pixel_style.PIXEL_FONT_SIZE_NORMAL)
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):

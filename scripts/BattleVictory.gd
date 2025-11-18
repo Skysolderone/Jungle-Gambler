@@ -18,6 +18,9 @@ var player_selected_souls: Array = []  # 战斗中使用的魂印
 var is_in_loot_selection: bool = false
 
 func _ready():
+	# 应用像素风格
+	_apply_pixel_style()
+
 	# 应用响应式布局
 	_setup_responsive_layout()
 
@@ -37,6 +40,23 @@ func _ready():
 	# 连接按钮信号
 	take_all_button.pressed.connect(_on_take_all_pressed)
 	skip_button.pressed.connect(_on_skip_pressed)
+
+# ========== 像素风格应用 ==========
+
+func _apply_pixel_style():
+	"""应用像素艺术风格"""
+	if not has_node("/root/PixelStyleManager"):
+		return
+
+	var pixel_style = get_node("/root/PixelStyleManager")
+	var main_panel = $MainPanel
+	pixel_style.apply_pixel_panel_style(main_panel, "DARK_GREY")
+
+	pixel_style.apply_pixel_label_style(title_label, "YELLOW", true, 28)
+	pixel_style.apply_pixel_label_style(result_label, "CYAN", true, 18)
+
+	pixel_style.apply_pixel_button_style(take_all_button, "GREEN", 16)
+	pixel_style.apply_pixel_button_style(skip_button, "GREY", 16)
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):

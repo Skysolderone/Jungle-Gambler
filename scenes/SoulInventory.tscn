@@ -1,6 +1,4 @@
-[gd_scene load_steps=7 format=3 uid="uid://c3v411t65hubq"]
-
-[ext_resource type="Script" path="res://scripts/SoulInventory.gd" id="1_soul_inv"]
+[gd_scene load_steps=6 format=3 uid="uid://c3v411t65hubq"]
 
 [sub_resource type="StyleBoxFlat" id="StyleBoxFlat_normal"]
 bg_color = Color(0.25, 0.25, 0.3, 1)
@@ -49,7 +47,6 @@ anchor_right = 1.0
 anchor_bottom = 1.0
 grow_horizontal = 2
 grow_vertical = 2
-script = ExtResource("1_soul_inv")
 
 [node name="Background" type="ColorRect" parent="."]
 layout_mode = 1

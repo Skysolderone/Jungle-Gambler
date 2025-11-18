@@ -98,6 +98,9 @@ var collapse_animation_running: bool = false
 var collapsing_cells: Array[Vector2i] = [] # 正在坍塌的格子坐标
 
 func _ready():
+	# 应用像素风格
+	_apply_pixel_style()
+
 	# 应用响应式布局
 	await _setup_responsive_layout()
 
@@ -173,6 +176,41 @@ func _ready():
 
 	# 启动倒计时更新循环
 	_start_collapse_timer_update()
+
+# ========== 像素风格应用 ==========
+
+func _apply_pixel_style():
+	"""应用像素艺术风格到地图探索场景"""
+	if not has_node("/root/PixelStyleManager"):
+		push_warning("PixelStyleManager 未加载，跳过像素风格应用")
+		return
+
+	var pixel_style = get_node("/root/PixelStyleManager")
+
+	# 应用背景颜色
+	var background = $Background
+	background.color = pixel_style.PIXEL_PALETTE["BLACK"]
+
+	# 顶部栏像素风格
+	var top_bar = $TopBar
+	pixel_style.apply_pixel_panel_style(top_bar, "DARK_GREY")
+
+	# 信息标签 - 使用不同颜色突出重要信息
+	pixel_style.apply_pixel_label_style(map_name_label, "YELLOW", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(player_info_label, "CYAN", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(power_label, "GREEN", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(exploration_label, "BLUE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(evacuation_label, "ORANGE", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_label_style(collapse_timer_label, "RED", true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+
+	# 按钮像素风格
+	var inventory_btn = $TopBar/MarginContainer/HBoxContainer/InventoryButton
+	var exit_btn = $TopBar/MarginContainer/HBoxContainer/ExitButton
+	pixel_style.apply_pixel_button_style(inventory_btn, "ORANGE", pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	pixel_style.apply_pixel_button_style(exit_btn, "RED", pixel_style.PIXEL_FONT_SIZE_NORMAL)
+
+	# 地图网格面板
+	pixel_style.apply_pixel_panel_style(grid_panel, "DARK_GREY")
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):
