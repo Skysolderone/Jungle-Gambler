@@ -64,6 +64,9 @@ var pipe_shape_names = {
 }
 
 func _ready():
+	# 应用像素风格
+	_apply_pixel_style()
+
 	# 初始化管道连接系统
 	_initialize_pipe_connection_system()
 
@@ -84,6 +87,64 @@ func _ready():
 
 	_check_starter_eligibility()
 	_refresh_inventory()
+
+func _apply_pixel_style():
+	"""应用像素风格到所有UI元素"""
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+
+		# 更新品质颜色为像素风格
+		quality_colors = {
+			0: pixel_style.PIXEL_PALETTE["QUALITY_COMMON"],
+			1: pixel_style.PIXEL_PALETTE["QUALITY_UNCOMMON"],
+			2: pixel_style.PIXEL_PALETTE["QUALITY_RARE"],
+			3: pixel_style.PIXEL_PALETTE["QUALITY_EPIC"],
+			4: pixel_style.PIXEL_PALETTE["QUALITY_LEGENDARY"],
+			5: pixel_style.PIXEL_PALETTE["QUALITY_MYTHIC"]
+		}
+
+		# 应用像素风格到顶部栏标签
+		var title_label = $MainPanel/TopBar/TitleLabel
+		pixel_style.apply_title_style(title_label, "YELLOW")
+
+		var count_label_node = $MainPanel/TopBar/CountLabel
+		pixel_style.apply_subtitle_style(count_label_node, "YELLOW")
+
+		# 应用像素风格到关闭按钮
+		var close_button = $MainPanel/TopBar/CloseButton
+		pixel_style.apply_secondary_button_style(close_button)
+
+		# 应用像素风格到工具栏按钮
+		var all_button = $MainPanel/ContentContainer/LeftPanel/ToolBar/AllButton
+		pixel_style.apply_secondary_button_style(all_button)
+
+		pixel_style.apply_secondary_button_style(rotate_button)
+		pixel_style.apply_danger_button_style(delete_button)
+		pixel_style.apply_success_button_style(starter_button)
+
+		# 应用像素风格到详情面板标签
+		var detail_title = $MainPanel/ContentContainer/RightPanel/ScrollContainer/DetailContainer/TitleMargin/TitleLabel
+		pixel_style.apply_subtitle_style(detail_title, "YELLOW")
+
+		pixel_style.apply_subtitle_style(soul_name, "WHITE")
+
+		var quality_label = $MainPanel/ContentContainer/RightPanel/ScrollContainer/DetailContainer/InfoMargin/InfoContainer/QualityContainer/Label
+		pixel_style.apply_body_style(quality_label, "YELLOW")
+
+		var shape_label = $MainPanel/ContentContainer/RightPanel/ScrollContainer/DetailContainer/InfoMargin/InfoContainer/ShapeContainer/Label
+		pixel_style.apply_body_style(shape_label, "YELLOW")
+
+		var power_label = $MainPanel/ContentContainer/RightPanel/ScrollContainer/DetailContainer/InfoMargin/InfoContainer/PowerContainer/Label
+		pixel_style.apply_body_style(power_label, "YELLOW")
+
+		pixel_style.apply_body_style(quality_value, "WHITE")
+		pixel_style.apply_body_style(shape_value, "WHITE")
+		pixel_style.apply_body_style(power_value, "YELLOW")
+		pixel_style.apply_small_text_style(description_label, "LIGHT_GREY")
+
+		# 应用像素风格到品质图例
+		var legend_title = $MainPanel/ContentContainer/RightPanel/ScrollContainer/DetailContainer/LegendMargin/LegendContainer/Title
+		pixel_style.apply_body_style(legend_title, "YELLOW")
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):

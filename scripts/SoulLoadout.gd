@@ -31,10 +31,47 @@ var quality_names = {
 
 func _ready():
 	current_username = UserSession.get_username()
+	_apply_pixel_style()
 	_apply_brightness_from_settings()
 	_load_selected_map()
 	_create_loadout_slots()
 	_load_inventory()
+
+func _apply_pixel_style():
+	"""应用像素风格到所有UI元素"""
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+
+		# 应用像素风格到标题
+		var title = $TopBar/MarginContainer/HBoxContainer/Title
+		pixel_style.apply_title_style(title, "YELLOW")
+
+		# 应用像素风格到地图信息
+		var map_info = $TopBar/MarginContainer/HBoxContainer/MapInfo
+		pixel_style.apply_subtitle_style(map_info, "WHITE")
+
+		# 应用像素风格到按钮
+		var back_button = $TopBar/MarginContainer/HBoxContainer/BackButton
+		pixel_style.apply_secondary_button_style(back_button)
+
+		var start_button = $MainContent/HBoxContainer/RightPanel/StartButton
+		pixel_style.apply_success_button_style(start_button)
+
+		# 应用像素风格到标签
+		var left_label = $MainContent/HBoxContainer/LeftPanel/Label
+		pixel_style.apply_subtitle_style(left_label, "YELLOW")
+
+		var right_label = $MainContent/HBoxContainer/RightPanel/Label
+		pixel_style.apply_subtitle_style(right_label, "YELLOW")
+
+		var stats_title = $MainContent/HBoxContainer/RightPanel/StatsPanel/MarginContainer/VBoxContainer/StatsTitle
+		pixel_style.apply_subtitle_style(stats_title, "YELLOW")
+
+		var total_power = $MainContent/HBoxContainer/RightPanel/StatsPanel/MarginContainer/VBoxContainer/TotalPowerLabel
+		pixel_style.apply_body_style(total_power, "WHITE")
+
+		var count_label = $MainContent/HBoxContainer/RightPanel/StatsPanel/MarginContainer/VBoxContainer/CountLabel
+		pixel_style.apply_body_style(count_label, "WHITE")
 
 func _apply_brightness_from_settings():
 	var settings = {
@@ -101,10 +138,10 @@ func _create_soul_card(item) -> Panel:
 	style.border_width_right = 2
 	style.border_width_bottom = 2
 	style.border_color = base_color
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_right = 8
-	style.corner_radius_bottom_left = 8
+	style.corner_radius_top_left = 0
+	style.corner_radius_top_right = 0
+	style.corner_radius_bottom_right = 0
+	style.corner_radius_bottom_left = 0
 	card.add_theme_stylebox_override("panel", style)
 	
 	var vbox = VBoxContainer.new()
@@ -117,41 +154,60 @@ func _create_soul_card(item) -> Panel:
 	top_margin.custom_minimum_size = Vector2(0, 10)
 	vbox.add_child(top_margin)
 	
-	# 名称
+	# 名称（应用像素字体）
 	var name_label = Label.new()
 	name_label.text = soul.name
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_color_override("font_color", base_color)
-	name_label.add_theme_font_size_override("font_size", 22)
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		var color_name = _get_quality_color_name(soul.quality)
+		pixel_style.apply_pixel_label_style(name_label, color_name, true, pixel_style.PIXEL_FONT_SIZE_LARGE)
+	else:
+		name_label.add_theme_color_override("font_color", base_color)
+		name_label.add_theme_font_size_override("font_size", 22)
 	vbox.add_child(name_label)
 
-	# 品质
+	# 品质（应用像素字体）
 	var quality_label = Label.new()
 	quality_label.text = quality_names.get(soul.quality, "未知")
 	quality_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	quality_label.add_theme_color_override("font_color", base_color)
-	quality_label.add_theme_font_size_override("font_size", 18)
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		var color_name = _get_quality_color_name(soul.quality)
+		pixel_style.apply_pixel_label_style(quality_label, color_name, true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	else:
+		quality_label.add_theme_color_override("font_color", base_color)
+		quality_label.add_theme_font_size_override("font_size", 18)
 	vbox.add_child(quality_label)
 
-	# 力量
+	# 力量（应用像素字体）
 	var power_label = Label.new()
 	power_label.text = "力量: " + str(soul.power)
 	power_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	power_label.add_theme_color_override("font_color", Color(1, 0.85, 0.4))
-	power_label.add_theme_font_size_override("font_size", 20)
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		pixel_style.apply_pixel_label_style(power_label, "YELLOW", true, pixel_style.PIXEL_FONT_SIZE_LARGE)
+	else:
+		power_label.add_theme_color_override("font_color", Color(1, 0.85, 0.4))
+		power_label.add_theme_font_size_override("font_size", 20)
 	vbox.add_child(power_label)
 
-	# 使用次数
+	# 使用次数（应用像素字体）
 	var uses_label = Label.new()
+	var uses_color_name = "GREEN"
 	if item.uses == -1:
 		uses_label.text = "次数: ∞"
-		uses_label.add_theme_color_override("font_color", Color(0.5, 0.8, 0.5))
 	else:
 		uses_label.text = "次数: " + str(item.uses)
-		var uses_color = Color(0.5, 0.8, 0.5) if item.uses > 0 else Color(0.8, 0.3, 0.3)
-		uses_label.add_theme_color_override("font_color", uses_color)
+		uses_color_name = "GREEN" if item.uses > 0 else "RED"
 	uses_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	uses_label.add_theme_font_size_override("font_size", 16)
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		pixel_style.apply_pixel_label_style(uses_label, uses_color_name, true, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	else:
+		var uses_color = Color(0.5, 0.8, 0.5) if (item.uses == -1 or item.uses > 0) else Color(0.8, 0.3, 0.3)
+		uses_label.add_theme_color_override("font_color", uses_color)
+		uses_label.add_theme_font_size_override("font_size", 16)
 	vbox.add_child(uses_label)
 
 	# 间距
@@ -159,11 +215,10 @@ func _create_soul_card(item) -> Panel:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(spacer)
 	
-	# 添加按钮
+	# 添加按钮（应用像素风格）
 	var add_button = Button.new()
 	add_button.text = "添加"
 	add_button.custom_minimum_size = Vector2(150, 50)
-	add_button.add_theme_font_size_override("font_size", 20)
 	add_button.pressed.connect(_on_add_soul.bind(item))
 	add_button.set_meta("soul_item", item)  # 保存引用以便更新状态
 
@@ -177,6 +232,12 @@ func _create_soul_card(item) -> Panel:
 	if already_added:
 		add_button.disabled = true
 		add_button.text = "已添加"
+
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		pixel_style.apply_primary_button_style(add_button)
+	else:
+		add_button.add_theme_font_size_override("font_size", 20)
 
 	var button_center = CenterContainer.new()
 	button_center.add_child(add_button)
@@ -207,10 +268,10 @@ func _create_empty_slot(index: int) -> Panel:
 	style.border_width_right = 2
 	style.border_width_bottom = 2
 	style.border_color = Color(0.3, 0.3, 0.35, 1)
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_right = 8
-	style.corner_radius_bottom_left = 8
+	style.corner_radius_top_left = 0
+	style.corner_radius_top_right = 0
+	style.corner_radius_bottom_right = 0
+	style.corner_radius_bottom_left = 0
 	slot.add_theme_stylebox_override("panel", style)
 	
 	var hbox = HBoxContainer.new()
@@ -223,12 +284,16 @@ func _create_empty_slot(index: int) -> Panel:
 	left_margin.custom_minimum_size = Vector2(15, 0)
 	hbox.add_child(left_margin)
 	
-	# 槽位标签
+	# 槽位标签（应用像素字体）
 	var slot_label = Label.new()
 	slot_label.text = "槽位 " + str(index + 1)
-	slot_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
-	slot_label.add_theme_font_size_override("font_size", 16)
 	slot_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		pixel_style.apply_body_style(slot_label, "GREY")
+	else:
+		slot_label.add_theme_color_override("font_color", Color(0.6, 0.6, 0.6))
+		slot_label.add_theme_font_size_override("font_size", 16)
 	hbox.add_child(slot_label)
 	
 	# 间距
@@ -273,7 +338,7 @@ func _update_slot_display(slot: Panel, item):
 	var soul = item.soul_print
 	var base_color = quality_colors.get(soul.quality, Color.WHITE)
 	
-	# 更新边框颜色
+	# 更新边框颜色（像素风格：无圆角）
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.08, 0.08, 0.1, 1)
 	style.border_width_left = 2
@@ -281,10 +346,10 @@ func _update_slot_display(slot: Panel, item):
 	style.border_width_right = 2
 	style.border_width_bottom = 2
 	style.border_color = base_color
-	style.corner_radius_top_left = 8
-	style.corner_radius_top_right = 8
-	style.corner_radius_bottom_right = 8
-	style.corner_radius_bottom_left = 8
+	style.corner_radius_top_left = 0
+	style.corner_radius_top_right = 0
+	style.corner_radius_bottom_right = 0
+	style.corner_radius_bottom_left = 0
 	slot.add_theme_stylebox_override("panel", style)
 	
 	var hbox = HBoxContainer.new()
@@ -297,32 +362,44 @@ func _update_slot_display(slot: Panel, item):
 	left_margin.custom_minimum_size = Vector2(15, 0)
 	hbox.add_child(left_margin)
 	
-	# 名称
+	# 名称（应用像素字体）
 	var name_label = Label.new()
 	name_label.text = soul.name
-	name_label.add_theme_color_override("font_color", base_color)
-	name_label.add_theme_font_size_override("font_size", 16)
 	name_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		var color_name = _get_quality_color_name(soul.quality)
+		pixel_style.apply_pixel_label_style(name_label, color_name, false, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	else:
+		name_label.add_theme_color_override("font_color", base_color)
+		name_label.add_theme_font_size_override("font_size", 16)
 	hbox.add_child(name_label)
-	
+
 	# 间距
 	var spacer = Control.new()
 	spacer.size_flags_horizontal = Control.SIZE_EXPAND_FILL
 	hbox.add_child(spacer)
-	
-	# 力量
+
+	# 力量（应用像素字体）
 	var power_label = Label.new()
 	power_label.text = "+" + str(soul.power)
-	power_label.add_theme_color_override("font_color", Color(1, 0.85, 0.4))
-	power_label.add_theme_font_size_override("font_size", 18)
 	power_label.vertical_alignment = VERTICAL_ALIGNMENT_CENTER
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		pixel_style.apply_pixel_label_style(power_label, "YELLOW", false, pixel_style.PIXEL_FONT_SIZE_NORMAL)
+	else:
+		power_label.add_theme_color_override("font_color", Color(1, 0.85, 0.4))
+		power_label.add_theme_font_size_override("font_size", 18)
 	hbox.add_child(power_label)
-	
-	# 移除按钮
+
+	# 移除按钮（应用像素风格）
 	var remove_button = Button.new()
 	remove_button.text = "移除"
 	remove_button.custom_minimum_size = Vector2(60, 40)
 	remove_button.pressed.connect(_on_remove_soul.bind(slot.get_meta("slot_index")))
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		pixel_style.apply_danger_button_style(remove_button)
 	hbox.add_child(remove_button)
 	
 	# 右边距
@@ -431,6 +508,17 @@ func _on_start_button_pressed():
 	
 	# 进入游戏地图
 	get_tree().change_scene_to_file("res://scenes/GameMap.tscn")
+
+func _get_quality_color_name(quality: int) -> String:
+	"""根据品质返回颜色名称"""
+	match quality:
+		0: return "GREY"
+		1: return "GREEN"
+		2: return "BLUE"
+		3: return "PURPLE"
+		4: return "ORANGE"
+		5: return "RED"
+		_: return "WHITE"
 
 func _on_back_button_pressed():
 	get_tree().change_scene_to_file("res://scenes/MapSelection.tscn")

@@ -38,11 +38,31 @@ var maps = [
 ]
 
 func _ready():
+	# 应用像素风格
+	_apply_pixel_style()
+
 	# 应用响应式布局
 	_setup_responsive_layout()
-	
+
 	_apply_brightness_from_settings()
 	_create_map_cards()
+
+func _apply_pixel_style():
+	"""应用像素风格到所有UI元素"""
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+
+		# 应用像素风格到标题
+		var title = $TopBar/MarginContainer/HBoxContainer/Title
+		pixel_style.apply_title_style(title, "YELLOW")
+
+		# 应用像素风格到描述
+		var desc = $MainContent/VBoxContainer/Description
+		pixel_style.apply_subtitle_style(desc, "WHITE")
+
+		# 应用像素风格到返回按钮
+		var back_button = $TopBar/MarginContainer/HBoxContainer/BackButton
+		pixel_style.apply_secondary_button_style(back_button)
 
 func _setup_responsive_layout():
 	if has_node("/root/ResponsiveLayoutManager"):
@@ -102,7 +122,7 @@ func _create_map_card(map_data: Dictionary, _index: int) -> Panel:
 	var card = Panel.new()
 	card.custom_minimum_size = Vector2(250, 350)
 	
-	# 设置卡片样式
+	# 设置卡片样式（像素风格：无圆角）
 	var style = StyleBoxFlat.new()
 	style.bg_color = Color(0.15, 0.15, 0.18, 1)
 	style.border_width_left = 3
@@ -110,10 +130,10 @@ func _create_map_card(map_data: Dictionary, _index: int) -> Panel:
 	style.border_width_right = 3
 	style.border_width_bottom = 3
 	style.border_color = map_data.get("color", Color.WHITE)
-	style.corner_radius_top_left = 10
-	style.corner_radius_top_right = 10
-	style.corner_radius_bottom_right = 10
-	style.corner_radius_bottom_left = 10
+	style.corner_radius_top_left = 0
+	style.corner_radius_top_right = 0
+	style.corner_radius_bottom_right = 0
+	style.corner_radius_bottom_left = 0
 	card.add_theme_stylebox_override("panel", style)
 	
 	# 创建内容容器
@@ -127,36 +147,49 @@ func _create_map_card(map_data: Dictionary, _index: int) -> Panel:
 	top_margin.custom_minimum_size = Vector2(0, 20)
 	vbox.add_child(top_margin)
 	
-	# 地图名称
+	# 地图名称（应用像素字体）
 	var name_label = Label.new()
 	name_label.text = map_data.get("name", "未知地图")
 	name_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	name_label.add_theme_color_override("font_color", map_data.get("color", Color.WHITE))
-	name_label.add_theme_font_size_override("font_size", 24)
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		var color_name = _get_color_name_from_color(map_data.get("color", Color.WHITE))
+		pixel_style.apply_pixel_label_style(name_label, color_name, true, pixel_style.PIXEL_FONT_SIZE_LARGE)
+	else:
+		name_label.add_theme_color_override("font_color", map_data.get("color", Color.WHITE))
+		name_label.add_theme_font_size_override("font_size", 24)
 	vbox.add_child(name_label)
-	
-	# 难度
+
+	# 难度（应用像素字体）
 	var difficulty_label = Label.new()
 	difficulty_label.text = "难度: " + map_data.get("difficulty", "未知")
 	difficulty_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
-	difficulty_label.add_theme_font_size_override("font_size", 16)
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		pixel_style.apply_body_style(difficulty_label, "WHITE")
+	else:
+		difficulty_label.add_theme_font_size_override("font_size", 16)
 	vbox.add_child(difficulty_label)
-	
+
 	# 分隔线
 	var separator = ColorRect.new()
 	separator.custom_minimum_size = Vector2(200, 2)
 	separator.color = map_data.get("color", Color.WHITE) * 0.5
 	separator.size_flags_horizontal = Control.SIZE_SHRINK_CENTER
 	vbox.add_child(separator)
-	
-	# 描述
+
+	# 描述（应用像素字体）
 	var desc_label = Label.new()
 	desc_label.text = map_data.get("description", "")
 	desc_label.horizontal_alignment = HORIZONTAL_ALIGNMENT_CENTER
 	desc_label.autowrap_mode = TextServer.AUTOWRAP_WORD_SMART
-	desc_label.add_theme_font_size_override("font_size", 14)
-	desc_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	desc_label.custom_minimum_size = Vector2(200, 0)
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		pixel_style.apply_small_text_style(desc_label, "LIGHT_GREY")
+	else:
+		desc_label.add_theme_font_size_override("font_size", 14)
+		desc_label.add_theme_color_override("font_color", Color(0.8, 0.8, 0.8))
 	vbox.add_child(desc_label)
 	
 	# 间距
@@ -164,28 +197,32 @@ func _create_map_card(map_data: Dictionary, _index: int) -> Panel:
 	spacer.size_flags_vertical = Control.SIZE_EXPAND_FILL
 	vbox.add_child(spacer)
 	
-	# 选择按钮
+	# 选择按钮（应用像素风格）
 	var select_button = Button.new()
 	select_button.text = "选择地图"
 	select_button.custom_minimum_size = Vector2(180, 50)
-	select_button.add_theme_font_size_override("font_size", 18)
-	
-	var btn_style_normal = StyleBoxFlat.new()
-	btn_style_normal.bg_color = Color(0.25, 0.25, 0.3, 1)
-	btn_style_normal.corner_radius_top_left = 8
-	btn_style_normal.corner_radius_top_right = 8
-	btn_style_normal.corner_radius_bottom_right = 8
-	btn_style_normal.corner_radius_bottom_left = 8
-	select_button.add_theme_stylebox_override("normal", btn_style_normal)
-	
-	var btn_style_hover = StyleBoxFlat.new()
-	btn_style_hover.bg_color = map_data.get("color", Color.WHITE) * 0.6
-	btn_style_hover.corner_radius_top_left = 8
-	btn_style_hover.corner_radius_top_right = 8
-	btn_style_hover.corner_radius_bottom_right = 8
-	btn_style_hover.corner_radius_bottom_left = 8
-	select_button.add_theme_stylebox_override("hover", btn_style_hover)
-	
+
+	if has_node("/root/PixelStyleManager"):
+		var pixel_style = get_node("/root/PixelStyleManager")
+		pixel_style.apply_primary_button_style(select_button)
+	else:
+		select_button.add_theme_font_size_override("font_size", 18)
+		var btn_style_normal = StyleBoxFlat.new()
+		btn_style_normal.bg_color = Color(0.25, 0.25, 0.3, 1)
+		btn_style_normal.corner_radius_top_left = 0
+		btn_style_normal.corner_radius_top_right = 0
+		btn_style_normal.corner_radius_bottom_right = 0
+		btn_style_normal.corner_radius_bottom_left = 0
+		select_button.add_theme_stylebox_override("normal", btn_style_normal)
+
+		var btn_style_hover = StyleBoxFlat.new()
+		btn_style_hover.bg_color = map_data.get("color", Color.WHITE) * 0.6
+		btn_style_hover.corner_radius_top_left = 0
+		btn_style_hover.corner_radius_top_right = 0
+		btn_style_hover.corner_radius_bottom_right = 0
+		btn_style_hover.corner_radius_bottom_left = 0
+		select_button.add_theme_stylebox_override("hover", btn_style_hover)
+
 	select_button.pressed.connect(_on_map_selected.bind(map_data))
 	
 	var button_center = CenterContainer.new()
@@ -207,6 +244,26 @@ func _on_map_selected(map_data: Dictionary):
 	
 	# 进入魂印配置页面
 	get_tree().change_scene_to_file("res://scenes/SoulLoadout.tscn")
+
+func _get_color_name_from_color(color: Color) -> String:
+	"""根据颜色值返回颜色名称"""
+	# 简单的颜色映射
+	if color.r > 0.8 and color.g < 0.5 and color.b < 0.5:
+		return "RED"
+	elif color.r > 0.8 and color.g > 0.5 and color.b < 0.5:
+		return "ORANGE"
+	elif color.r > 0.8 and color.g > 0.6 and color.b < 0.5:
+		return "YELLOW"
+	elif color.r < 0.5 and color.g > 0.6 and color.b < 0.5:
+		return "GREEN"
+	elif color.r < 0.5 and color.g > 0.6 and color.b > 0.8:
+		return "CYAN"
+	elif color.r < 0.5 and color.g < 0.6 and color.b > 0.8:
+		return "BLUE"
+	elif color.r > 0.5 and color.g < 0.5 and color.b > 0.6:
+		return "PURPLE"
+	else:
+		return "WHITE"
 
 func _on_back_button_pressed():
 	get_tree().change_scene_to_file("res://scenes/Lobby.tscn")
